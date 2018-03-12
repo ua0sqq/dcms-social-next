@@ -1,0 +1,11 @@
+{
+  "config": {
+    "vendor-dir": "sys/library"
+  },
+  "autoload": {
+    "psr-4": {
+      "Core\\": "sys/classes/",
+      "go\\DB\\": "sys/library/goDB"
+    }
+  }
+}
