@@ -1,5 +1,5 @@
 <?php
-echo "<div class='title'>Меню сайта\n";
+echo "<div class='title'>Меню сайта</a>\n";
 echo "</div>";
 $q_menu=$db->query("SELECT * FROM `menu` ORDER BY `pos` ASC");
 while ($post_menu = $q_menu->row()) {
@@ -20,9 +20,8 @@ while ($post_menu = $q_menu->row()) {
     echo $post_menu['name'].' ';
     if ($post_menu['counter']!=null && is_file(H.$post_menu['counter'])) {
         echo '<span class="mm_counter">';
-        include H.$post_menu['counter'];
-        echo '</span>';
-       // echo '</div>';
+        @include H.$post_menu['counter'];
+        echo '</div>';
     }
     echo "</div>";
     if ($post_menu['type']=='link') {
@@ -38,5 +37,5 @@ if (user_access('adm_panel_show')) {
 if (isset($user)) {
     echo "<a href='/exit.php'><div class='main_menu'>Выход</div></a>";
 }
-//echo "<div class='tof'></a>\n";
-//echo "</div>";
+echo "<div class='tof'></a>\n";
+echo "</div>";

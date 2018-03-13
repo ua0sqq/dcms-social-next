@@ -69,8 +69,8 @@ if ($k_post > 0) {
         echo '<img src="/style/themes/' . $set['set_them'] . '/forum/14/them_' . $them['up'] . $them['close'] . '.png" alt="" /> ';
         // Ссылка на тему
         echo '<a href="/forum/' . $them['id_forum'] . '/' . $them['id_razdel'] . '/' . $them['id'] . '/"><b>' . htmlspecialchars($them['name']) . '</b></a> 
-	<a href="/forum/' .$them['id_forum'] . '/' . $them['id_razdel']  . '/' . $them['id'] . '/?page=' . $pageEnd . '">
-	(' . $db->query("SELECT COUNT(`id`) FROM `forum_p` WHERE `id_forum` = '".$them['id_forum']."' AND `id_razdel` = '".$them['id_razdel']."' AND `id_them` = '".$them['id']."'")->el() . ')</a><br/>';
+	<a href="/forum/' .$them['id_forum'] . '/' . $them['id_razdel']  . '/' . $them['id'] . '/?page=' . $pageEnd . '">(' .
+    $db->query("SELECT COUNT(`id`) FROM `forum_p` WHERE `id_forum` = '".$them['id_forum']."' AND `id_razdel` = '".$them['id_razdel']."' AND `id_them` = '".$them['id']."'")->el() . ')</a><br/>';
         echo rez_text($them['text'], 112).'<br/>';
         // Автор темы
         echo group($them['id_user']).' ';
@@ -92,7 +92,7 @@ echo "<img src='/style/icons/chat.png' alt='*' /> Чат ";
 include H.'chat/count.php';
 echo "</div></a>";
 $q=$db->query("SELECT * FROM `chat_rooms` ORDER BY `pos` ASC")->assoc();
-if (count($q)) {
+if (!empty($q)) {
     echo "<div class='mess'>";
     foreach ($q as $room) {
         /*-----------зебра-----------*/
