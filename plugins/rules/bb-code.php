@@ -8,11 +8,13 @@ include_once '../../sys/inc/db_connect.php';
 include_once '../../sys/inc/ipua.php';
 include_once '../../sys/inc/fnc.php';
 include_once '../../sys/inc/user.php';
+
 $set['title']='Фон';
 include_once '../../sys/inc/thead.php';
 title();
 err();
 aut();
+
 echo "<div class='foot'>\n";
 echo 'Стили текста:<br />';
 echo "</div>\n";
@@ -34,5 +36,5 @@ echo 'Ссылки:<br />';
 echo "</div>\n";
 echo "<input type='text' value='[url=http://адрес]название[/url]' /></a><br /><a href='bb-code.php'>Ссылка</a><br />\n";
 echo "<input type='text' value='[u=id пользователя]ник пользователя[/u]'/></a><br /><a href='/info.php?id=1'>Пользователь</a><br />\n";
+
 include_once '../../sys/inc/tfoot.php';
-?>
