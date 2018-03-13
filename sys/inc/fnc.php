@@ -96,6 +96,7 @@ if (!isset($hard_process)) {
     $q=$db->query("SELECT * FROM `cron` WHERE `id` = 'clear_tmp_dir'")->assoc();
     if (!count($q)) {
         $db->query("INSERT INTO `cron` (`id`, `time`) VALUES ('clear_tmp_dir', '$time')");
+        $q=$db->query("SELECT * FROM `cron` WHERE `id` = 'clear_tmp_dir'")->assoc();
     }
     foreach ($q as $clear_dir);
     if ($clear_dir['time']==null || $clear_dir['time']<$time-60*60*24) {
@@ -120,6 +121,7 @@ if (!isset($hard_process)) {
     $q=$db->query("SELECT * FROM `cron` WHERE `id` = 'visit' LIMIT 1")->assoc();
     if (!count($q)) {
         $db->query("INSERT INTO `cron` (`id`, `time`) VALUES ('visit', '$time')");
+        $q=$db->query("SELECT * FROM `cron` WHERE `id` = 'visit' LIMIT 1")->assoc();
     }
     foreach ($q as $visit);
     if ($visit['time']==null || $visit['time']<time()-60*60*24) {
@@ -298,6 +300,7 @@ if (!isset($hard_process)) {
     $q=$db->query("SELECT * FROM `cron` WHERE `id` = 'everyday'")->assoc();
     if (!count($q)) {
         $db->query("INSERT INTO `cron` (`id`, `time`) VALUES ('everyday', '".time()."')");
+        $q=$db->query("SELECT * FROM `cron` WHERE `id` = 'everyday'")->assoc();
     }
     foreach ($q as $everyday);
     if ($everyday['time']==null || $everyday['time']<time()-60*60*24) {

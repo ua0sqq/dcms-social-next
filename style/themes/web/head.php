@@ -1,13 +1,13 @@
 <?php
-echo '<?xml version="1.0" encoding="utf-8"?>';
+
 $set['web'] = true;
 header("Content-type: text/html");
 ?>
 <!DOCTYPE html>
 <html>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <head>
         <title><?php echo htmlspecialchars($set['title']); ?></title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
         <link rel="stylesheet" href="/style/themes/<?php echo $set['set_them']; ?>/tables.css" type="text/css" />
         <!-- Модальное окно -->
         <link rel="stylesheet" href="/ajax/style/style.css" type="text/css"/>
@@ -74,7 +74,8 @@ header("Content-type: text/html");
             }
         </script>  
     </head>
-    <body><?php include_once H . 'style/themes/' . $set['set_them'] . '/title.php'; ?>
+    <body><?php
+    include_once H . 'style/themes/' . $set['set_them'] . '/title.php'; ?>
         <div class="head">
             <table class="nav">
                 <tr>
@@ -82,7 +83,8 @@ header("Content-type: text/html");
                         <a href="/index.php" title="На главную"><img src="/style/themes/<?php echo $set['set_them']; ?>/logo.png" alt="Logotype" /></a>
                     </td>
                     <td class="head_menu">
-                        <?php include_once H . 'style/themes/' . $set['set_them'] . '/navigation.php'; ?>
+                        <?php
+                        include_once H . 'style/themes/' . $set['set_them'] . '/navigation.php'; ?>
                     </td>
                 </tr>
             </table>
@@ -91,7 +93,8 @@ header("Content-type: text/html");
             <table class="table">
                 <tr>
                     <td class="block_menu_nav">
-                        <?php include_once H . 'style/themes/' . $set['set_them'] . '/menu.php'; ?>
+                        <?php
+                        include_once H . 'style/themes/' . $set['set_them'] . '/menu.php'; ?>
                     </td>
                     <td class="block_all_nav">
                         <div class="ind_cont">
@@ -99,7 +102,7 @@ header("Content-type: text/html");
                                 <?php echo $set['title']; ?>
                             </div>
                             <div class='content_block'> 
-                                <?
+                                <?php
 // Блок для подгрузки смайлов
                                 if (isset($user)):
                                     ?>
@@ -109,6 +112,6 @@ header("Content-type: text/html");
                                         <div id="loading" style="display: none">  
                                             Идет загрузка...  
                                         </div>
-                                    </div><?
+                                    </div><?php
                                 endif;
                                 ?>

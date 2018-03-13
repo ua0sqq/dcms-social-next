@@ -55,6 +55,7 @@ unset($stat);
 echo "Последний месяц:<br />\n";
 $k_day=$db->query("SELECT COUNT(*) FROM `visit_everyday`")->el();
 $q=$db->query("SELECT * FROM `visit_everyday` ORDER BY `time` ASC LIMIT ".max($k_day-30, 0).", 30");
+$stat = [];
 while ($result=$q->row()) {
     $day_st=mktime(0, 0, 0, date('n', $result['time']), date('j', $result['time']));
     $day_fn=mktime(0, 0, 0, date('n', $result['time']), date('j', $result['time'])+1);

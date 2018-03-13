@@ -8,6 +8,7 @@ include_once 'sys/inc/db_connect.php';
 include_once 'sys/inc/ipua.php';
 include_once 'sys/inc/fnc.php';
 include_once 'sys/inc/user.php';
+
 // Cмена режима отображения
 if (isset($_GET['admin']) && user_access('user_collisions')) {
     if ($_GET['admin'] == 'close') {
@@ -26,9 +27,8 @@ aut();
 ссылку на весь их список.(с) DCMS-Social
 ==============================================
 */
-$k_lider = $db->query("SELECT COUNT(*) FROM `liders` WHERE `time` > '$time'");
-$liders = $db->query("SELECT * FROM `liders` WHERE `time` > '$time' ORDER BY rand() LIMIT 1")->row();
-if ($k_lider > 0) {
+if ($db->query("SELECT COUNT(*) FROM `liders` WHERE `time` > '$time'")->el()) {
+    $liders = $db->query("SELECT * FROM `liders` WHERE `time` > '$time' ORDER BY rand() LIMIT 1")->row();
     echo '<div class="main">';
     $lider = get_user($liders['id_user']);
     echo user::avatar($lider['id'], 0) . user::nick($lider['id'], 1, 1, 1) . '<br />';
@@ -39,7 +39,7 @@ if ($k_lider > 0) {
     echo '</div>';
 }
     
-$k_post = $db->query("SELECT COUNT(*) FROM `user` WHERE `date_last` > '".(time()-600)."'");
+$k_post = $db->query("SELECT COUNT(*) FROM `user` WHERE `date_last` > '".(time()-600)."'")->el();
 $k_page = k_page($k_post, $set['p_str']);
 $page = page($k_page);
 $start = $set['p_str']*$page-$set['p_str'];

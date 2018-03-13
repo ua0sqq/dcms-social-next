@@ -22,19 +22,11 @@ if (isset($_GET['delete'])) {
     if (isset($_GET['ok'])) {
         $db->query("DELETE FROM `user_music` WHERE `id_file` = '$file_id[id]' AND `dir` = 'obmen'");
         $db->query("DELETE FROM `obmennik_files` WHERE `id` = '$file_id[id]'");
-        unlink(H.'sys/obmen/files/'.$file_id['id'].'.dat');
-        unlink(H.'sys/obmen/screens/128/'.$file_id['id'].'.gif');
-        unlink(H.'sys/obmen/screens/128/'.$file_id['id'].'.png');
-        unlink(H.'sys/obmen/screens/128/'.$file_id['id'].'.jpg');
-        unlink(H.'sys/obmen/screens/128/'.$file_id['id'].'.jpeg');
-        unlink(H.'sys/obmen/screens/48/'.$file_id['id'].'.gif');
-        unlink(H.'sys/obmen/screens/48/'.$file_id['id'].'.png');
-        unlink(H.'sys/obmen/screens/48/'.$file_id['id'].'.jpg');
-        unlink(H.'sys/obmen/screens/48/'.$file_id['id'].'.jpeg');
-        unlink(H.'sys/obmen/files/'.$file_id['id'].'.dat');
+        if (is_file(H.'sys/obmen/files/'.$file_id['id'].'.dat')) {
+            unlink(H.'sys/obmen/files/'.$file_id['id'].'.dat');
+        }
+        array_map('unlink', glob(H.'sys/obmen/screens/*/'.$file_id['id'].'.*'));
         $_SESSION['message']='Файл успешно удален';
-    
-    
         header("Location: ?page=".intval($_GET['page'])."");
         exit;
     }

@@ -13,7 +13,8 @@ function obmen_path($path)
             $of .= $path_arr[$z] . '/';
         }
         $rdir .= $path_arr[$i] . '/';
-        $dir_id = go\DB\query("SELECT * FROM `obmennik_dir` WHERE `dir` = '/$rdir' OR `dir` = '$rdir/' OR `dir` = '$rdir' LIMIT 1")->row();
+        $dir_id = go\DB\query("SELECT * FROM `obmennik_dir` WHERE `dir` = ? OR `dir` = ? OR `dir` = ? LIMIT ?i",
+                              ['/'.$rdir, $rdir.'/', $rdir, 1])->row();
         $dirname = $dir_id['name'];
         $rudir .= "<a href=\"/obmen/".url(preg_replace("#(^(/){1,})|((/){1,}$)#", "", $rdir))."/?page=$_SESSION[page]\">".$dirname.'</a> &gt; ';
     }

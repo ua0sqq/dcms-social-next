@@ -87,29 +87,8 @@ VALUES ('$metka', '$dir_id[id]', '$name', '$ras', '$type', '$size', '$time', '$t
             }
         }
         if (!isset($err)) {
+            
             chmod(H."sys/obmen/files/$id_file.dat", 0666);
-            if (isset($_FILES['screen']) && $imgc=imagecreatefromstring(file_get_contents($_FILES['screen']['tmp_name']))) {
-                $img_x=imagesx($imgc);
-                $img_y=imagesy($imgc);
-                if ($img_x==$img_y) {
-                    $dstW=320; // ширина
-                    $dstH=320; // высота
-                } elseif ($img_x>$img_y) {
-                    $prop=$img_x/$img_y;
-                    $dstW=320;
-                    $dstH=ceil($dstW/$prop);
-                } else {
-                    $prop=$img_y/$img_x;
-                    $dstH=320;
-                    $dstW=ceil($dstH/$prop);
-                }
-                $screen=imagecreatetruecolor($dstW, $dstH);
-                imagecopyresampled($screen, $imgc, 0, 0, 0, 0, $dstW, $dstH, $img_x, $img_y);
-                imagedestroy($imgc);
-                $screen=img_copyright($screen); // наложение копирайта
-                imagegif($screen, H."sys/obmen/screens/320/$id_file.gif");
-                imagedestroy($screen);
-            }
             if (isset($_FILES['screen']) && $imgc=imagecreatefromstring(file_get_contents($_FILES['screen']['tmp_name']))) {
                 $img_x=imagesx($imgc);
                 $img_y=imagesy($imgc);

@@ -30,14 +30,15 @@ if (!isset($_GET['act']) && !isset($_GET['trans'])) {
     echo '<img src="/style/icons/search.gif" alt="*"> <a href="/obmen/search.php">Поиск файлов</a> ';
     
     if (isset($user) && $dir_id['upload'] == 1) {
-        $dir_user = $db->query("SELECT * FROM `user_files`  WHERE `id_user` = '$user[id]' AND `osn` = '1'")->row();
-        echo ' | <a href="/user/personalfiles/' . $user['id'] . '/' . $dir_user['id'] . '/?obmen_dir=' . $dir_id['id'] . '">Добавить файл</a>';
+        $dir_user = $db->query("SELECT id FROM `user_files`  WHERE `id_user` = '$user[id]' AND `osn` = '1'")->el();
+        echo ' | <a href="/user/personalfiles/' . $user['id'] . '/' . (int)$dir_user . '/?obmen_dir=' . $dir_id['id'] . '">Добавить файл</a>';
     }
     
     echo '</div>';
 }
 echo '<table class="post">';
 $q=$db->query("SELECT * FROM `obmennik_dir` WHERE `dir_osn` = '/$l' OR `dir_osn` = '$l/' OR `dir_osn` = '$l' ".(user_access('obmen_dir_edit')?"":"AND `my` = '0'")." ORDER BY `name`,`num` ASC");
+$list = [];
 while ($post = $q->row()) {
     $set['p_str']=50;
     $list[]=array('dir'=>1,'post'=>$post);

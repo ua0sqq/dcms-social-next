@@ -102,8 +102,8 @@ if (isset($_SESSION['step']) && $_SESSION['step']==1 && !$db->query("SELECT COUN
         if ($set['reg_select']=='open_mail') {
             msg('Вам необходимо активировать Ваш аккаунт по ссылке, высланной на Email');
         } else {
-            $db->query("update `user` set `wall` = '0' where `id` = '$user[id]' limit 1");
-            header('Location: /umenu.php?login=' . htmlspecialchars($_POST['reg_nick']) . '&pass=' . htmlspecialchars($_POST['pass1']));
+            $db->query("UPDATE `user` SET `wall` = '0' WHERE `id` = '$user[id]' LIMIT 1");
+            header('Location: /umenu.php?login=' . htmlspecialchars($_POST['nick']) . '&pass=' . htmlspecialchars($_POST['pass1']));
         }
         echo "Если Ваш браузер не поддерживает Cookie, Вы можете создать закладку для автовхода<br />\n";
         echo "<input type='text' value='http://$_SERVER[SERVER_NAME]/login.php?id=$user[id]&amp;pass=".htmlspecialchars($_POST['pass1'])."' /><br />\n";

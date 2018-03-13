@@ -44,7 +44,7 @@ switch (filter_input(INPUT_GET, 'sort', FILTER_DEFAULT)) {
 	$sql_sort='`u`.`id`';
 	$sort='id'; // ID
     break;
-}var_dump($_GET['sort']);
+}
 if (!isset($_GET['go'])) {
     $k_post=$db->query("SELECT COUNT(*) FROM `user`")->el();
     $k_page=k_page($k_post, $set['p_str']);
@@ -126,7 +126,7 @@ if ($usearch==null) {
 }
 $usearch=preg_replace("#( ){1,}#", "", $usearch);
 if (isset($_GET['go']) && $usearch!=null) {
-    $k_post=$db->query("SELECT COUNT(*) FROM `user` WHERE `nick` like '%".my_esc($usearch)."%' OR `id` = '".intval($usearch)."'");
+    $k_post=$db->query("SELECT COUNT(*) FROM `user` WHERE `nick` like '%".my_esc($usearch)."%' OR `id` = '".intval($usearch)."'")->el();
     $k_page=k_page($k_post, $set['p_str']);
     $page=page($k_page);
     $start=$set['p_str']*$page-$set['p_str'];

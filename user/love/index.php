@@ -14,7 +14,7 @@ $set['title'] = 'Знакомства'; // заголовок страницы
 include_once '../../sys/inc/thead.php';
 title();
 aut();
-
+// TODO: ???
 if (isset($_GET['orders']) && $_GET['orders']=='man') {
     $_SESSION['orders'] = " AND `pol` = '1'";
     $_SESSION['nav1'] = 'activ';

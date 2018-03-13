@@ -1,11 +1,12 @@
 <?php
 
 if (!isset($hard_process)) {
-    $backup = go\DB\query('SELECT `time` FROM `cron` WHERE `id`="backup_mysql"')->row();
-    if (!count($backup)) {
+    $backups = go\DB\query('SELECT `time` FROM `cron` WHERE `id`="backup_mysql"')->assoc();
+    if (!count($backups)) {
         go\DB\query('INSERT INTO `cron` (`id`, `time`) VALUES (?, ?i)', array('backup_mysql', time()));
+        $backups = go\DB\query('SELECT `time` FROM `cron` WHERE `id`="backup_mysql"')->assoc();
     }
-
+    foreach($backups as $backup);
     if (preg_match('#^[a-z0-9_\-\.]+\@[a-z0-9_\-\.]+$#iu', $set['mail_backup']) && ($backup['time']==null || $backup['time']<time()-60*60*24)) {
         go\DB\query('UPDATE `cron` SET `time`=?i WHERE `id`=?', array(time(), 'backup_mysql'));
         $hard_process=true;
