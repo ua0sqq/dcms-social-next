@@ -8,12 +8,14 @@ include_once '../../sys/inc/db_connect.php';
 include_once '../../sys/inc/ipua.php';
 include_once '../../sys/inc/fnc.php';
 include_once '../../sys/inc/user.php';
-if (isset($_GET['id']) && $db->query("SELECT COUNT(*) FROM `liders` WHERE `id_user` = '".intval($_GET['id'])."'")==1)
+
+if (isset($_GET['id']) && $db->query("SELECT COUNT(*) FROM `liders` WHERE `id_user` = '".intval($_GET['id'])."'")->el())
 {
 	if (isset($user) && $user['level'] > 2)
 	{
 		$db->query("DELETE FROM `liders` WHERE `id_user` = '" . intval($_GET['id']) . "'");
-		$_SESSION['message'] = 'Пользователь удален из списка лидеров';
+		// TODO: С‡С‚Рѕ Р·Р° Р№СѓС…РЅСЏ? РљР°РєРѕР№ С‚СѓРґРёР»Р° iso 8859 РІРєРѕСЂСЏС‡РёР»?
+		$_SESSION['message'] = 'ГЏГ®Г«ГјГ§Г®ГўГ ГІГҐГ«Гј ГіГ¤Г Г«ГҐГ­ ГЁГ§ Г±ГЇГЁГ±ГЄГ  Г«ГЁГ¤ГҐГ°Г®Гў';  
 	}
 }
 if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!=NULL)
