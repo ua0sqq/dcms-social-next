@@ -16,7 +16,7 @@ aut();
 $k_post=$db->query("SELECT COUNT(DISTINCT `mail`.`id_user`) FROM `mail`
  LEFT JOIN `users_konts` ON `mail`.`id_user` = `users_konts`.`id_kont` AND `users_konts`.`id_user` = '$user[id]'
  WHERE `mail`.`id_kont` = '$user[id]' AND (`users_konts`.`type` IS NULL OR `users_konts`.`type` = 'common' OR `users_konts`.`type` = 'favorite') AND `mail`.`read` = '0'")->el();
-//echo mysql_error(),"<br />\n";
+
 $k_page=k_page($k_post, $set['p_str']);
 $page=page($k_page);
 $start=$set['p_str']*$page-$set['p_str'];
@@ -30,7 +30,7 @@ if ($k_post==0) {
  LEFT JOIN `users_konts` ON `mail`.`id_user` = `users_konts`.`id_kont` AND `users_konts`.`id_user` = '$user[id]'
  WHERE `mail`.`id_kont` = '$user[id]' AND (`users_konts`.`type` IS NULL  OR `users_konts`.`type` = 'common' OR `users_konts`.`type` = 'favorite') AND `mail`.`read` = '0'
   GROUP BY `mail`.`id_user` ORDER BY `count` DESC LIMIT $start, $set[p_str]");
-    //echo mysql_error(),"<br />\n";
+
     while ($kont = $q->row()) {
         $ank=get_user($kont['id_user']);
         /*-----------зебра-----------*/

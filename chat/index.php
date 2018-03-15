@@ -10,7 +10,7 @@ include_once '../sys/inc/fnc.php';
 include_once '../sys/inc/user.php';
 
 /* Бан пользователя */
-if ($db->query("SELECT COUNT(*) FROM `ban` WHERE `razdel` = 'chat' AND `id_user` = '$user[id]' AND (`time` > '$time' OR `view` = '0' OR `navsegda` = '1')")->el()) {
+if (isset($user) && $db->query("SELECT COUNT(*) FROM `ban` WHERE `razdel` = 'chat' AND `id_user` = '$user[id]' AND (`time` > '$time' OR `view` = '0' OR `navsegda` = '1')")->el()) {
     header('Location: /ban.php?'.SID);
     exit;
 }

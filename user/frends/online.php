@@ -9,11 +9,14 @@ include_once '../../sys/inc/ipua.php';
 include_once '../../sys/inc/fnc.php';
 include_once '../../sys/inc/user.php';
 
+only_reg('/aut.php');
+
 if (isset($_GET['id'])) {
     $sid = intval($_GET['id']);
 } else {
     $sid = $user['id'];
 }
+
 $ank = get_user($sid);
 /*
 ==================================

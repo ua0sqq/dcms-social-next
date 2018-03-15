@@ -26,7 +26,7 @@ include_once '../../sys/inc/user.php';
 
 include_once '../../sys/inc/files.php';
 /* Бан пользователя */
-if ($db->query("SELECT COUNT(*) FROM `ban` WHERE `razdel` = 'files' AND `id_user` = '$user[id]' AND (`time` > '$time' OR `view` = '0' OR `navsegda` = '1')")->el()) {
+if (isset($user) && $db->query("SELECT COUNT(*) FROM `ban` WHERE `razdel` = 'files' AND `id_user` = '$user[id]' AND (`time` > '$time' OR `view` = '0' OR `navsegda` = '1')")->el()) {
     header('Location: /ban.php?'.SID);
     exit;
 }
@@ -38,8 +38,8 @@ if (isset($user)) {
 if (isset($_GET['id'])) {
     $ank['id']=intval($_GET['id']);
 }
-if ($ank['id']==0) {
-    echo "Ошибка! Это папка системы!";
+if (!isset($ank['id'])) {
+    header('Location: /aut.php');
     exit;
 }
 

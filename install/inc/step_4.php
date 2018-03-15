@@ -31,7 +31,7 @@ if (isset($_SESSION['adm_reg_ok']) && $_SESSION['adm_reg_ok']==true) {
         $tmp_set['mysql_pass']=$_SESSION['pass'];
         $tmp_set['mysql_db_name']=$_SESSION['db'];
         $tmp_set['charset_names']='utf8';
-        $tmp_set['shif']=$_SESSION['shif'];
+        $tmp_set['shif'] = $_SESSION['shif'];
 
         if (save_settings($tmp_set)) {
             unset($_SESSION['install_step'],$_SESSION['host'],$_SESSION['user'],$_SESSION['pass'],$_SESSION['db'],$_SESSION['adm_reg_ok'],$_SESSION['mysql_ok']);

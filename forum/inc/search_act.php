@@ -25,13 +25,13 @@ if (!isset($_POST['text']) || strlen2($_POST['text']) < 3) {
     }
 }
 if (isset($s_arr_mysql)) {
-    $adm_add = null;
+    $adm_add = [];
     $adm_add2 = null;
     
     if (!isset($user) || $user['level'] == 0) {
         $q222 = $db->query("SELECT * FROM `forum_f` WHERE `adm` = '1'");
         while ($adm_f = $q222->row()) {
-            $adm_add[]="`forum_p`.`id_forum` <> '$adm_f[id]'";
+            $adm_add[] = "`forum_p`.`id_forum` <> '$adm_f[id]'";
         }
         if (sizeof($adm_add) != 0) {
             $adm_add2 = implode(' AND ', $adm_add).' AND ';

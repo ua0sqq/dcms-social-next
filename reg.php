@@ -66,12 +66,11 @@ if (isset($_SESSION['step']) && $_SESSION['step']==1 && !$db->query("SELECT COUN
     if (!isset($err)) {
         if ($set['reg_select']=='open_mail') {
             $activation=md5(passgen());
-            $db->query("INSERT INTO `user` (`nick`, `pass`, `date_reg`, `date_last`, `pol`, `activation`, `ank_mail`) values('".$_SESSION['reg_nick']."', '".shif($_POST['pass1'])."', '$time', '$time', '".intval($_POST['pol'])."', '$activation', '".my_esc($_POST['ank_mail'])."')");
-            $id_reg=mysql_insert_id();
+            $id_reg=$db->query("INSERT INTO `user` (`nick`, `pass`, `date_reg`, `date_last`, `pol`, `activation`, `ank_mail`) values('".$_SESSION['reg_nick']."', '".shif($_POST['pass1'])."', '$time', '$time', '".intval($_POST['pol'])."', '$activation', '".my_esc($_POST['ank_mail'])."')")->id();
             $subject = "Активация аккаунта";
             $regmail = "Здравствуйте $_SESSION[reg_nick]<br />
 Для активации Вашего аккаунта перейдите по ссылке:<br />
-<a href='http://$_SERVER[HTTP_HOST]/reg.php?id=$id_reg&amp;activation=$activation'>http://$_SERVER[HTTP_HOST]/reg.php?id=".mysql_insert_id()."&amp;activation=$activation</a><br />
+<a href='http://$_SERVER[HTTP_HOST]/reg.php?id=$id_reg&amp;activation=$activation'>http://$_SERVER[HTTP_HOST]/reg.php?id=".$id_reg."&amp;activation=$activation</a><br />
 Если аккаунт не будет активирован в течении 24 часов, он будет удален<br />
 С уважением, администрация сайта<br />
 ";

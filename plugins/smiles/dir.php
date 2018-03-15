@@ -15,10 +15,11 @@ include_once H.'sys/inc/ipua.php';
 include_once H.'sys/inc/fnc.php';
 include_once H.'sys/inc/user.php';
 
-if (isset($_GET['id'])) {
-    $id = intval($_GET['id']);
-} else {
+$id = isset($_GET['id']) ? abs(intval($_GET['id'])) : 0;
+
+if ($id < 1) {
     header("Location: /index.php");
+	exit;
 }
 $dir = $db->query("SELECT * FROM `smile_dir` WHERE `id` = '" . $id . "'")->row();
 if (!$dir['id']) {

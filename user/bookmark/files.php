@@ -33,7 +33,7 @@ aut(); // форма авторизации
 echo '<div class="foot">';
 echo '<img src="/style/icons/str2.gif" alt="*" /> <a href="/user/bookmark/index.php?id=' . $ank['id'] . '">Закладки</a> | <b>Файлы</b>';
 echo '</div>';
-$k_post=$db->query("SELECT COUNT(id_file) FROM `bookmarks` WHERE `id_user` = '$ank[id]' AND `type`='file'")->el();
+$k_post=$db->query("SELECT COUNT(*) FROM `bookmarks` WHERE `id_user` = '$ank[id]' AND `type`='file'")->el();
 $k_page=k_page($k_post,$set['p_str']);
 $page=page($k_page);
 $start=$set['p_str']*$page-$set['p_str'];

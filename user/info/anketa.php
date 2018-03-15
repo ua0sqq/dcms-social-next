@@ -8,17 +8,24 @@ include_once '../../sys//inc/db_connect.php';
 include_once '../../sys//inc/ipua.php';
 include_once '../../sys//inc/fnc.php';
 include_once '../../sys//inc/user.php';
-if (isset($user)) {
-    $ank['id']=$user['id'];
-}
+
+$ank['id'] = isset($user) ? $user['id'] : 0;
+
 if (isset($_GET['id'])) {
     $ank['id']=intval($_GET['id']);
-} if ($ank['id']==0) {
-    $ank=get_user($ank['id']);
+}
+if ($ank['id'] == 0) {
+    $ank=array ( 'id' => 0,
+                'nick' => 'Система',
+                'level' => 999, 'pol' => 1,
+                'group_name' => 'Системный робот',
+                'ank_o_sebe' => 'Создан для уведомлений',
+                );
     $set['title']=$ank['nick'].' - анкета '; // заголовок страницы
     include_once '../../sys/inc/thead.php';
     title();
-    aut();/*
+    aut();
+/*
 ==================================
 Приватность станички пользователя
 Запрещаем просмотр анкеты

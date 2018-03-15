@@ -11,7 +11,7 @@ include_once '../sys/inc/fnc.php';
 include_once '../sys/inc/user.php';
 
 /* Бан пользователя */
-if ($db->query("SELECT COUNT(*) FROM `ban` WHERE `razdel` = 'forum' AND `id_user` = '$user[id]' AND (`time` > '$time' OR `view` = '0' OR `navsegda` = '1')")->el()) {
+if (isset($user) && $db->query("SELECT COUNT(*) FROM `ban` WHERE `razdel` = 'forum' AND `id_user` = '$user[id]' AND (`time` > '$time' OR `view` = '0' OR `navsegda` = '1')")->el()) {
     header('Location: /ban.php?'.SID);
     exit;
 }
@@ -24,8 +24,8 @@ aut(); // форма авторизации
 echo '<div class="foot">';
 echo '<img src="/style/icons/str2.gif" /> <a href="/forum/">Форум</a> | <b>Новые посты</b>';
 echo '</div>';
-$adm_add = null;
-$adm_add2 = null;
+$adm_add = [];
+$adm_add2 = '';
 if (!isset($user) || $user['level'] == 0) {
     $q222 = $db->query("SELECT * FROM `forum_f` WHERE `adm` = '1'");
     

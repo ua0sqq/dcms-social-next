@@ -25,26 +25,32 @@ include_once '../../sys/inc/fnc.php';
 include_once '../../sys/inc/user.php';
 
 /* Бан пользователя */
-if ($db->query("SELECT COUNT(*) FROM `ban` WHERE `razdel` = 'notes' AND `id_user` = '$user[id]' AND (`time` > '$time' OR `view` = '0' OR `navsegda` = '1')")->el()) {
+// ЗАЕБАЛ ЭТОТ ГОВНОКОД
+if (isset($user) && $db->query("SELECT COUNT(*) FROM `ban` WHERE `razdel` = 'notes' AND `id_user` = '$user[id]' AND (`time` > '$time' OR `view` = '0' OR `navsegda` = '1')")->el()) {
     header('Location: /ban.php?'.SID);
     exit;
 }
-if (isset($user)) {
-    $ank['id']=$user['id'];
-}
+
+$ank['id'] = isset($user) ? $user['id'] : 0;
+
 if (isset($_GET['id'])) {
-    $ank['id']=intval($_GET['id']);
+    $ank['id'] = intval($_GET['id']);
 }
-$ank=get_user($ank['id']);
-if ($ank['id']==0) {
-    $ank=get_user($ank['id']);
-    echo "<span class=\"status\">Доступ запрещен!</span><br />\n";
+
+if ($ank['id'] < 1) {
+    include_once '../../sys/inc/thead.php';
+    echo "<div class=\"err\">Доступ запрещен!</div>\n";
+    include_once '../../sys/inc/tfoot.php';
     exit;
 }
+
+$ank=get_user($ank['id']);
+
 $set['title']='Дневники ' . $ank['nick'] . '';
 include_once '../../sys/inc/thead.php';
 title();
 aut(); // форма авторизации
+
 if (isset($_GET['sort']) && $_GET['sort'] =='t') {
     $order='order by `time` desc';
 } elseif (isset($_GET['sort']) && $_GET['sort'] =='c') {

@@ -8,9 +8,11 @@ include_once 'sys/inc/ipua.php';
 include_once 'sys/inc/fnc.php';
 include_once 'sys/inc/user.php';
 include_once 'sys/inc/icons.php'; // Иконки главного меню
+
 include_once 'sys/inc/thead.php';
 title();
 err();
+
 if (!$set['web'])
 {
 	?>
@@ -18,10 +20,10 @@ if (!$set['web'])
 	<center>
 	<a href="/online.php" title="онлайн" style="color:#cdcecf; text-decoration: none">
 	<font color="#fee300" size="2">Онлайн </font>
-	<font color="#ffffff"><?=$db->query("SELECT COUNT(*) FROM `user` WHERE `date_last` > ".(time()-600)."")->el()?></font>
+	<font color="#ffffff"><?= $db->query("SELECT COUNT(*) FROM `user` WHERE `date_last` > ".(time()-600)."")->el()?></font>
 	</a>
 	<font color="#fee300" size="2"> (</font>
-	<font color="#ffffff">+<?=$db->query("SELECT COUNT(*) FROM `guests` WHERE `date_last` > ".(time()-600)." AND `pereh` > '0'")->el()?></font>
+	<font color="#ffffff">+<?= $db->query("SELECT COUNT(*) FROM `guests` WHERE `date_last` > ".(time()-600)." AND `pereh` > '0'")->el()?></font>
 	<font color="#fee300" size="2"> гостей )</font>
 	</center>
 	</div>

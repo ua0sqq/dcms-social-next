@@ -8,17 +8,20 @@ include_once 'sys/inc/db_connect.php';
 include_once 'sys/inc/ipua.php';
 include_once 'sys/inc/fnc.php';
 include_once 'sys/inc/user.php';
+
 if (isset($user)) {
-    $ank['id']=$user['id'];
+    $ank['id'] = $user['id'];
 }
 if (isset($_GET['id'])) {
     $ank['id']=intval($_GET['id']);
 }
-$ank = get_user($ank['id']);
-if (!$ank) {
+if (!isset($ank['id'])) {
     header("Location: /index.php?".SID);
     exit;
-} if ($ank['id']==0) {
+}
+$ank = get_user($ank['id']);
+
+if ($ank['id']==0) {
     $ank = get_user($ank['id']);
     $set['title'] = $ank['nick'].' - страничка '; // заголовок страницы
     include_once 'sys/inc/thead.php';
