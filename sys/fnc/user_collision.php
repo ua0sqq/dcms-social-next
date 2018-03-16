@@ -23,8 +23,3 @@ function user_collision($massive, $im = 0)
     }
     return $massive;
 }
-if (isset($_GET)) {// TODO: remove
-    foreach ($_GET as $key => $value) {
-        $_GET[$key] = fiera($value);
-    }
-}
