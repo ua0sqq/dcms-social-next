@@ -62,7 +62,7 @@ function passgen($k_simb=8, $types=3)
     }
     return $password;
 }
-$passgen = passgen();
+$passgen = passgen(8);
 // сохранение настроек системы
 function save_settings($set)
 {

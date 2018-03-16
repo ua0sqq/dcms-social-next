@@ -104,7 +104,7 @@ if (ini_get('register_globals')==false) {
     echo "<span class='off'>register_globals on: !!!</span><br />\n";
     $err[]='register_globals включен. Грубое нарушение безопасности';
 }
-if (function_exists('mcrypt_cbc')) {
+if (extension_loaded('openssl')) {
     echo "<span class='on'>Шифрование COOKIE: OK</span><br />\n";
 } else {
     echo "<span class='on'>Шифрование COOKIE: нет</span><br />\n";

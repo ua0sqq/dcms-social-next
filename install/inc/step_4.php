@@ -3,9 +3,9 @@ $set['title']='Регистрация Администратора';
 include_once 'inc/head.php'; // верхняя часть темы оформления
 
 if (!isset($_SESSION['shif'])) {
-    $_SESSION['shif']=passgen();
+    $_SESSION['shif']=$passgen;
 }
-
+$set['shif'] = $_SESSION['shif'];
 require_once $_SERVER['DOCUMENT_ROOT'] . '/sys/library/goDB/autoload.php';
 
     $set['charset_names'] = 'utf8';
@@ -108,7 +108,7 @@ VALUES(?, ?, ?i, ?i, ?i, ?, ?, ?i, ?i, ?i)",
         $db->query("INSERT INTO `notification_set` (`id_user`) VALUES ('$user[id]')");
 
         $_SESSION['id_user']=$user['id'];
-        setcookie('id_user', $user['id'], time()+60*60*24*365);
+        setcookie('id_user', $user['id'], time()+60*60*24*365, '/', $_SERVER['HTTP_HOST']);
         setcookie('pass', cookie_encrypt($password, $user['id']), time()+60*60*24*365);
 
         $_SESSION['adm_reg_ok']=true;
