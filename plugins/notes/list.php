@@ -142,7 +142,7 @@ if (isset($_POST['msg']) && isset($user)) {
         Обсуждения
         ====================================
         */
-        $q = $db->query("SELECT * FROM `frends` WHERE `user` = '".$notes['id_user']."' AND `i` = '1'")->el();
+        $q = $db->query("SELECT * FROM `frends` WHERE `user` = '".$notes['id_user']."' AND `i` = '1'");
         while ($f = $q->row()) {
             $a=get_user($f['frend']);
             $discSet = $db->query("SELECT * FROM `discussions_set` WHERE `id_user` = '".$a['id']."' LIMIT 1")->row(); // Общая настройка обсуждений
@@ -372,7 +372,7 @@ while ($post = $q->row()) {
         echo "<a href='?id=$notes[id]&amp;response=$ank[id]'>[*]</a> \n";
     }
     echo "".medal($ank['id'])." ".online($ank['id'])." (".vremja($post['time']).")<br />";
-    $postBan = $db->query("SELECT COUNT(*) FROM `ban` WHERE (`razdel` = 'all' OR `razdel` = 'notes') AND `post` = '1' AND `id_user` = '$ank[id]' AND (`time` > '$time' OR `navsegda` = '1')");
+    $postBan = $db->query("SELECT COUNT(*) FROM `ban` WHERE (`razdel` = 'all' OR `razdel` = 'notes') AND `post` = '1' AND `id_user` = '$ank[id]' AND (`time` > '$time' OR `navsegda` = '1')")->el();
     if ($postBan == 0) { // Блок сообщения
         echo output_text($post['msg'])."<br />\n";
     } else {
