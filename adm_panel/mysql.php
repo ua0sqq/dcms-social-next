@@ -19,31 +19,39 @@ title();
 
 if (isset($_GET['set']) && $_GET['set']=='set' && isset($_POST['query'])) {
     $sql=trim($_POST['query']);
-    if ($conf['phpversion']==5) {
+    if ($conf['phpversion']>=5) {
         include_once H.'sys/inc/sql_parser.php';
         // при помощи парсера запросы разбиваются точнее, но работает это только в php5
-        $sql=SQLParser::getQueries($sql); 
+        $sql=SQLParser::getQueries($sql);
     } else {
         $sql = preg_split('/;(\n|\r)*/', $sql);
     }
     $k_z=0;
     $k_z_ok=0;
+
     for ($i=0;$i<count($sql);$i++) {
         if ($sql[$i]!='') {
             $k_z++;
-            if ($db->query($sql[$i])) {
+            try {
+                $db->query($sql[$i]);
                 $k_z_ok++;
+            } catch (go\DB\Exceptions\Query $e) {
+                echo '<div class="foot">';
+                echo '<ol style="overflow-x: auto;font-family: monospace;font-size: small;">';
+                echo '<li><span style="color: #8F3504;">SQL-query: '.$e->getQuery().'</span></li>'."\n";
+                echo '<li><span style="color: red;">Error description: '.$e->getError()."</span></li>\n";
+                echo '<li>Error code: '.$e->getErrorCode().'</li>';
+                echo '</ol>';
+                echo '</div>'."\n";
             }
         }
     }
     if ($k_z_ok>0) {
-        if ($k_z_ok==1 && $k_z=1) {
-            msg("Запрос успешно выполнен");
-        } else {
-            msg("Выполнено $k_z_ok запросов из $k_z");
-        }
-        admin_log('Админка', 'MySQL', "Выполнено $k_z_ok запрос(ов)");
+        msg("Выполнено $k_z_ok запросов из $k_z");
+    } else {
+        $err = "Пустые параметры";
     }
+    admin_log('Админка', 'MySQL', "Выполнено $k_z_ok запрос(ов)");
 }
 err();
 aut();

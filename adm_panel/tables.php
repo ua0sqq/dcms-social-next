@@ -21,9 +21,9 @@ if (isset($_FILES['file'])) {
         $err = lang('Не верный формат файла');
     }
     if (!isset($err)) {
-        move_uploaded_file($_FILES['file']['tmp_name'], H . 'sys/sql_update/' . $_FILES['file']['name']);
+        move_uploaded_file($_FILES['file']['tmp_name'], H . 'sys/update/' . $_FILES['file']['name']);
         // выполнение одноразовых         запросов
-        $opdirtables = opendir(H . 'sys/sql_update/');
+        $opdirtables = opendir(H . 'sys/update/');
         while ($rd = readdir($opdirtables)) {
             if (preg_match('#^\.#', $rd)) {
                 continue;
@@ -34,10 +34,21 @@ if (isset($_FILES['file'])) {
 
             if (preg_match('#\.sql$#i', $rd)) {
                 include_once H.'sys/inc/sql_parser.php';
-                $sql = SQLParser::getQueriesFromFile(H.'sys/sql_update/'.$rd);
+                $sql = SQLParser::getQueriesFromFile(H.'sys/update/'.$rd);
 
                 for ($i = 0; $i < count($sql);$i++) {
-                    $db->query($sql[$i], array());
+                    try {
+                        $db->query($sql[$i], array());
+                    } catch (go\DB\Exceptions\Query $e) {
+                        $err = 'Ошибка выполнения запросов!';
+                        echo '<div class="foot">';
+                        echo '<ol style="overflow-x: auto;font-family: monospace;font-size: small;">';
+                        echo '<li><span style="color: #8F3504;">SQL-query: '.$e->getQuery().'</span></li>'."\n";
+                        echo '<li><span style="color: red;">Error description: '.$e->getError()."</span></li>\n";
+                        echo '<li>Error code: '.$e->getErrorCode().'</li>';
+                        echo '</ol>';
+                        echo '</div>'."\n";
+                    }
                 }
 
                 $set['update'][$rd]=true;
@@ -49,9 +60,10 @@ if (isset($_FILES['file'])) {
         if (is_file(H . 'sys/update/' . $_FILES['file']['name'])) {
             unlink(H . 'sys/update/' . $_FILES['file']['name']);
         }
-
-        $_SESSION['message'] = 'Таблицы успешно залиты';
-        exit(header('Location: ?'));
+        if (!isset($err)) {
+            $_SESSION['message'] = 'Таблицы успешно залиты';
+            exit(header('Location: ?'));
+        }
     }
 }
 if (isset($_GET['update'])) {
@@ -67,21 +79,41 @@ if (isset($_GET['update'])) {
         if (preg_match('#\.sql$#i', $rd)) {
             include_once H.'sys/inc/sql_parser.php';
             $sql=SQLParser::getQueriesFromFile(H.'sys/update/'.$rd);
-            for ($i=0;$i<count($sql);$i++) {
-                $db->query($sql[$i], array());
+            
+			for ($i=0;$i<count($sql);$i++) {
+                try {
+                    $db->query($sql[$i], array());
+                } catch (go\DB\Exceptions\Query $e) {
+                    $err = 'Ошибка выполнения запросов!';
+                    echo '<div class="foot">';
+                    echo '<ol style="overflow-x: auto;font-family: monospace;font-size: small;">';
+                    echo '<li><span style="color: #8F3504;">SQL-query: '.$e->getQuery().'</span></li>'."\n";
+                    echo '<li><span style="color: red;">Error description: '.$e->getError()."</span></li>\n";
+                    echo '<li>Error code: '.$e->getErrorCode().'</li>';
+                    echo '</ol>';
+                    echo '</div>'."\n";
+                }
             }
             $set['update'][$rd]=true;
             $save_settings=true;
         }
     }
     closedir($opdirtables);
-
-    foreach (glob(H . 'sys/update/*.sql') as $file) {
-        unlink($file);
+	
+	$files = glob(H . 'sys/update/*.sql');
+	if (count($files)) {
+		foreach ($files as $file) {
+			unlink($file);
+		}
+	} else {
+		$err = 'Файлы не найдены';
+	}
+    
+	if (!isset($err)) {
+        msg("Таблицы успешно залиты!");
     }
-
-    msg("Таблицы успешно залиты!");
 }
+
 err();
 aut();
     echo "<form method='post' enctype='multipart/form-data' action='?$passgen'>
