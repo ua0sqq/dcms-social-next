@@ -16,7 +16,7 @@ $args = [
 		 'id' => [
 				  'filter'  => FILTER_VALIDATE_INT,
 				  'options' => [
-								'default'   => 0,
+								'default'   => null,
 								'min_range' => 1,
 								],
 				  ],
@@ -25,7 +25,7 @@ $args = [
 		 'aut_save' => [
 				  'filter'  => FILTER_VALIDATE_INT,
 				  'options' => [
-								'default'   => 0,
+								'default'   => null,
 								'max_range' => 1,
 								],
 				  ],
@@ -33,7 +33,7 @@ $args = [
 		 'id_user' => [
 				  'filter'  => FILTER_VALIDATE_INT,
 				  'options' => [
-								'default'   => false,
+								'default'   => null,
 								'min_range' => 1,
 								],
 				  ],
@@ -45,7 +45,7 @@ unset($args);
 $user_data = [];
 $user_log_data = [];
 
-if (isset($in_get['id']) && isset($in_get['pass'])) {
+if ($in_get['id'] && !empty($in_get['pass'])) {
     if ($user = $db->query("SELECT `id` FROM `user` WHERE `id` = ?i AND `pass` = ?",
 				   [$in_get['id'], shif($in_get['pass'])])->el()) {
         
@@ -58,7 +58,7 @@ if (isset($in_get['id']) && isset($in_get['pass'])) {
 	} else {
         $_SESSION['err'] = 'Неправильный логин или пароль';
     }
-} elseif (isset($in_post['nick']) && isset($in_post['pass'])) {
+} elseif (!empty($in_post['nick']) && !empty($in_post['pass'])) {
 	$data =  [$in_post['nick'], shif($in_post['pass'])];
     if ($user = $db->query("SELECT `id` FROM `user` WHERE `nick` = ? AND `pass` = ?", $data)->el()) {
 
@@ -67,8 +67,8 @@ if (isset($in_get['id']) && isset($in_get['pass'])) {
        
         // сохранение данных в COOKIE
         if (isset($in_post['aut_save']) && $in_post['aut_save']) {
-            setcookie('id_user', $user['id'], time()+60*60*24*365);
-            setcookie('pass', cookie_encrypt($in_post['pass'], $user['id']), time()+60*60*24*365);
+            setcookie('id_user', $user['id'], time()+60*60*24*30);
+            setcookie('pass', cookie_encrypt($in_post['pass'], $user['id']), time()+60*60*24*30);
         }
 
 		$user_data = ['date_aut' =>time(), 'date_last' => time()];		
@@ -77,7 +77,7 @@ if (isset($in_get['id']) && isset($in_get['pass'])) {
 	} else {
         $_SESSION['err'] = 'Неправильный логин или пароль';
     }
-} elseif (isset($in_cookies['id_user']) && isset($in_cookies['pass']) && $in_cookies['id_user'] && $in_cookies['pass']) {
+} elseif (!empty($in_cookies['id_user']) && !empty($in_cookies['pass'])) {
 	$data = [$in_cookies['id_user'], shif(cookie_decrypt($in_cookies['pass'], $in_cookies['id_user']))];
     if ($user = $db->query("SELECT `id` FROM `user` WHERE `id` = ?i AND `pass` = ?",
 						   $data)->el()) {
@@ -115,17 +115,18 @@ if ($ua) {
 }
 
 // Проверяем на схожие ники
-$collision_q = $db->query("SELECT * FROM `user` WHERE `ip` = '$iplong' AND `ua` = '".my_esc($ua)."' AND `date_last` > '".(time()-600)."' AND `id` <> '$user[id]'");
+$collision_q = $db->query("SELECT `u`.`id`, (
+SELECT COUNT(*) FROM `user_collision` WHERE `id_user`=?i AND `id_user2`=`u`.`id` OR `id_user2`=?i AND `id_user`=`u`.`id`) cnt
+FROM `user` u WHERE `ip`=?i AND `ua`=? AND `date_last`>?i AND `u`.`id`<>?i",
+						  [$user['id'], $user['id'], $iplong, $ua, time()-600, $user['id']]);
 while ($collision = $collision_q->row()) {
-    if (!$db->query("SELECT COUNT(*) FROM `user_collision` WHERE `id_user` = '$user[id]' AND `id_user2` = '$collision[id]' OR `id_user2` = '$user[id]' AND `id_user` = '$collision[id]'")->el()) {
-        $db->query("INSERT INTO `user_collision` (`id_user`, `id_user2`, `type`) values('$user[id]', '$collision[id]', 'ip_ua_time')");
+    if (!$collision['cnt']) {
+        $db->query("INSERT INTO `user_collision` (`id_user`, `id_user2`, `type`) VALUES(?i, ?i, ?)",
+				   [$user['id'], $collision['id'], 'ip_ua_time']);
     }
 }
-/*
-========================================
-Рейтинг
-========================================
-*/
+
+// Рейтинг
 if ($user['rating_tmp'] > 1000) {
     $col = $user['rating_tmp'];
     $col = $user['rating_tmp'] / 1000;
