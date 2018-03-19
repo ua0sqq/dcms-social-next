@@ -131,10 +131,10 @@ if (isset($_POST['msg']) && isset($user)) {
         ==========================
         */
         if (isset($user) && $respons==true) {
-            $notifiacation=$db->query("SELECT * FROM `notification_set` WHERE `id_user` = '".$ank_otv['id']."' LIMIT 1")->row();
+            $notifiacation=$db->query("SELECT * FROM `notification_set` WHERE `id_user` = '".$ank_reply['id']."' LIMIT 1")->row();
             
-            if ($notifiacation['komm'] == 1 && $ank_otv['id'] != $user['id']) {
-                $db->query("INSERT INTO `notification` (`avtor`, `id_user`, `id_object`, `type`, `time`) VALUES ('$user[id]', '$ank_otv[id]', '$notes[id]', 'notes_komm', '$time')");
+            if ($notifiacation['komm'] == 1 && $ank_reply['id'] != $user['id']) {
+                $db->query("INSERT INTO `notification` (`avtor`, `id_user`, `id_object`, `type`, `time`) VALUES ('$user[id]', '$ank_reply[id]', '$notes[id]', 'notes_komm', '$time')");
             }
         }
         /*
@@ -411,11 +411,11 @@ if ($notes['private_komm']==2 && $user['id']!=$avtor['id'] && !user_access('note
     exit;
 }
 if (isset($user)) {
-    echo "<form method=\"post\" name='message' action=\"?id=".intval($_GET['id'])."&amp;page=$page".$go_otv."\">\n";
+    echo "<form method=\"post\" name='message' action=\"?id=".intval($_GET['id'])."&amp;page=$page".$go_link."\">\n";
     if ($set['web'] && is_file(H.'style/themes/'.$set['set_them'].'/altername_post_form.php')) {
         include_once H.'style/themes/'.$set['set_them'].'/altername_post_form.php';
     } else {
-        echo "$tPanel<textarea name=\"msg\">$otvet</textarea><br />\n";
+        echo "$tPanel<textarea name=\"msg\">$insert</textarea><br />\n";
     }
     echo "<input value=\"Отправить\" type=\"submit\" />\n";
     echo "</form>\n";

@@ -201,10 +201,10 @@ $db->query("UPDATE `discussions` SET `count` = '".($disc['count']+1)."', `time` 
 		==========================
 		*/
 		if (isset($user) && $respons==TRUE){
-		$notifiacation=$db->query("SELECT * FROM `notification_set` WHERE `id_user` = '".$ank_otv['id']."' LIMIT 1")->row();
+		$notifiacation=$db->query("SELECT * FROM `notification_set` WHERE `id_user` = '".$ank_reply['id']."' LIMIT 1")->row();
 			
-			if ($notifiacation['komm'] == 1 && $ank_otv['id'] != $user['id'])
-			$db->query("INSERT INTO `notification` (`avtor`, `id_user`, `id_object`, `type`, `time`) VALUES ('$user[id]', '$ank_otv[id]', '$file_id[id]', 'files_komm', '$time')");
+			if ($notifiacation['komm'] == 1 && $ank_reply['id'] != $user['id'])
+			$db->query("INSERT INTO `notification` (`avtor`, `id_user`, `id_object`, `type`, `time`) VALUES ('$user[id]', '$ank_reply[id]', '$file_id[id]', 'files_komm', '$time')");
 		
 		}
 $db->query("INSERT INTO `obmennik_komm` (`id_file`, `id_user`, `time`, `msg`) values('$file_id[id]', '$user[id]', '$time', '".my_esc($msg)."')");

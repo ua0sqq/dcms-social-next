@@ -75,6 +75,8 @@ if (isset($user) && $user['id'] != $ank['id'] && !isset($_SESSION['guest_' . $an
         $_SESSION['guest_' . $ank['id']] = 1;
     }
 }
+
+
 /*----------------------------------------------------*/
 /*------------------------стена-----------------------*/
 if (isset($user) && isset($_GET['wall']) && $_GET['wall']==1) {
@@ -83,9 +85,14 @@ if (isset($user) && isset($_GET['wall']) && $_GET['wall']==1) {
 } elseif (isset($user) && isset($_GET['wall']) && $_GET['wall']==0) {
     $db->query("UPDATE `user` SET `wall` = '0' WHERE `id` = '$user[id]'");
     header("Location: /info.php?id=$ank[id]");
-} if (isset($user)) {
-    $db->query("UPDATE `notification` SET `read` = '1' WHERE `type` = 'stena_komm' AND `id_user` = '$user[id]' AND `id_object` = '$ank[id]'");
-} if (isset($_POST['msg']) && isset($user)) {
+}
+
+if (isset($user)) {
+    $db->query("UPDATE `notification` SET `read` = ?i WHERE `type` = ? AND `id_user` = ?i AND `id_object` = ?i",
+               [1, 'stena_komm', $user['id'], $ank['id']]);
+}
+
+if (isset($_POST['msg']) && isset($user)) {
     $msg=$_POST['msg'];
     if (isset($_POST['translit']) && $_POST['translit']==1) {
         $msg=translit($msg);
@@ -98,7 +105,8 @@ if (isset($user) && isset($_GET['wall']) && $_GET['wall']==1) {
         $err[]='Сообщение слишком длинное';
     } elseif (strlen2($msg)<2) {
         $err[]='Короткое сообщение';
-    } elseif ($db->query("SELECT COUNT(*) FROM `stena` WHERE `id_user` = '$user[id]' AND  `id_stena` = '$ank[id]' AND `msg` = '".my_esc($msg)."' LIMIT 1")->el()) {
+    } elseif ($db->query("SELECT COUNT(*) FROM `stena` WHERE `id_user` = ?i AND  `id_stena` = ?i AND `msg` = ?",
+                         [$user['id'], $ank['id'], $msg])->el()) {
         $err='Ваше сообщение повторяет предыдущее';
     } elseif (!isset($err)) {		/*
         ==========================
@@ -106,26 +114,30 @@ if (isset($user) && isset($_GET['wall']) && $_GET['wall']==1) {
         ==========================
         */
         if (isset($user) && $respons==true) {
-            $notifiacation=$db->query("SELECT * FROM `notification_set` WHERE `id_user` = '".$ank_otv['id']."' LIMIT 1")->row();
+            $notifiacation=$db->query("SELECT * FROM `notification_set` WHERE `id_user` = '".$ank_reply['id']."' LIMIT 1")->row();
             
-            if ($notifiacation['komm'] == 1 && $ank_otv['id'] != $user['id']) {
-                $db->query("INSERT INTO `notification` (`avtor`, `id_user`, `id_object`, `type`, `time`) VALUES ('$user[id]', '$ank_otv[id]', '$ank[id]', 'stena_komm', '$time')");
+            if ($notifiacation['komm'] == 1 && $ank_reply['id'] != $user['id']) {
+                $db->query("INSERT INTO `notification` (`avtor`, `id_user`, `id_object`, `type`, `time`) VALUES ('$user[id]', '$ank_reply[id]', '$ank[id]', 'stena_komm', '$time')");
             }
         }
-        $db->query("INSERT INTO `stena` (id_user, time, msg, id_stena) values('$user[id]', '$time', '".my_esc($msg)."', '$ank[id]')");
-        $db->query("UPDATE `user` SET `balls` = '".($user['balls']+1)."' ,`rating_tmp` = '".($user['rating_tmp']+1)."' WHERE `id` = '$user[id]' LIMIT 1");
+        $db->query("INSERT INTO `stena` (id_user, time, msg, id_stena) VALUES(?i, ?i, ?, ?i)",
+                   [$user['id'], $time, $msg, $ank['id']]);
+        $db->query("UPDATE `user` SET `balls`=`balls`+?i, `rating_tmp`=`rating_tmp`+?i WHERE `id` = ?i",
+                   [1, 1, $user['id']]);
         $_SESSION['message'] = 'Сообщение успешно добавлено';
         if (isset($user)) {
-            $notifiacation=$db->query("SELECT * FROM `notification_set` WHERE `id_user` = '".$post['id_user']."' LIMIT 1")->row();
+            $notifiacation=$db->query("SELECT * FROM `notification_set` WHERE `id_user` = '".$user['id']."' LIMIT 1")->row();
             
-            if ($notifiacation['komm'] == 1 && $user['id_user'] != $ank['id']) {
+            if ($notifiacation['komm'] == 1 && $user['id'] != $ank['id']) {
                 $db->query("INSERT INTO `notification` (`avtor`, `id_user`, `type`, `time`) VALUES ('$user[id]', '$ank[id]', 'stena', '$time')");
             }
         }
     }
-}/*---------------------------------------------------*/if ((!isset($_SESSION['refer']) || $_SESSION['refer']==null)
-&& isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!=null &&
-!preg_match('#info\.php#', $_SERVER['HTTP_REFERER'])) {
+}
+
+/*---------------------------------------------------*/
+if ((!isset($_SESSION['refer']) || $_SESSION['refer']==null) && isset($_SERVER['HTTP_REFERER'])
+    && $_SERVER['HTTP_REFERER']!=null && !preg_match('#info\.php#', $_SERVER['HTTP_REFERER'])) {
     $_SESSION['refer']=str_replace('&', '&amp;', preg_replace('#^http://[^/]*/#', '/', $_SERVER['HTTP_REFERER']));
 }
 if (isset($_POST['rating']) && isset($user)  && $user['id']!=$ank['id'] && $user['balls']>=50 && $db->query("SELECT SUM(`rating`) FROM `user_voice2` WHERE `id_kont` = '$user[id]'")>=0) {

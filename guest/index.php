@@ -92,7 +92,7 @@ $start = $set['p_str'] * $page - $set['p_str'];
 // Форма для комментариев
 if (isset($user) || (isset($set['write_guest']) && $set['write_guest'] == 1 && (!isset($_SESSION['antiflood']) || $_SESSION['antiflood'] < $time - 300)))
 {
-	echo '<form method="post" name="message" action="?page=' . $page . REPLY . '">';
+	echo '<form method="post" name="message" action="?page=' . $page . $go_link . '">';
 	if (is_file(H.'style/themes/' . $set['set_them'] . '/altername_post_form.php'))
 	    include_once H.'style/themes/' . $set['set_them'] . '/altername_post_form.php';
 	else

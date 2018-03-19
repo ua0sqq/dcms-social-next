@@ -33,12 +33,14 @@ if ($set['antidos']) {
         }
     }
     if ($k_loads>100) {
-        if ($db->query("SELECT COUNT(*) FROM `ban_ip` WHERE `min` <= '$iplong' AND `max` >= '$iplong'")==0) {
-            $db->query("INSERT INTO `ban_ip` (`min`, `max`, `prich`) values('$iplong', '$iplong', 'AntiDos')");
+        if (!$db->query("SELECT COUNT(*) FROM `ban_ip` WHERE `min` <= ?i AND `max` >= ?i",
+                        [$iplong, $iplong])->el()) {
+            $db->query("INSERT INTO `ban_ip` (`min`, `max`) values(?i , ?i)",
+                       [$iplong, $iplong]);
         }
     }
     @file_put_contents(H.'sys/tmp/antidos_'.$iplong.'.dat', serialize($antidos));
-    @chmod(H.'sys/tmp/antidos_'.$iplong.'.dat', 0777);
+    @chmod(H.'sys/tmp/antidos_'.$iplong.'.dat', 0644);
 }
 // антимат сделает автоматическое предупреждение, а затем бан
 function antimat($str)
@@ -50,10 +52,12 @@ function antimat($str)
         $censure=censure($str);
         if ($censure) {
             $antimat[$censure]=$time;
-            if (count($antimat)>3 && isset($user) && $user['level']) { // если сделано больше 3-х предупреждений
+            // если сделано больше 3-х предупреждений
+            if (count($antimat)>3 && isset($user) && $user['level']) { 
                 $prich="Обнаружен мат: $censure";
                 $timeban=$time+60*60; // бан на час
-                $db->query("INSERT INTO `ban` (`id_user`, `id_ban`, `prich`, `time`) VALUES ('$user[id]', '0', '$prich', '$timeban')");
+                $db->query("INSERT INTO `ban` (`id_user`, `id_ban`, `prich`, `time`) VALUES (?i, ?i, ?, ?i)",
+                           [$user['id'], 0, $prich, $timeban]);
                 admin_log('Пользователи', 'Бан', "Бан пользователя '[url=/amd_panel/ban.php?id=$user[id]]$user[nick][/url]' (id#$user[id]) до ".vremja($timeban)." по причине '$prich'");
                 header('Location: /ban.php?'.SID);
                 exit;
@@ -93,63 +97,101 @@ function delete_dir($dir)
 }
 // очистка временной папки
 if (!isset($hard_process)) {
-    $q=$db->query("SELECT * FROM `cron` WHERE `id` = 'clear_tmp_dir'")->assoc();
-    if (!count($q)) {
-        $db->query("INSERT INTO `cron` (`id`, `time`) VALUES ('clear_tmp_dir', '$time')");
-        $q=$db->query("SELECT * FROM `cron` WHERE `id` = 'clear_tmp_dir'")->assoc();
-    }
-    foreach ($q as $clear_dir);
-    if ($clear_dir['time']==null || $clear_dir['time']<$time-60*60*24) {
-        $hard_process=true;
-        $db->query("UPDATE `cron` SET `time` = '$time' WHERE `id` = 'clear_tmp_dir'");
-        //if (function_exists('curl_init')) {
-        //    $ch = curl_init();
-        //    curl_setopt($ch, CURLOPT_URL, 'http://dcms-social.ru/curl.php?site=' . $_SERVER['HTTP_HOST'] . '&version=' . $set['dcms_version'] . '&title=' . $set['title']);
-        //    $data = curl_exec($ch);
-        //    curl_close($ch);
-        //}
-        $od=opendir(H.'sys/tmp/');
-        while ($rd=readdir($od)) {
-            if (!preg_match('#^\.#', $rd) && filectime(H.'sys/tmp/'.$rd)<$time-60*60*24) {
-                @delete_dir(H.'sys/tmp/'.$rd);
+    $cron = $db->query('SELECT * FROM cron')->vars();
+    if (!isset($cron['clear_tmp_dir'])) {
+        $db->query('INSERT INTO `cron` (`id`, `time`) VALUES (?, ?i)',
+                    ['clear_tmp_dir', time()]);
+    } else
+    if (/*isset($cron['clear_tmp_dir']) && */$cron['clear_tmp_dir'] < (time() - 60 * 60 * 24)) {
+        $hard_process = true;
+        $db->query('UPDATE `cron` SET `time`=?i WHERE `id`=?',
+                    [time(), 'clear_tmp_dir']);
+        $od = opendir(H . 'sys/tmp/');
+        while ($rd = readdir($od)) {
+            if (!preg_match('#^\.#', $rd) && filectime(H . 'sys/tmp/' . $rd) < time() - 60 * 60 * 24) {
+                delete_dir(H . 'sys/tmp/' . $rd);
             }
         }
         closedir($od);
     }
-}// Подведение итогов статистики
-if (!isset($hard_process)) {
-    $q=$db->query("SELECT * FROM `cron` WHERE `id` = 'visit' LIMIT 1")->assoc();
-    if (!count($q)) {
-        $db->query("INSERT INTO `cron` (`id`, `time`) VALUES ('visit', '$time')");
-        $q=$db->query("SELECT * FROM `cron` WHERE `id` = 'visit' LIMIT 1")->assoc();
-    }
-    foreach ($q as $visit);
-    if ($visit['time']==null || $visit['time']<time()-60*60*24) {
+    if (!isset($cron['visit'])) {
+        $db->query('INSERT INTO `cron` (`id`, `time`) VALUES (?, ?i)',
+                   ['visit', time()]);
+    } else
+    if (/*isset($cron['visit']) && */$cron['visit'] < (time() - 60 * 60 * 24)) {
+        // Ставим ограничение на 10 минут
         if (function_exists('set_time_limit')) {
-            @set_time_limit(600);
-        } // Ставим ограничение на 10 минут
-$last_day=mktime(0, 0, 0, date('m'), date('d')-1); // начало вчерашних суток
-$today_time=mktime(0, 0, 0); // начало сегодняшних суток
-if (!$db->query("SELECT COUNT(*) FROM `visit_everyday` WHERE `time` = '$last_day'")->el()) {
-    $hard_process=true;
-    // записываем общие данные за вчерашние сутки в отдельную таблицу
-    $db->query("INSERT INTO `visit_everyday` (`host` , `host_ip_ua`, `hit`, `time`) VALUES ((SELECT COUNT(DISTINCT `ip`) FROM `visit_today` WHERE `time` < '$today_time'),(SELECT COUNT(DISTINCT `ip`, `ua`) FROM `visit_today` WHERE `time` < '$today_time'),(SELECT COUNT(*) FROM `visit_today` WHERE `time` < '$today_time'),'$last_day')");
-    $db->query('DELETE FROM `visit_today` WHERE `time` < '.$today_time);
-}
+            set_time_limit(600);
+        }
+        $last_day = mktime(0, 0, 0, date('m'), date('d') - 1); // начало вчерашних суток
+        $today_time = mktime(0, 0, 0); // начало сегодняшних суток
+        if (!$db->query('SELECT COUNT(*) FROM `visit_everyday` WHERE `time`=?i',
+                        [$last_day])->el()) {
+            $hard_process = true;
+            // записываем общие данные за вчерашние сутки в отдельную таблицу
+            $data = [$today_time, $today_time, $today_time, $last_day];
+            $db->query('INSERT INTO `visit_everyday` (`host` , `host_ip_ua`, `hit`, `time`) VALUES ((
+SELECT COUNT(DISTINCT `ip`) FROM `visit_today` WHERE `time` < ?i),(
+SELECT COUNT(DISTINCT `ip`, `ua`) FROM `visit_today` WHERE `time` < ?i),(
+SELECT COUNT(*) FROM `visit_today` WHERE `time` < ?i), ?i)', $data);
+            $db->query('DELETE FROM `visit_today` WHERE `time` < ?i',
+                       [$today_time]);
+            unset($data);
+        }
+    }
+    if (!isset($cron['everyday'])) {
+        $db->query('INSERT INTO `cron` (`id`, `time`) VALUES (?, ?i)',
+                 ['everyday', time()]);
+    } else
+    if (/*isset($cron['everyday']) && */$cron['everyday'] < (time() - 60 * 60 * 24)) {
+        $hard_process = true;
+        // Ставим ограничение на 10 минут
+        if (function_exists('set_time_limit')) {
+            set_time_limit(600);
+        }
+        $db->query('UPDATE `cron` SET `time`=?i WHERE `id`=?',
+                   [time(), 'everyday']);
+        // удаление гостей старше 10 минут
+        $db->query('DELETE FROM `guests` WHERE `date_last` < ?i',
+                   [(time() - 600)]);
+        // удаление старых постов в чате
+        $db->query('DELETE FROM `chat_post` WHERE `time` < ?i',
+                   [(time() - 60 * 60 * 24)]);
+        // удаление неактивированных аккаунтов
+        $db->query('DELETE FROM `user` WHERE `activation` != null AND `date_reg` < ?i',
+                   [(time() - 60 * 60 * 24)]);
+        // удаляем все контакты, помеченные на удаление более месяца назад
+        $qd = $db->query('SELECT * FROM `users_konts` WHERE `type`=?string AND `time`<?i',
+                         ['deleted',  (time() - 60 * 60 * 24 * 30)]);
+        while ($deleted = $qd->row()) {
+            $db->query('DELETE FROM `users_konts` WHERE `id_user`=?i AND `id_kont`=?i',
+                       [$deleted['id_user'], $deleted['id_kont']]);
+            if (!$db->query('SELECT COUNT(*) FROM `users_konts` WHERE `id_kont`=?i AND `id_user`=?i',
+                            [$deleted['id_user'], $deleted['id_kont']])->el()) {
+                // если юзер не находится в контакте у другого, то удаляем и все сообщения
+                $db->query('DELETE FROM `mail` WHERE `id_user`=?i AND `id_kont`=?i OR `id_kont`=?i AND `id_user`=?i',
+                           [$deleted['id_user'], $deleted['id_kont'], $deleted['id_user'], $deleted['id_kont']]);
+            }
+        }
+        // оптимизация таблиц
+        $db->query('OPTIMIZE TABLE `guests`, `chat_post`, `user`, `users_konts`, `mail`');
     }
 }
 // запись о переходах на сайт
-if (isset($_SERVER['HTTP_REFERER']) && !preg_match('#'.preg_quote($_SERVER['HTTP_HOST']).'#', $_SERVER['HTTP_REFERER']) && $ref=@parse_url($_SERVER['HTTP_REFERER'])) {
-    if (isset($ref['host'])) {
-        $_SESSION['http_referer']=$ref['host'];
+if ($reff = filter_input(INPUT_SERVER, 'HTTP_REFERER', FILTER_SANITIZE_URL)) {
+    $ref = parse_url($reff);
+    if (isset($ref['host']) && $ref['host'] != filter_input(INPUT_SERVER, 'HTTP_HOST', FILTER_DEFAULT)) {
+        $_SESSION['http_referer'] = $ref['host'];
     }
 }
+// переносы строк
 function br($msg, $br='<br />')
 {
     return preg_replace("#((<br( ?/?)>)|\n|\r)+#i", $br, $msg);
-} // переносы строк
+}
+// Вырезает все нечитаемые символы
 function esc($text, $br=null)
-{ // Вырезает все нечитаемые символы
+{ 
     if ($br!=null) {
         for ($i=0;$i<=31;$i++) {
             $text=str_replace(chr($i), null, $text);
@@ -202,20 +244,19 @@ function get_user($user_id=0)
     }
 }
 // определение оператора
-function opsos($ips=null)
+function opsos($ips = null)
 {
     global $ip;
-    if ($ips==null) {
-        $ips=$ip;
+    if ($ips == null) {
+        $ips = $ip;
     }
-    $ipl=ip2long($ips);
-    if (go\DB\query("SELECT COUNT(*) FROM `opsos` WHERE `min` <= '$ipl' AND `max` >= '$ipl'")->el()) {
-        $opsos=go\DB\query("SELECT opsos FROM `opsos` WHERE `min` <= '$ipl' AND `max` >= '$ipl' LIMIT 1")->row();
-        return stripcslashes(htmlspecialchars($opsos['opsos']));
-    } else {
-        return false;
+    if ($opsos = go\DB\query('SELECT `opsos` FROM `opsos` WHERE  ?i BETWEEN `min` AND `max`',
+                            [$ips])->el()) {
+        return stripcslashes(htmlspecialchars($opsos));
     }
-}// вывод времени
+    return false;
+}
+// вывод времени
 function vremja($time=null)
 {
     global $user;
@@ -296,42 +337,7 @@ function only_level($level=0, $link = null)
         exit;
     }
 }
-if (!isset($hard_process)) {
-    $q=$db->query("SELECT * FROM `cron` WHERE `id` = 'everyday'")->assoc();
-    if (!count($q)) {
-        $db->query("INSERT INTO `cron` (`id`, `time`) VALUES ('everyday', '".time()."')");
-        $q=$db->query("SELECT * FROM `cron` WHERE `id` = 'everyday'")->assoc();
-    }
-    foreach ($q as $everyday);
-    if ($everyday['time']==null || $everyday['time']<time()-60*60*24) {
-        $hard_process=true;
-        if (function_exists('set_time_limit')) {
-            @set_time_limit(600);
-        } // Ставим ограничение на 10 минут
-        $db->query("UPDATE `cron` SET `time` = '".time()."' WHERE `id` = 'everyday'");
-        $db->query("DELETE FROM `guests` WHERE `date_last` < '".(time()-600)."'");
-        // удаление старых постов в чате
-        $db->query("DELETE FROM `chat_post` WHERE `time` < '".(time()-60*60*24)."'");
-        // удаление неактивированных аккаунтов
-        $db->query("DELETE FROM `user` WHERE `activation` IS NOT NULL AND `date_reg` < '".(time()-60*60*24)."'");
-        // удаляем все контакты, помеченные на удаление более месяца назад
-        $qd=$db->query("SELECT * FROM `users_konts` WHERE `type` = 'deleted' AND `time` < ".($time-60*60*24*30));
-        while ($deleted=$qd->row()) {
-            $db->query("DELETE FROM `users_konts` WHERE `id_user` = '$deleted[id_user]' AND `id_kont` = '$deleted[id_kont]'");
-            if (!$db->query("SELECT COUNT(*) FROM `users_konts` WHERE `id_kont` = '$deleted[id_user]' AND `id_user` = '$deleted[id_kont]'")->el()) {
-                // если юзер не находится в контакте у другого, то удаляем и все сообщения
-                $db->query("DELETE FROM `mail` WHERE `id_user` = '$deleted[id_user]' AND `id_kont` = '$deleted[id_kont]' OR `id_kont` = '$deleted[id_user]' AND `id_user` = '$deleted[id_kont]'");
-            }
-        }
-        $tab = $db->query('SHOW TABLE STATUS') ;
-        while ($tables = $tab->row()) {
-            if ($tables['Engine'] == 'MyISAM' && $tables['Data_free'] > '0') {
-                $db->query('OPTIMIZE TABLE `' . $tables['Name'] . '`');
-            }
-        }
-    }
-}
-// вывод ошибок
+// Вывод предупреждений
 function err()
 {
     global $err;
@@ -405,4 +411,10 @@ while ($filebase = readdir($opdirbase)) {
     }
 }
 // запись о посещении
-$db->query("INSERT INTO `visit_today` (`ip` , `ua`, `time`) VALUES ('$iplong', '".@my_esc($_SERVER['HTTP_USER_AGENT'])."', '$time')");
+if (isset($_SERVER['HTTP_USER_AGENT'])) {
+    $bot = $_SERVER['HTTP_USER_AGENT'];
+} else {
+    $bot = 'Нет данных';
+}
+$db->query("INSERT INTO `visit_today` (`ip` , `ua`, `time`) VALUES (?i, ?, ?i)",
+           [$iplong, $bot, $time]);

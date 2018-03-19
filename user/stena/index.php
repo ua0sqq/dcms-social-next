@@ -79,11 +79,11 @@ echo "</div>\n";
 if ($k_page>1)str('?id='.$ank['id'].'&',$k_page,$page); // Вывод страниц
 if (isset($user) || (isset($set['write_guest']) && $set['write_guest']==1 && (!isset($_SESSION['antiflood']) || $_SESSION['antiflood']<$time-300)))
 {
-echo "<form method=\"post\" name='message' action=\"?id=$ank[id]$go_otv\">\n";
+echo "<form method=\"post\" name='message' action=\"?id=$ank[id]$go_link\">\n";
 if ($set['web'] && is_file(H.'style/themes/'.$set['set_them'].'/altername_post_form.php'))
 include_once H.'style/themes/'.$set['set_them'].'/altername_post_form.php';
 else
-echo "$tPanel<textarea name=\"msg\">$otvet</textarea><br />\n";
+echo "$tPanel<textarea name=\"msg\">$insert</textarea><br />\n";
 echo "<input value=\"Отправить\" type=\"submit\" />\n";
 echo "</form><table width='99%'>\n";
 }

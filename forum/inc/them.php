@@ -118,12 +118,12 @@ if (isset($user) && ($them['close'] == 0 || $them['close'] == 1 && user_access('
         }
         // отправляем автору
         if (!$db->query("SELECT COUNT(*) FROM `discussions` WHERE `id_user` = '$them[id_user]' AND `type` = 'them' AND `id_sim` = '$them[id]' LIMIT 1")->el()) {
-            if ($them['id_user'] != $user['id'] && $them['id_user'] != $ank_otv['id']) {
+            if ($them['id_user'] != $user['id'] && $them['id_user'] != $ank_reply['id']) {
                 $db->query("INSERT INTO `discussions` (`id_user`, `avtor`, `type`, `time`, `id_sim`, `count`) values('$them[id_user]', '$them[id_user]', 'them', '$time', '$them[id]', '1')");
             }
         } else {
             $disc = $db->query("SELECT * FROM `discussions` WHERE `id_user` = '$them[id_user]' AND `type` = 'them' AND `id_sim` = '$them[id]' LIMIT 1")->row();
-            if ($them['id_user'] != $user['id'] && $them['id_user'] != $ank_otv['id']) {
+            if ($them['id_user'] != $user['id'] && $them['id_user'] != $ank_reply['id']) {
                 $db->query("UPDATE `discussions` SET `count` = '" . ($disc['count'] + 1) . "', `time` = '$time' WHERE `id_user` = '$them[id_user]' AND `type` = 'them' AND `id_sim` = '$them[id]' LIMIT 1");
             }
         }
@@ -137,13 +137,13 @@ if (isset($user) && ($them['close'] == 0 || $them['close'] == 1 && user_access('
 // 	Уведомление при цитате
             if (isset($_POST['cit'])) {
                 $cit2=$db->query("SELECT * FROM `forum_p` WHERE `id` = '$cit' LIMIT 1")->row();
-                $ank_otv['id'] = $cit2['id_user'];
+                $ank_reply['id'] = $cit2['id_user'];
             }
         
-            $notifiacation = $db->query("SELECT * FROM `notification_set` WHERE `id_user` = '" . $ank_otv['id'] . "' LIMIT 1")->row();
+            $notifiacation = $db->query("SELECT * FROM `notification_set` WHERE `id_user` = '" . $ank_reply['id'] . "' LIMIT 1")->row();
     
             if ($notifiacation['komm'] == 1) {
-                $db->query("INSERT INTO `notification` (`avtor`, `id_user`, `id_object`, `type`, `time`) VALUES ('$user[id]', '$ank_otv[id]', '$them[id]', 'them_komm', '$time')");
+                $db->query("INSERT INTO `notification` (`avtor`, `id_user`, `id_object`, `type`, `time`) VALUES ('$user[id]', '$ank_reply[id]', '$them[id]', 'them_komm', '$time')");
             }
         }
     
@@ -722,9 +722,9 @@ if ((user_access('forum_post_ed') || isset($user) && $ank2['id'] == $user['id'])
         echo "</div>";
     }
     if ($user['set_files'] == 1) {
-        echo "<form method='post' name='message' enctype='multipart/form-data' action='/forum/$forum[id]/$razdel[id]/$them[id]/new?page=$page&amp;$passgen&amp;" . $go_otv . "'>\n";
+        echo "<form method='post' name='message' enctype='multipart/form-data' action='/forum/$forum[id]/$razdel[id]/$them[id]/new?page=$page&amp;$passgen&amp;" . $go_link . "'>\n";
     } else {
-        echo "<form method='post' name='message' action='/forum/$forum[id]/$razdel[id]/$them[id]/new?page=$page&amp;$passgen&amp;" . $go_otv . "'>\n";
+        echo "<form method='post' name='message' action='/forum/$forum[id]/$razdel[id]/$them[id]/new?page=$page&amp;$passgen&amp;" . $go_link . "'>\n";
     }
     if (isset($_POST['msg']) && isset($_POST['file_s'])) {
         $msg2 = output_text($_POST['msg'], false, true, false, false, false);
@@ -734,7 +734,7 @@ if ((user_access('forum_post_ed') || isset($user) && $ank2['id'] == $user['id'])
     if ($set['web'] && is_file(H . 'style/themes/' . $set['set_them'] . '/altername_post_form.php')) {
         include H . 'style/themes/' . $set['set_them'] . '/altername_post_form.php';
     } else {
-        echo "$tPanel<textarea name=\"msg\">$otvet$msg2</textarea><br />\n";
+        echo "$tPanel<textarea name=\"msg\">$insert$msg2</textarea><br />\n";
     }
     if ($user['set_files'] == 1) {
         if (isset($_SESSION['file'])) {

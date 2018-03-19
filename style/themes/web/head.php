@@ -1,17 +1,15 @@
 <?php 
-echo '<?xml version="1.0" encoding="utf-8"?>';
 
 $set['web'] = true;
 header("Content-type: text/html");
 ?>
 <!DOCTYPE html>
 <html>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <head>
+        <meta charset="UTF-8"> 
         <title><?php  echo htmlspecialchars($set['title']); ?></title>
         <link rel="shortcut icon" href="/favicon.ico" /><link rel="stylesheet" href="/style/themes/<?php  echo $set['set_them']; ?>/style.css" type="text/css" />
         <link rel="stylesheet" href="/style/themes/<?php  echo $set['set_them']; ?>/tables.css" type="text/css" />
-
         <!-- Модальное окно -->
         <link rel="stylesheet" href="/ajax/style/style.css" type="text/css"/>
         <script type="text/javascript" src="/ajax/jquery.js"></script>

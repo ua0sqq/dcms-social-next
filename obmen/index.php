@@ -214,10 +214,10 @@ if (isset($_GET['f'])) {
             } elseif (!isset($err)) {
                 $ank=get_user($file_id['id_user']);
                 if (isset($user) && $respons == true) {
-                    $notifiacation=$db->query("SELECT * FROM `notification_set` WHERE `id_user` = '".$ank_otv['id']."' LIMIT 1")->row();
+                    $notifiacation=$db->query("SELECT * FROM `notification_set` WHERE `id_user` = '".$ank_reply['id']."' LIMIT 1")->row();
                  
-                    if ($notifiacation['komm']  ==  1 && $ank_otv['id'] != $user['id']) {
-                        $db->query("INSERT INTO `notification` (`avtor`, `id_user`, `id_object`, `type`, `time`) VALUES ('$user[id]', '$ank_otv[id]', '$file_id[id]', 'obmen_komm', '$time')");
+                    if ($notifiacation['komm']  ==  1 && $ank_reply['id'] != $user['id']) {
+                        $db->query("INSERT INTO `notification` (`avtor`, `id_user`, `id_object`, `type`, `time`) VALUES ('$user[id]', '$ank_reply[id]', '$file_id[id]', 'obmen_komm', '$time')");
                     }
                 }
              

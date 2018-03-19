@@ -66,11 +66,11 @@ if ($k_page>1) {
     str('?showinfo&amp;', $k_page, $page);
 } // Вывод страниц
 if (isset($user)) {
-    echo "<form method=\"post\" name='message' action=\"?showinfo&amp;".$go_otv."\">\n";
+    echo "<form method=\"post\" name='message' action=\"?showinfo&amp;".$go_link."\">\n";
     if ($set['web'] && is_file(H.'style/themes/'.$set['set_them'].'/altername_post_form.php')) {
         include_once H.'style/themes/'.$set['set_them'].'/altername_post_form.php';
     } else {
-        echo "$tPanel<textarea name=\"msg\">$respons_msg</textarea><br />\n";
+        echo "$tPanel<textarea name=\"msg\">$insert</textarea><br />\n";
     }
     echo "<input value=\"Отправить\" type=\"submit\" />\n";
     echo "</form>\n";

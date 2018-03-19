@@ -183,7 +183,7 @@ if ($k_page>1) {
 }
 // Форма для комментариев
 if (isset($user)) {
-    echo '<form method="post" name="message" action="?id=' . intval($_GET['id']) . '&amp;page=' . $page . REPLY . '">';
+    echo '<form method="post" name="message" action="?id=' . intval($_GET['id']) . '&amp;page=' . $page . $go_link . '">';
     if (is_file(H.'style/themes/' . $set['set_them'] . '/altername_post_form.php')) {
         include_once H.'style/themes/' . $set['set_them'] . '/altername_post_form.php';
     } else {

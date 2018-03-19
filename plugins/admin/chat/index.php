@@ -35,10 +35,10 @@ elseif(!isset($err)){
 		==========================
 		*/
 		if (isset($user) && $respons==TRUE){
-		$notifiacation=$db->query("SELECT * FROM `notification_set` WHERE `id_user` = '".$ank_otv['id']."' LIMIT 1")->row();
+		$notifiacation=$db->query("SELECT * FROM `notification_set` WHERE `id_user` = '".$ank_reply['id']."' LIMIT 1")->row();
 			
-			if ($notifiacation['komm'] == 1 && $ank_otv['id'] != $user['id'])
-			$db->query("INSERT INTO `notification` (`avtor`, `id_user`, `type`, `time`) VALUES ('$user[id]', '$ank_otv[id]', 'adm_komm', '$time')");
+			if ($notifiacation['komm'] == 1 && $ank_reply['id'] != $user['id'])
+			$db->query("INSERT INTO `notification` (`avtor`, `id_user`, `type`, `time`) VALUES ('$user[id]', '$ank_reply[id]', 'adm_komm', '$time')");
 		
 		}
 $db->query("INSERT INTO `adm_chat` (id_user, time, msg) values('$user[id]', '$time', '".my_esc($msg)."')");
@@ -88,11 +88,11 @@ echo "</table>\n";
 if ($k_page>1)str('?',$k_page,$page); // Вывод страниц
 if (isset($user) || (isset($set['write_guest']) && $set['write_guest']==1 && (!isset($_SESSION['antiflood']) || $_SESSION['antiflood']<$time-300)))
 {
-echo "<form method=\"post\" name='message' action=\"?$go_otv\">\n";
+echo "<form method=\"post\" name='message' action=\"?$go_link\">\n";
 if ($set['web'] && is_file(H.'style/themes/'.$set['set_them'].'/altername_post_form.php'))
 include_once H.'style/themes/'.$set['set_them'].'/altername_post_form.php';
 else
-echo "$tPanel<textarea name=\"msg\">$otvet</textarea><br />\n";
+echo "$tPanel<textarea name=\"msg\">$insert</textarea><br />\n";
 echo "<input value=\"Отправить\" type=\"submit\" />\n";
 echo "</form>\n";
 }

@@ -388,7 +388,7 @@ if (!isset($block_foto)) {
         str('?', $k_page, $page);
     } // Вывод страниц
     if (isset($user)) {
-        echo '<form method="post" name="message" action="?page=' . $pageEnd . '&amp;' . REPLY . '">';
+        echo '<form method="post" name="message" action="?page=' . $pageEnd . '&amp;' . $go_link . '">';
         if (is_file(H.'style/themes/'.$set['set_them'].'/altername_post_form.php')) {
             include_once H.'style/themes/'.$set['set_them'].'/altername_post_form.php';
         } else {
