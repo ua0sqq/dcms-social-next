@@ -109,8 +109,8 @@ SELECT COUNT(*) AS notificationset FROM `notification_set` WHERE `id_user` = ?i)
     
     // Пишем ip пользователя
     $ip_add  = isset($ip2['add']) ? ip2long($ip2['add']) : 0;
-    $ip_cl   = isset($ip2['cl']) ? ip2long($ip2['cl']) : null;
-    $ip_xff  = isset($ip2['xff']) ? ip2long($ip2['xff']) : null;
+    $ip_cl   = isset($ip2['cl']) ? ip2long($ip2['cl']) : 0;
+    $ip_xff  = isset($ip2['xff']) ? ip2long($ip2['xff']) : 0;
     $ua      = isset($ua) ? $ua : 'Нет данных';
     $url     = filter_input(INPUT_SERVER, 'SCRIPT_NAME', FILTER_SANITIZE_URL);
     $set_user += [

@@ -1,38 +1,27 @@
 <?php
-function group($user = NULL)
+function group($user = null)
 {
-	global $set, $time;
-	if (go\DB\query("SELECT COUNT(*) FROM `ban` WHERE `id_user` = '$user' AND (`time` > '$time' OR `navsegda` = '1')")->el())
-	{
-		$ban = ' <img src="/style/user/ban.png" alt="*" class="icon" id="icon_group" /> ';
-		return $ban;
-	}
-	else 
-	{
-		$ank = go\DB\query("SELECT group_access, pol  FROM `user` WHERE `id` = $user LIMIT 1")->row();
-		if ($ank['group_access'] > 7 && ($ank['group_access'] < 10 || $ank['group_access'] > 14))
-		{
-			if ($ank['pol'] == 1) $adm = '<img src="/style/user/1.png" alt="*" class="icon" id="icon_group" /> ';
-			else
-			$adm = '<img src="/style/user/2.png" alt="" class="icon"/> ';
-			return $adm;
-		}
-		elseif (($ank['group_access'] > 1 && $ank['group_access'] <= 7) || ($ank['group_access'] > 10 && $ank['group_access'] <= 14))
-		{
-			if ($ank['pol'] == 1)
-				$mod = '<img src="/style/user/3.png" alt="*" class="icon" id="icon_group" /> ';
-			else
-				$mod = '<img src="/style/user/4.png" alt="*" class="icon" id="icon_group" /> ';
-			return $mod;
-		}
-		else
-		{
-			if ($ank['pol'] == 1) 
-				$user = '<img src="/style/user/5.png" alt="" class="icon" id="icon_group" /> ';
-			else
-				$user = '<img src="/style/user/6.png" alt="" class="icon" id="icon_group" /> ';
-			return $user;
-		}
-	}
+    if (!$ank = go\DB\query(
+        "SELECT `group_access`, `pol`  FROM `user` WHERE `id`=?i AND NOT EXISTS(
+SELECT `id_user` FROM `ban` WHERE  `id_user`=?i  AND (`time`>?i OR `navsegda`=1))",
+                            [$user, $user, time()]
+    )->row()) {
+        return ' <img src="/style/user/ban.png" alt="*" class="icon" id="icon_group" /> ';
+    }
+    if ($ank['group_access'] > 7 && ($ank['group_access'] < 10 || $ank['group_access'] > 14)) {
+        if ($ank['pol'] == 1) {
+            return '<img src="/style/user/1.png" alt="*" class="icon" id="icon_group" /> ';
+        }
+        return '<img src="/style/user/2.png" alt="" class="icon"/> ';
+    } elseif (($ank['group_access'] > 1 && $ank['group_access'] <= 7) || ($ank['group_access'] > 10 && $ank['group_access'] <= 14)) {
+        if ($ank['pol'] == 1) {
+            return '<img src="/style/user/3.png" alt="*" class="icon" id="icon_group" /> ';
+        }
+        return '<img src="/style/user/4.png" alt="*" class="icon" id="icon_group" /> ';
+    } else {
+        if ($ank['pol'] == 1) {
+            return '<img src="/style/user/5.png" alt="" class="icon" id="icon_group" /> ';
+        }
+        return '<img src="/style/user/6.png" alt="" class="icon" id="icon_group" /> ';
+    }
 }
-?>

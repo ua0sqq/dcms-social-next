@@ -11,7 +11,7 @@ function user_collision($massive, $im = 0)
             } else {
                 $coll = $collision['id_user'];
             }
-            $ank_coll2 = get_user($coll);
+            $ank_coll2 = go\DB\query('SELECT `id`, `level` FROM `user` WHERE `id`=?i', [$coll])->row();
             if (!in_array($coll, $massive) && ($user['level'] > $ank_coll2['level']) && ($im == 0 || $user['id'] != $ank_coll2['id'])) {
                 $massive[] = $coll;
                 $new = true;

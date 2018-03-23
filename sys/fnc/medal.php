@@ -1,28 +1,26 @@
 <?php
 function medal($user = 0)
 {
-	$ank = go\DB\query("SELECT `rating` FROM `user` WHERE `id` = $user LIMIT 1")->row();
-	
-	$img = 0;
-	if ($ank['rating'] >= 6 && $ank['rating'] <= 11)
-		$img = 1;
-		
-	elseif ($ank['rating'] >= 12 && $ank['rating'] <= 19)
-		$img = 2;
-	elseif ($ank['rating'] >= 20 && $ank['rating'] <= 27)
-		$img = 3;
-	elseif ($ank['rating'] >= 28 && $ank['rating'] <= 37)
-		$img = 4;
-	elseif ($ank['rating'] >= 38 && $ank['rating'] <= 47)
-		$img = 5;
-	elseif ($ank['rating'] >= 48 && $ank['rating'] <= 59)
-		$img = 6;
-	elseif ($ank['rating'] >= 60 && $ank['rating'] <= 9999999)
-		$img = 7;
-	
-	if ($img != 0)
-	{
-		return ' <img src="/style/medal/' . $img . '.png" alt="DS" />';
-	}
+    $ank = (int)go\DB\query("SELECT `rating` FROM `user` WHERE `id`=?i", [$user])->el();
+    
+    $img = 0;
+    if ($ank >= 6 && $ank <= 11) {
+        $img = 1;
+    } elseif ($ank >= 12 && $ank <= 19) {
+        $img = 2;
+    } elseif ($ank >= 20 && $ank <= 27) {
+        $img = 3;
+    } elseif ($ank >= 28 && $ank <= 37) {
+        $img = 4;
+    } elseif ($ank >= 38 && $ank <= 47) {
+        $img = 5;
+    } elseif ($ank >= 48 && $ank <= 59) {
+        $img = 6;
+    } elseif ($ank >= 60) {
+        $img = 7;
+    }
+    
+    if ($img) {
+        return ' <img src="/style/medal/' . $img . '.png" alt="DS" />';
+    }
 }
-?>

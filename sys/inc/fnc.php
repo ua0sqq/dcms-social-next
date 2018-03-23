@@ -1,8 +1,8 @@
 <?php
 // псевдонимы функций temporary
 function my_esc($value) {
-    $search = array("\\", "\x00", "\n", "\r", "'", '"', "\x1a");
-    $replace = array("\\\\","\\0","\\n", "\\r", "\'", '\"', "\\Z");
+    $search = array("\\", "\x00", "\n", "\r", "'", '"', "\x1a", "?");
+    $replace = array("\\\\","\\0","\\n", "\\r", "\'", '\"', "\\Z", "??");
     return str_replace($search, $replace, $value);
 }
 
@@ -79,20 +79,20 @@ function delete_dir($dir)
             if ($rd == '.' || $rd == '..') {
                 continue;
             }
-            if (is_dir("$dir/$rd")) {
-                @chmod("$dir/$rd", 0777);
-                delete_dir("$dir/$rd");
+            if (is_dir($dir . '/' . $rd)) {
+                delete_dir($dir . '/' . $rd);
             } else {
-                @chmod("$dir/$rd", 0777);
-                @unlink("$dir/$rd");
+                if (is_file($dir . '/' . $rd)) {
+                    unlink($dir . '/' . $rd);
+                }
             }
         }
         closedir($od);
-        @chmod("$dir", 0777);
-        return @rmdir("$dir");
+        return rmdir($dir);
     } else {
-        @chmod("$dir", 0777);
-        @unlink("$dir");
+        if (is_file($dir)) {
+            unlink($dir);
+        }
     }
 }
 // очистка временной папки
@@ -372,7 +372,6 @@ function save_settings($set)
     if ($fopen=@fopen(H.'sys/dat/settings_6.2.dat', 'w')) {
         @fputs($fopen, serialize($set));
         @fclose($fopen);
-        @chmod(H.'sys/dat/settings_6.2.dat', 0777);
         return true;
     } else {
         return false;
