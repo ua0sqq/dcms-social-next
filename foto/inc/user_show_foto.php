@@ -277,7 +277,7 @@ if ($gallery['privat'] == 1 && ($frends['frend'] != 2 || !isset($user)) && $user
 /*--------------------Альбом под паролем-------------------*/
 if ($user['id'] != $ank['id'] && $gallery['pass'] != null) {
     if (isset($input_post['password'])) {
-        $_SESSION['pass'] = my_esc($input_post['password']);
+        $_SESSION['pass'] = trim($input_post['password']);
         
         if ($_SESSION['pass'] != $gallery['pass']) {
             $_SESSION['message'] = 'Неверный пароль';

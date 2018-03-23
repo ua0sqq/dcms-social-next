@@ -58,8 +58,8 @@ if (isset($input_get['act']) && $input_get['act'] == 'delete' && isset($input_ge
 /*
 * Редактирование фотографии
 */
-if (isset($input_get['act']) && $input_get['act'] == 'rename' && isset($input_get['ok']) && isset($_POST['name']) && isset($_POST['opis'])) {
-    $name = trim($_POST['name']);
+if (isset($input_get['act']) && $input_get['act'] == 'rename' && isset($input_get['ok']) && isset($input_post['name']) && isset($input_post['opis'])) {
+    $name = trim($input_post['name']);
     if (!preg_match("#^([A-zА-я0-9\-\_\(\)\,\.\ \:])+$#ui", $name)) {
         $err = 'В названии темы присутствуют запрещенные символы';
     }
@@ -69,7 +69,7 @@ if (isset($input_get['act']) && $input_get['act'] == 'rename' && isset($input_ge
     if (strlen2($name) > 32) {
         $err = 'Название не должно быть длиннее 32-х символов';
     }
-    $msg = trim($_POST['opis']);
+    $msg = trim($input_post['opis']);
     
     if (strlen2($msg) > 1024) {
         $err = 'Длина описания превышает предел в 1024 символа';
