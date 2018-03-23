@@ -1,105 +1,136 @@
 <?php
-if (!isset($user) && !isset($_GET['id_user'])) {
-    header("Location: /foto/?".SID);
+if (!isset($user) && !$input_get['id_user']) {
+    header('Location: /foto/?' . SID);
     exit;
 }
 if (isset($user)) {
     $ank['id'] = $user['id'];
 }
-if (isset($_GET['id_user'])) {
-    $ank['id'] = intval($_GET['id_user']);
+if ($input_get['id_user']) {
+    $ank['id'] = $input_get['id_user'];
 }
-$ank = get_user($ank['id']);
+
+$ank = $db->query('SELECT `id`, `nick`, `level`, `group_access` FROM `user` WHERE `id`=?i', [$ank['id']])->row();
+
 if (!$ank) {
-    header("Location: /foto/?".SID);
+    header('Location: /foto/?' . SID);
     exit;
 }
-/* Бан пользователя */
-if ($db->query("SELECT COUNT(*) FROM `ban` WHERE `razdel` = 'foto' AND `id_user` = '$user[id]' AND (`time` > '$time' OR `view` = '0' OR `navsegda` = '1')")->el()) {
+
+// Бан пользователя
+if (isset($user) && $db->query(
+    "SELECT COUNT(*) FROM `ban` WHERE `razdel`=? AND `id_user`=?i AND (`time`>?i OR `view`=? OR `navsegda`=?i)",
+                               ['foto', $user['id'], $time, '0', 1]
+)->el()) {
+    $_SESSION['message'] = 'Доступ к альбомам запрещен';
     header('Location: /ban.php?'.SID);
     exit;
 }
-$gallery['id'] = intval($_GET['id_gallery']);
-if (!$db->query("SELECT COUNT(*) FROM `gallery` WHERE `id` = '$gallery[id]' AND `id_user` = '$ank[id]' LIMIT 1")->el()) {
-    header("Location: /foto/$ank[id]/?".SID);
+
+$gallery['id'] = $input_get['id_gallery'];
+
+if (!$db->query(
+    "SELECT COUNT(*) FROM `gallery` WHERE `id`=?i AND `id_user`=?i",
+                [$gallery['id'], $ank['id']]
+)->el()) {
+    header('Location: /foto/' . $ank['id'] . '/?' . SID);
     exit;
 }
-$gallery = $db->query("SELECT * FROM `gallery` WHERE `id` = '$gallery[id]' AND `id_user` = '$ank[id]' LIMIT 1")->row();
-$foto['id'] = intval($_GET['id_foto']);
-if (!$db->query("SELECT COUNT(*) FROM `gallery_foto` WHERE `id` = '$foto[id]' LIMIT 1")->el()) {
-    header("Location: /foto/$ank[id]/$gallery[id]/?".SID);
+$gallery = $db->query(
+    "SELECT * FROM `gallery` WHERE `id`=?i AND `id_user`=?i",
+                [$gallery['id'], $ank['id']]
+)->row();
+
+$foto['id'] = $input_get['id_foto'];
+
+if (!$db->query("SELECT COUNT(*) FROM `gallery_foto` WHERE `id`=?i", [$foto['id']])->el()) {
+    header('Location: /foto/' . $ank['id'] . '/' . $gallery['id'] . '/?' . SID);
     exit;
 }
-$foto = $db->query("SELECT * FROM `gallery_foto` WHERE `id` = '$foto[id]'  LIMIT 1")->row();
-/*
-================================
-Закладки
-================================
-*/
+
+$foto = $db->query("SELECT * FROM `gallery_foto` WHERE `id`=?i", [$foto['id']])->row();
+
+// Закладки
+
 // Добавляем в закладки
-if (isset($_GET['fav']) && $_GET['fav'] == 1) {
-    if (!$db->query("SELECT COUNT(`id`) FROM `bookmarks` WHERE `id_user` = '" . $user['id'] . "' AND `id_object` = '" . $foto['id'] . "' AND `type`='foto' LIMIT 1")->el()) {
-        $db->query("INSERT INTO `bookmarks` (`type`,`id_object`, `id_user`, `time`) VALUES ('foto','$foto[id]', '$user[id]', '$time')");
+if (isset($input_get['fav'])) {
+    if ($input_get['fav'] <> 0 && !$db->query(
+        "SELECT COUNT( * ) FROM `bookmarks` WHERE `id_user`=?i AND `id_object`=?i AND `type`=?",
+                    [$user['id'], $foto['id'], 'foto']
+    )->el()) {
+        $db->query(
+            "INSERT INTO `bookmarks` (`type`,`id_object`, `id_user`, `time`) VALUES (?, ?i, ?i, ?i)",
+                   ['foto', $foto['id'], $user['id'], $time]
+        );
         $_SESSION['message'] = 'Фото добавлено в закладки';
-        header("Location: /foto/$ank[id]/$gallery[id]/$foto[id]/?page=" . intval($_GET['page']));
+        header('Location: /foto/' . $ank['id'] . '/' . $gallery['id'] . '/' . $foto['id'] . '/?page=' . $input_get['page']);
         exit;
-    }
-}
-// Удаляем из закладок
-if (isset($_GET['fav']) && $_GET['fav'] == 0) {
-    if ($db->query("SELECT COUNT(`id`) FROM `bookmarks` WHERE `id_user` = '" . $user['id'] . "' AND `id_object` = '" . $foto['id'] . "' `type`='foto' LIMIT 1")->el()) {
-        $db->query("DELETE FROM `bookmarks` WHERE `id_user` = '$user[id]' AND  `id_object` = '$foto[id]' AND `type`='foto'");
+    } elseif ($input_get['fav'] == 0 && $db->query(
+        "DELETE FROM `bookmarks` WHERE `id_user`=?i AND `id_object`=?i AND `type`=?",
+                    [$user['id'], $foto['id'], 'foto']
+    )) {
         $_SESSION['message'] = 'Фото удалено из закладок';
-        header("Location: /foto/$ank[id]/$gallery[id]/$foto[id]/?page=" . intval($_GET['page']));
+        header('Location: /foto/' . $ank['id'] . '/' . $gallery['id'] . '/' . $foto['id'] . '/?page=' . $input_get['page']);
         exit;
     }
 }
-$IS = [0,0];
-if (is_file(H.'sys/gallery/foto/'.$foto['id'].'.'.$foto['ras'])) {
-    $IS = getimagesize(H.'sys/gallery/foto/'.$foto['id'].'.'.$foto['ras']);
+// TODO: что еще за хрень?
+$IS = [0, 0];
+if (is_file(H . 'sys/gallery/foto/' . $foto['id'] . '.' . $foto['ras'])) {
+    $IS = getimagesize(H . 'sys/gallery/foto/' . $foto['id'] . '.' . $foto['ras']);
 }
 printf("", $IS[0], $IS[1]);
 $w = $IS[0];
 $h = $IS[1];
-if ((user_access('foto_foto_edit')) || (isset($user) && $ank['id'] == $user['id'])) {
+if (isset($user) && (user_access('foto_foto_edit') ||  $ank['id'] == $user['id'])) {
     include 'inc/gallery_show_foto_act.php';
 }
-/*------------очищаем счетчик этого обсуждения-------------*/
+
+// очищаем счетчик этого обсуждения
 if (isset($user)) {
-    $db->query("UPDATE `discussions` SET `count` = '0' WHERE `id_user` = '$user[id]' AND `type` = 'foto' AND `id_sim` = '$foto[id]' LIMIT 1");
-    $db->query("UPDATE `notification` SET `read` = '1' WHERE `type` = 'foto_komm' AND `id_user` = '$user[id]' AND `id_object` = '$foto[id]'");
+    $db->query(
+        "UPDATE `discussions` SET `count`=?i WHERE `id_user`=?i AND `type`=? AND `id_sim`=?i LIMIT ?i",
+               [0, $user['id'], 'foto', $foto['id'], 1]
+    );
+    $db->query(
+        "UPDATE `notification` SET `read`=? WHERE `type`=? AND `id_user`=?i AND `id_object`=?i",
+               ['1', 'foto_komm', $user['id'], $foto['id']]
+    );
 }
-/*---------------------------------------------------------*/
-/*
-==========================
-Оценка к фото
-==========================
-*/
-    
-if (isset($user) && $user['id'] != $ank['id'] && !$db->query("SELECT COUNT(*) FROM `gallery_rating` WHERE `id_user` = '$user[id]' AND `id_foto` = '$foto[id]'")->el()->el()) {
-    if (isset($_GET['rating']) && $_GET['rating'] > 0 && $_GET['rating'] < 7) {
-        $c =$db->query("SELECT COUNT(*) FROM `user_set` WHERE `id_user` = '$user[id]' AND `ocenka` > '$time'")->el();
-        
-        if ($c == 0 && $_GET['rating'] == 6) {
+// Оценка к фото
+if (isset($user) && $user['id'] != $ank['id'] && !$db->query(
+    "SELECT COUNT(*) FROM `gallery_rating` WHERE `id_user`=?i AND `id_foto`=?i",
+                                                             [$user['id'], $foto['id']]
+)->el()) {
+    if (isset($input_get['rating']) && $input_get['rating'] > 0 && $input_get['rating'] < 7) {
+        if (!$db->query(
+            "SELECT COUNT(*) FROM `user_set` WHERE `id_user`=?i AND `ocenka`>?i",
+                       [$user['id'], $time]
+        )->el() && $input_get['rating'] == 6) {
             $_SESSION['message'] = 'Необходимо активировать услугу';
-            header("Location: /user/money/plus5.php");
+            header('Location: /user/money/plus5.php');
             exit;
         }
     
-        $db->query("INSERT INTO `gallery_rating` (`id_user`, `id_foto`, `like`, `time`, `avtor`) values('$user[id]', '$foto[id]', '" . intval($_GET['rating']) . "', '$time', $foto[id_user])", $db);
-        $db->query("UPDATE `gallery_foto` SET `rating` = '" . ($foto['rating'] + intval($_GET['rating'])) . "' WHERE `id` = '$foto[id]' LIMIT 1", $db);
+        $db->query(
+            "INSERT INTO `gallery_rating` (`id_user`, `id_foto`, `like`, `time`, `avtor`) VALUES(?i, ?i', ?i, ?i, ?i)",
+                   [$user['id'], $foto['id'], $input_get['rating'], $time, $foto['id_user']]
+        );
+        $db->query(
+            "UPDATE `gallery_foto` SET `rating`=`rating`+?i WHERE `id`=?i",
+                   [$input_get['rating'], $foto['id']]
+        );
+        
         $_SESSION['message'] = 'Ваша оценка принята';
-        header("Location: ?");
+        header('Location: ?');
         exit;
     }
 }
-/*
-==========================
-Комментарий
-==========================
-*/
-if (isset($_POST['msg']) && isset($user)) {
-    $msg = $_POST['msg'];
+
+// Комментарий
+if (isset($input_post['msg']) && isset($user)) {
+    $msg = $input_post['msg'];
+    $mat = antimat($msg);
     if ($mat) {
         $err[] = 'В тексте сообщения обнаружен мат: '.$mat;
     }
@@ -107,82 +138,116 @@ if (isset($_POST['msg']) && isset($user)) {
         $err = 'Сообщение слишком длинное';
     } elseif (strlen2($msg) < 2) {
         $err = 'Короткое сообщение';
-    } elseif ($db->query("SELECT COUNT(*) FROM `gallery_komm` WHERE `id_foto` = '$foto[id]' AND `id_user` = '$user[id]' AND `msg` = '".my_esc($msg)."' LIMIT 1")->el()) {
+    } elseif ($db->query(
+        "SELECT COUNT(*) FROM `gallery_komm` WHERE `id_foto`=?i AND `id_user`=?i AND `msg`=?",
+                         [$foto['id'], $user['id'], $msg]
+    )->el()) {
         $err = 'Ваше сообщение повторяет предыдущее';
     } elseif (!isset($err)) {
         
         // Начисление баллов за активность
         include_once H.'sys/add/user.active.php';
-        /*
-        ==========================
-        Уведомления об ответах
-        ==========================
-        */
-        
+        // Уведомления об ответах
         if (isset($ank_reply['id'])) {
-            $notifiacation =$db->query("SELECT * FROM `notification_set` WHERE `id_user` = '" . $ank_reply['id'] . "' LIMIT 1")->row();
-            
-            if ($notifiacation['komm'] == 1 && $ank_reply['id'] != $user['id']) {
-                $db->query("INSERT INTO `notification` (`avtor`, `id_user`, `id_object`, `type`, `time`) VALUES ('$user[id]', '$ank_reply[id]', '$foto[id]', 'foto_komm', '$time')");
+            if ($db->query(
+                "SELECT `komm` FROM `notification_set` WHERE `id_user`=?i LIMIT ?i",
+                                       [$ank_reply['id'], 1]
+            )->el() && $ank_reply['id'] != $user['id']) {
+                $db->query(
+                    "INSERT INTO `notification` (`avtor`, `id_user`, `id_object`, `type`, `time`) VALUES (?i, ?i, ?i, ?, ?i)",
+                           [$user['id'], $ank_reply['id'], $foto['id'], 'foto_komm', $time]
+                );
             }
         }
                 
-        /*
-        ====================================
-        Обсуждения
-        ====================================
-        */
+        // Обсуждения
+        
         // Отправляем друзьям
-        $q =$db->query("SELECT * FROM `frends` WHERE `user` = '".$gallery['id_user']."' AND `i` = '1'");
-        while ($f = $q->row()) {
-            $a = get_user($f['frend']);
-            $discSet =$db->query("SELECT * FROM `discussions_set` WHERE `id_user` = '".$a['id']."' LIMIT 1")->row(); // Общая настройка обсуждений
-            
-            if ($f['disc_foto'] == 1 && $discSet['disc_foto'] == 1) {
-                if (!$db->query("SELECT COUNT(*) FROM `discussions` WHERE `id_user` = '$a[id]' AND `type` = 'foto' AND `id_sim` = '$foto[id]' LIMIT 1")->el()->el()) {
-                    if ($a['id'] != $user['id'] || $a['id'] != $foto['id_user']) {
-                        $db->query("INSERT INTO `discussions` (`id_user`, `avtor`, `type`, `time`, `id_sim`, `count`) values('$a[id]', '$gallery[id_user]', 'foto', '$time', '$foto[id]', '1')");
+        $q =$db->query(
+            "SELECT * FROM `frends` WHERE `user`=?i AND `i`=?i",
+                       [$gallery['id_user'], 1]
+        );
+        $q = $db->query(
+            "SELECT fr.user, fr.disc_foto, dsc.disc_foto as dsc_foto FROM `frends` fr 
+JOIN discussions_set dsc ON dsc.id_user=fr.user
+WHERE fr.`frend`=?i AND fr.`disc_foto`=?i AND `i`=?i",
+                        [$gallery['id_user'], 1, 1]
+            );
+        while ($frend = $q->row()) {
+            if ($frend['disc_foto'] == 1 && $frend['dsc_foto'] == 1) {
+                if (!$db->query(
+                    "SELECT COUNT(*) FROM `discussions` WHERE `id_user`=?i AND `type`=? AND `id_sim`=?i",
+                                [$frend['user'], 'foto', $foto['id']]
+                )->el()) {
+                    if ($frend['user'] != $user['id'] || $frend['user']  != $foto['id_user']) {
+                        $db->query(
+                            "INSERT INTO `discussions` (`id_user`, `avtor`, `type`, `time`, `id_sim`, `count`) VALUES(?i, ?i, ?, ?i, ?i, ?i)",
+                                   [$frend['user'], $gallery['id_user'], 'foto', $time, $foto['id'], 1]
+                        );
                     }
                 } else {
-                    $disc =$db->query("SELECT * FROM `discussions` WHERE `id_user` = '$a[id]' AND `type` = 'foto' AND `id_sim` = '$foto[id]' LIMIT 1")->row();
-                    
                     if ($gallery['id_user'] != $user['id'] || $a['id'] != $foto['id_user']) {
-                        $db->query("UPDATE `discussions` SET `count` = '" . ($disc['count'] + 1) . "', `time` = '$time' WHERE `id_user` = '$a[id]' AND `type` = 'foto' AND `id_sim` = '$foto[id]' LIMIT 1");
+                        $db->query(
+                            "UPDATE `discussions` SET `count`=`count`+?i, `time`=?i WHERE `id_user`=?i AND `type`=? AND `id_sim`=?i LIMIT ?i",
+                                   [1, $time, $frend['user'], 'foto', $foto['id'],  1]
+                        );
                     }
                 }
             }
         }
         // Отправляем автору
-        if (!$db->query("SELECT COUNT(*) FROM `discussions` WHERE `id_user` = '$gallery[id_user]' AND `type` = 'foto' AND `id_sim` = '$foto[id]' LIMIT 1")->el()->el()) {
+        if (!$db->query(
+            "SELECT COUNT(*) FROM `discussions` WHERE `id_user`=?i AND `type`=? AND `id_sim`=?i",
+                                [$gallery['id_user'], 'foto', $foto['id']]
+        )->el()) {
             if ($gallery['id_user'] != $user['id']) {
-                $db->query("INSERT INTO `discussions` (`id_user`, `avtor`, `type`, `time`, `id_sim`, `count`) values('$gallery[id_user]', '$gallery[id_user]', 'foto', '$time', '$foto[id]', '1')");
+                $db->query(
+                            "INSERT INTO `discussions` (`id_user`, `avtor`, `type`, `time`, `id_sim`, `count`) VALUES(?i, ?i, ?, ?i, ?i, ?i)",
+                                   [$gallery['id_user'], $gallery['id_user'], 'foto', $time, $foto['id'], 1]
+                        );
             }
         } else {
-            $disc2 =$db->query("SELECT * FROM `discussions` WHERE `id_user` = '$gallery[id_user]' AND `type` = 'foto' AND `id_sim` = '$foto[id]' LIMIT 1")->row();
             if ($gallery['id_user'] != $user['id']) {
-                $db->query("UPDATE `discussions` SET `count` = '".($disc2['count']+1)."', `time` = '$time' WHERE `id_user` = '$gallery[id_user]' AND `type` = 'foto' AND `id_sim` = '$foto[id]' LIMIT 1");
+                $db->query(
+                            "UPDATE `discussions` SET `count`=`count`+?i, `time`=?i WHERE `id_user`=?i AND `type`=? AND `id_sim`=?i LIMIT ?i",
+                                   [1, $time, $gallery['id_user'], 'foto', $foto['id'],  1]
+                        );
             }
         }
         
         
-        $db->query("INSERT INTO `gallery_komm` (`id_foto`, `id_user`, `time`, `msg`) values('$foto[id]', '$user[id]', '$time', '".my_esc($msg)."')");
+        $db->query(
+            "INSERT INTO `gallery_komm` (`id_foto`, `id_user`, `time`, `msg`) VALUES(?i, ?i, ?i, ?)",
+                   [$foto['id'], $user['id'], $time, $msg]
+        );
         $_SESSION['message'] = 'Сообщение успешно добавлено';
-        header("Location: ?page=".intval($_GET['page']));
+        header("Location: ?page=".$input_get['page']);
         exit;
     }
 }
-if ((user_access('foto_komm_del') || $ank['id'] == $user['id']) && isset($_GET['delete']) && $db->query("SELECT COUNT(*) FROM `gallery_komm` WHERE `id`='".intval($_GET['delete'])."' AND `id_foto`='$foto[id]' LIMIT 1")->el()) {
-    $db->query("DELETE FROM `gallery_komm` WHERE `id`='".intval($_GET['delete'])."' LIMIT 1");
-    admin_log('Фотогалерея', 'Фотографии', "Удаление комментария к фото [url=/id$ank[id]]" . user::nick($ank['id'], 0) . "[/url]");
+if ((user_access('foto_komm_del') || $ank['id'] == $user['id']) && isset($input_get['delete'])
+    && $db->query(
+        "SELECT COUNT(*) FROM `gallery_komm` WHERE `id`=?i AND `id_foto`=?i",
+                  [$input_get['delete'], $foto['id']]
+    )->el()) {
+    $db->query(
+        "DELETE FROM `gallery_komm` WHERE `id`=?i",
+               [$input_get['delete']]
+    );
+    
+    admin_log('Фотогалерея', 'Фотографии', 'Удаление комментария к фото [url=/id' . $ank['id'] . ']' . $ank['nick'] . '[/url]');
+    
     $_SESSION['message'] = 'Комментарий успешно удален';
-    header("Location: ?page=".intval($_GET['page']));
+    header('Location: ?page=' . $input_get['page']);
     exit;
 }
+
 $set['title'] = text($gallery['name']) . ' - ' . text($foto['name']); // заголовок страницы
 include_once '../sys/inc/thead.php';
 title();
 err();
 aut();
+
 echo '<div class="foot">';
 echo '<img src="/style/icons/str2.gif" alt="*"> ' . user::nick($ank['id']) . ' | <a href="/foto/' . $ank['id'] . '/">Альбомы</a> | ';
 echo '<a href="/foto/' . $ank['id'] . '/' . $gallery['id'] . '/">' . text($gallery['name']) . '</a> | ';
@@ -196,7 +261,7 @@ include H.'sys/add/user.privace.php';
 /*
 * Если установлена приватность альбома
 */
-if ($gallery['privat'] == 1 && ($frend != 2 || !isset($user)) && $user['level'] <= $ank['level'] && $user['id'] != $ank['id']) {
+if ($gallery['privat'] == 1 && ($frends['frend'] != 2 || !isset($user)) && $user['level'] <= $ank['level'] && $user['id'] != $ank['id']) {
     echo '<div class="mess">';
     echo 'Просматривать альбом пользователя могут только его друзья!';
     echo '</div>';
@@ -208,16 +273,17 @@ if ($gallery['privat'] == 1 && ($frend != 2 || !isset($user)) && $user['level'] 
     
     $block_foto = true;
 }
+
 /*--------------------Альбом под паролем-------------------*/
 if ($user['id'] != $ank['id'] && $gallery['pass'] != null) {
-    if (isset($_POST['password'])) {
-        $_SESSION['pass'] = my_esc($_POST['password']);
+    if (isset($input_post['password'])) {
+        $_SESSION['pass'] = my_esc($input_post['password']);
         
         if ($_SESSION['pass'] != $gallery['pass']) {
             $_SESSION['message'] = 'Неверный пароль';
             $_SESSION['pass'] = null;
         }
-        header("Location: ?");
+        header('Location: ?');
     }
     if (!isset($_SESSION['pass']) || $_SESSION['pass'] != $gallery['pass']) {
         echo '<form action="?" method="POST">Пароль:<br /><input type="pass" name="password" value="" /><br />		
@@ -230,7 +296,7 @@ if ($user['id'] != $ank['id'] && $gallery['pass'] != null) {
         exit;
     }
 }
-/*---------------------------------------------------------*/
+
 if (!isset($block_foto)) {
     // +5 оценка
     $rat = $db->query("SELECT COUNT(*) FROM `gallery_rating` WHERE `id_foto` = $foto[id] AND `like` = '6'")->el();
@@ -249,15 +315,13 @@ if (!isset($block_foto)) {
         }
         echo '</div>';
         
-        /*
-        ===============================
-        Оценка фото
-        ===============================
-        */
-        
+        // Оценка фото
         if (isset($user) && $user['id'] != $ank['id']) {
             echo '<div class="nav2">';
-            if ($user['id']!=$ank['id'] && !$db->query("SELECT COUNT(*) FROM `gallery_rating` WHERE `id_user` = '$user[id]' AND `id_foto` = '$foto[id]'")->el()) {
+            if ($user['id'] != $ank['id'] && !$db->query(
+                "SELECT COUNT(*) FROM `gallery_rating` WHERE `id_user`=?i AND `id_foto`=?i",
+                                                         [$user['id'], $foto['id']]
+            )->el()) {
                 echo "<a href=\"?rating=6\" title=\"5+\"><img src='/style/icons/6.png' alt=''/></a>";
                 echo "<a href=\"?rating=5\" title=\"5\"><img src='/style/icons/5.png' alt=''/></a>";
                 echo "<a href=\"?rating=4\" title=\"4\"><img src='/style/icons/4.png' alt=''/></a>";
@@ -265,7 +329,10 @@ if (!isset($block_foto)) {
                 echo "<a href=\"?rating=2\" title=\"2\"><img src='/style/icons/2.png' alt=''/></a>";
                 echo "<a href=\"?rating=1\" title=\"1\"><img src='/style/icons/1.png' alt=''/></a>";
             } else {
-                $rate =$db->query("SELECT * FROM `gallery_rating` WHERE `id_foto` = $foto[id] AND `id_user` = '$user[id]' LIMIT 1")->row();
+                $rate =$db->query(
+                    "SELECT * FROM `gallery_rating` WHERE `id_foto` = $foto[id] AND `id_user` = '$user[id]' LIMIT 1",
+                                  [$foto['id'], $user['id'], 1]
+                )->row();
             
                 if (isset($user) && $user['id'] != $ank['id']) {
                     echo 'Ваша оценка <img src="/style/icons/' . $rate['like'] . '.png" alt=""/></a>';
@@ -286,27 +353,39 @@ if (!isset($block_foto)) {
 		Или Вы можете отключить предупреждения в <a href="/user/info/settings.php">настройках</a>.';
         echo '</div>';
     }
-    /*----------------------листинг-------------------*/
+    
+    // листинг
     $listr =$db->query("SELECT * FROM `gallery_foto` WHERE `id_gallery` = '$gallery[id]' AND `id` < '$foto[id]' ORDER BY `id` DESC LIMIT 1")->row();
     $list =$db->query("SELECT * FROM `gallery_foto` WHERE `id_gallery` = '$gallery[id]' AND `id` > '$foto[id]' ORDER BY `id`  ASC LIMIT 1")->row();
     echo '<div class="c2" style="text-align: center;">';
     echo '<span class="page">' . ($list['id'] ? "<a href='/foto/$ank[id]/$gallery[id]/$list[id]/'>&laquo; Пред.</a>" : "&laquo; Пред.") . '</span>';
-    $k_1 =$db->query("SELECT COUNT(*) FROM `gallery_foto` WHERE `id` > '$foto[id]' AND `id_gallery` = '$gallery[id]'")->el() + 1;
-    $k_2 =$db->query("SELECT COUNT(*) FROM `gallery_foto` WHERE `id_gallery` = '$gallery[id]'")->el();
-    echo ' (' . $k_1 . ' из ' . $k_2 . ') ';
+    $cnt = $db->query(
+        'SELECT * FROM (
+SELECT COUNT( * )+1 AS back FROM `gallery_foto` WHERE `id`>?i AND `id_gallery`=?i)q, (
+SELECT COUNT( * ) AS next FROM `gallery_foto` WHERE `id_gallery`=?i)q2',
+                    [$foto['id'], $gallery['id'], $gallery['id']]
+    )->row();
+    echo ' (' . $cnt['back'] . ' из ' . $cnt['next'] . ') ';
     echo '<span class="page">' . ($listr['id'] ? "<a href='/foto/$ank[id]/$gallery[id]/$listr[id]/'>След. &raquo;</a>" : "След. &raquo;") . '</span>';
     echo '</div>';
-    /*----------------------alex-borisi---------------*/
+    
+    // alex-borisi
     if (($user['abuld'] == 1 || $foto['metka'] == 0 || $foto['id_user'] == $user['id'])) {
         if (isset($user)) {
             echo '<div class="nav1">';
             echo '<img src="/style/icons/fav.gif" alt="*" /> ';
-            if (!$db->query("SELECT COUNT(*) FROM `bookmarks` WHERE `id_user` = '" . $user['id'] . "' AND `id_object` = '" . $foto['id'] . "' AND `type`='fot' LIMIT 1")->el()) {
+            if (!$db->query(
+                "SELECT COUNT(*) FROM `bookmarks` WHERE `id_user`=?i AND `id_object`=?i AND `type`=?",
+                            [$user['id'], $foto['id'], 'foto']
+            )->el()) {
                 echo '<a href="?fav=1&amp;page=' . $pageEnd . '">Добавить в закладки</a><br />';
             } else {
                 echo '<a href="?fav=0&amp;page=' . $pageEnd . '">Удалить из закладок</a><br />';
             }
-            echo 'В закладках у (' .$db->query("SELECT COUNT(*) FROM `bookmarks` WHERE `id_user` = '" . $user['id'] . "' AND `id_object` = '" . $foto['id'] . "' AND `type`='foto' LIMIT 1")->el() . ') чел.';
+            echo 'В закладках у (' .$db->query(
+                "SELECT COUNT(*) FROM `bookmarks` WHERE `id_user`=?i AND `id_object`=?i AND `type`=?",
+                                               [$user['id'], $foto['id'], 'foto']
+            )->el() . ') чел.';
             echo '</div>';
         }
         echo '<div class="main">';
@@ -326,7 +405,7 @@ if (!isset($block_foto)) {
             include 'inc/gallery_show_foto_form.php';
         }
     }
-    $k_post =$db->query("SELECT COUNT(*) FROM `gallery_komm` WHERE `id_foto` = '$foto[id]'")->el();
+    $k_post =$db->query("SELECT COUNT(*) FROM `gallery_komm` WHERE `id_foto`=?i", [$foto['id']])->el();
     $k_page = k_page($k_post, $set['p_str']);
     $page = page($k_page);
     $start = $set['p_str']*$page-$set['p_str'];
@@ -338,7 +417,7 @@ if (!isset($block_foto)) {
         echo 'Нет сообщений';
         echo '</div>';
     } else {
-        /*------------сортировка по времени--------------*/
+        // сортировка по времени
         if (isset($user)) {
             echo '<div id="comments" class="menus">';
             echo '<div class="webmenu">';
@@ -350,27 +429,32 @@ if (!isset($block_foto)) {
             echo '</div>';
             echo '</div>';
         }
-        /*---------------alex-borisi---------------------*/
     }
-    $q =$db->query("SELECT * FROM `gallery_komm` WHERE `id_foto` = '$foto[id]' ORDER BY `id` $sort LIMIT $start, $set[p_str]");
+
+    $q =$db->query(
+        "SELECT glk.*, u.id AS id_user, (
+SELECT COUNT(*) FROM `ban` WHERE (`razdel`='all' OR `razdel`='foto') AND `post`=1 AND `id_user`=glk.id_user AND (`time`>" . time() . " OR `navsegda`=1)) AS ban
+FROM `gallery_komm` glk
+JOIN `user` u ON u.id=glk.id_user
+WHERE glk.`id_foto`=?i ORDER BY glk.`id`?q LIMIT ?i OFFSET ?i",
+                   [$foto['id'], $sort, $set['p_str'], $start]
+    );
     while ($post = $q->row()) {
-        $ank2 =$db->query("SELECT * FROM `user` WHERE `id` = '$post[id_user]' LIMIT 1")->row();
+
         // Лесенка
         echo '<div class="' . ($num % 2 ? "nav1" : "nav2") . '">';
         $num++;
         
-        echo group($ank2['id']) . user::nick($ank2['id']);
+        echo group($post['id_user']) . user::nick($post['id_user']);
         
-        if (isset($user) && $user['id'] != $ank2['id']) {
-            echo ' <a href="?response=' . $ank2['id'] . '&amp;page=' . $page . '">[*]</a> ';
+        if (isset($user) && $user['id'] != $post['id_user']) {
+            echo ' <a href="?response=' . $post['id_user'] . '&amp;page=' . $page . '">[*]</a> ';
         }
         
-        echo medal($ank2['id']) . online($ank2['id']) . ' (' . vremja($post['time']) . ')<br />';
-        
-        $postBan =$db->query("SELECT COUNT(*) FROM `ban` WHERE (`razdel` = 'all' OR `razdel` = 'foto') AND `post` = '1' AND `id_user` = '$ank2[id]' AND (`time` > '$time' OR `navsegda` = '1')")->el();
-        
+        echo medal($post['id_user']) . online($post['id_user']) . ' (' . vremja($post['time']) . ')<br />';
+    
         // Блок сообщения
-        if ($postBan == 0) {
+        if ($post['ban'] == 0) {
             echo output_text($post['msg']);
         } else {
             echo output_text($banMess) . '<br />';
@@ -384,18 +468,33 @@ if (!isset($block_foto)) {
         }
         echo '</div>';
     }
+    // Вывод страниц
     if ($k_page > 1) {
         str('?', $k_page, $page);
-    } // Вывод страниц
+    }
+
     if (isset($user)) {
-        echo '<form method="post" name="message" action="?page=' . $pageEnd . '&amp;' . $go_link . '">';
-        if (is_file(H.'style/themes/'.$set['set_them'].'/altername_post_form.php')) {
-            include_once H.'style/themes/'.$set['set_them'].'/altername_post_form.php';
+        if ($gallery['privat_komm'] == 1 && ($frends['frend'] != 2 || !isset($user)) && $user['level'] <= $ank['level'] && $user['id'] != $ank['id']) {
+            echo '<div class="mess">';
+            echo 'Комментировать альбом пользователя могут только его друзья!';
+            echo '</div>';
+            $block_foto = true;
+        } elseif ($gallery['privat_komm'] == 2 && $user['id'] != $ank['id'] && $user['level'] <= $ank['level']) {
+            echo '<div class="mess">';
+            echo 'Пользователь запретил комментировать альбом!';
+            echo '</div>';
+    
+            $block_foto = true;
         } else {
-            echo $tPanel . '<textarea name="msg">' . $insert . '</textarea><br />';
+            echo '<form method="post" name="message" action="?page=' . $pageEnd . '&amp;' . $go_link . '">';
+            if (is_file(H.'style/themes/'.$set['set_them'].'/altername_post_form.php')) {
+                include_once H.'style/themes/'.$set['set_them'].'/altername_post_form.php';
+            } else {
+                echo $tPanel . '<textarea name="msg">' . $insert . '</textarea><br />';
+            }
+            echo '<input value="Отправить" type="submit" />';
+            echo '</form>';
         }
-        echo '<input value="Отправить" type="submit" />';
-        echo '</form>';
     }
 }
 echo '<div class="foot">';

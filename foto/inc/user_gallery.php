@@ -1,35 +1,46 @@
 <?php
-if (!isset($user) && !isset($_GET['id_user'])) {
-    header("Location: /foto/?".SID);
+if (!isset($user) && !isset($input_get['id_user'])) {
+    header('Location: /foto/?' . SID);
     exit;
 }
 if (isset($user)) {
     $ank['id'] = $user['id'];
 }
-if (isset($_GET['id_user'])) {
-    $ank['id'] = intval($_GET['id_user']);
+if (isset($input_get['id_user'])) {
+    $ank['id'] = $input_get['id_user'];
 }
 // Автор альбома
-$ank = get_user($ank['id']);
+$ank = $db->query('SELECT `id`, `nick`, `level`, `group_access` FROM `user` WHERE `id`=?i', [$ank['id']])->row();
 if (!$ank) {
-    header("Location: /foto/?".SID);
+    header('Location: /foto/?' . SID);
     exit;
 }
-// Если вы в бане
-if (ISSET($USER) && $db->query("SELECT COUNT(*) FROM `ban` WHERE `razdel` = 'foto' AND `id_user` = '$user[id]' AND (`time` > '$time' OR `view` = '0' OR `navsegda` = '1')")->el()) {
+// Бан пользователя
+if (isset($user) && $db->query(
+    "SELECT COUNT(*) FROM `ban` WHERE `razdel`=? AND `id_user`=?i AND (`time`>?i OR `view`=? OR `navsegda`=?i)",
+                               ['foto', $user['id'], $time, '0', 1]
+)->el()) {
+    $_SESSION['message'] = 'Доступ к альбомам запрещен';
     header('Location: /ban.php?'.SID);
     exit;
 }
+
 // заголовок страницы
-$set['title'] = user::nick($ank['id'], 0) . ' - Фотоальбомы';
+$set['title'] = $ank['nick'] . ' - Фотоальбомы';
+
 // Это при создании нового альбома
-include 'inc/gallery_act.php';
+if (isset($user)) {
+    include 'inc/gallery_act.php';
+}
 include_once '../sys/inc/thead.php';
 title();
 aut();
 err();
 // Создание альбомов
-include 'inc/gallery_form.php';
+if (isset($user)) {
+    include 'inc/gallery_form.php';
+}
+
 echo '<div class="foot">';
 echo '<img src="/style/icons/str2.gif" alt="*"> ' . user::nick($ank['id']) . ' | <b>Альбомы</b></div>';
 if ($ank['id'] == $user['id']) {
@@ -37,28 +48,33 @@ if ($ank['id'] == $user['id']) {
 }
 // Подключаем приватность стр.
 include H.'sys/add/user.privace.php';
-$k_post = $db->query("SELECT COUNT(*) FROM `gallery` WHERE `id_user` = '$ank[id]'")->el();
+
+$k_post = $db->query("SELECT COUNT(*) FROM `gallery` WHERE `id_user`=?i", [$ank['id']])->el();
 $k_page = k_page($k_post, $set['p_str']);
 $page = page($k_page);
 $start = $set['p_str']*$page-$set['p_str'];
+
 echo '<table class="post">';
 if ($k_post == 0) {
     echo '<div class="mess">';
     echo 'Фотоальбомов нет';
     echo '</div>';
 }
-$q = $db->query("SELECT * FROM `gallery` WHERE `id_user` = '$ank[id]' ORDER BY `time` DESC LIMIT $start, $set[p_str]");
+
+$q = $db->query(
+    "SELECT glr.*, (
+SELECT COUNT(*) FROM `gallery_foto` WHERE `id_gallery`=`glr`.`id`) cnt
+FROM `gallery` glr WHERE glr.`id_user`=?i ORDER BY glr.`time` DESC LIMIT ?i OFFSET ?i",
+                [$ank['id'], $set['p_str'], $start]
+);
 while ($post = $q->row()) {
     // Лесенка
     echo '<div class="' . ($num % 2 ? "nav1" : "nav2") . '">';
     $num++;
     
-    // Cчетчик фотографий
-    $count = $db->query("SELECT COUNT(*) FROM `gallery_foto` WHERE `id_gallery` = '$post[id]'")->el();
-    
     echo '<img src="/style/themes/' . $set['set_them'] . '/loads/14/' . ($post['pass'] != null || $post['privat'] != 0 ? 'lock.gif' : 'dir.png') . '" alt="*" /> ';
+    echo '<a href="/foto/' . $ank['id'] . '/' . $post['id'] . '/">' . text($post['name']) . '</a> (' . $post['cnt'] . ' фото) ';
     
-    echo '<a href="/foto/' . $ank['id'] . '/' . $post['id'] . '/">' . text($post['name']) . '</a> (' . $count . ' фото) ';
     if (isset($user) && (user_access('foto_alb_del') || $user['id'] == $ank['id'])) {
         echo '[<a href="/foto/' . $ank['id'] . '/' . $post['id'] . '/?edit=rename"><img src="/style/icons/edit.gif" alt="*" /> ред</a>] ';
         echo '[<a href="/foto/' . $ank['id'] . '/' . $post['id'] . '/?act=delete"><img src="/style/icons/delete.gif" alt="*" /> удл</a>]';
@@ -83,5 +99,6 @@ if ($k_page > 1) {
 echo '<div class="foot">';
 echo '<img src="/style/icons/str2.gif" alt="*"> ' . user::nick($ank['id']) . ' | <b>Альбомы</b>';
 echo '</div>';
+
 include_once '../sys/inc/tfoot.php';
 exit;

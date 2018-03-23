@@ -1,7 +1,7 @@
 <?php
 if (isset($user) && $user['id'] == $ank['id'])
 {
-	if (isset($_GET['act']) && $_GET['act'] == 'create')
+	if (isset($input_get['act']) && $input_get['act'] == 'create')
 	{
 		?>
 		<div class="foot">

@@ -1,104 +1,123 @@
 <?php
 // Удаление альбома
-if ((user_access('foto_alb_del') || isset($user) && $user['id']==$ank['id']) && isset($_GET['act']) && $_GET['act']=='delete' && isset($_GET['ok'])) {
-    $q = $db->query("SELECT * FROM `gallery_foto` WHERE `id_gallery` = '$gallery[id]'")->assoc();
+if ((user_access('foto_alb_del') || isset($user) && $user['id'] == $ank['id'])
+    && isset($input_get['act']) && $input_get['act'] == 'delete' && isset($input_get['ok'])) {
+    $q = $db->query(
+        "SELECT * FROM `gallery_foto` WHERE `id_gallery`=?i",
+                    [$gallery['id']]
+    )->assoc();
     
     foreach ($q as $post) {
-        @unlink(H."sys/gallery/48/$post[id].jpg");
-        @unlink(H."sys/gallery/50/$post[id].jpg");
-        @unlink(H."sys/gallery/128/$post[id].jpg");
-        @unlink(H."sys/gallery/640/$post[id].jpg");
-        @unlink(H."sys/gallery/foto/$post[id].jpg");
-        $db->query("DELETE FROM `gallery_komm` WHERE `id_foto` = '$post[id]' LIMIT 1");
-        $db->query("DELETE FROM `gallery_foto` WHERE `id` = '$post[id]' LIMIT 1");
-        $db->query("DELETE FROM `mark_foto` WHERE `id_foto` = '$post[id]' LIMIT 1");
+        array_map('unlink', glob(H . 'sys/gallery/*/' . $post['id'] . '.jpg'));
     }
     
+    $db->query(
+        "DELETE FROM `gallery` WHERE `id`=?i",
+                    [$gallery['id']]
+    );
+    $db->query('DELETE FROM `gallery_foto` WHERE `id_gallery` NOT IN(SELECT `id` FROM `gallery`)');
+    $db->query('DELETE FROM `gallery_komm` WHERE `id_foto` NOT IN(SELECT `id` FROM `gallery_foto`)');
+    $db->query('DELETE FROM `gallery_rating` WHERE `id_foto` NOT IN(SELECT `id` FROM `gallery_foto`)');
+    $db->query('OPTIMIZE TABLE `gallery`, `gallery_foto`, `gallery_komm`, `gallery_rating`;');
+    
     if ($user['id'] != $ank['id']) {
-        admin_log('Фотогалерея', 'Фотоальбомы', "Удаление альбома " . text($gallery['name']) . " (фотографий: ".count($q).")");
+        admin_log('Фотогалерея', 'Фотоальбомы', 'Удаление альбома ' . $gallery['name'] . ' (фотографий: '.count($q).')');
     }
-    $db->query("DELETE FROM `gallery` WHERE `id` = '$gallery[id]' LIMIT 1");
+
     $_SESSION['message'] = 'Фотоальбом успешно удален';
-    header("Location: /foto/$ank[id]/");
+    header('Location: /foto/' . $ank['id'] . '/');
     exit;
 }
 // Загрузка фото
 if (isset($user) && $user['id'] == $ank['id'] && isset($_FILES['file'])) {
     if ($imgc = @imagecreatefromstring(file_get_contents($_FILES['file']['tmp_name']))) {
-        $name = $_POST['name'];
-        if ($name == null) {
-            $name = esc(stripcslashes(htmlspecialchars(preg_replace('#\.[^\.]*$#i', null, $_FILES['file']['name']))));
+        $name = strip_tags($input_post['name']);
+        
+        if (empty($name)) {
+            $name = uniqid('foto_');
         }
-   
-        if (!preg_match("#^([A-zА-я0-9\-\_\ ])+$#ui", $name)) {
-            $err = 'В названии фото присутствуют запрещенные символы';
-        }
+
         if (strlen2($name) < 3) {
             $err = 'Короткое название';
         }
         if (strlen2($name) > 32) {
             $err = 'Название не должно быть длиннее 32-х символов';
         }
-        $name = my_esc($name);
-        if (isset($_POST['metka']) && ($_POST['metka'] == 0 || $_POST['metka'] == 1)) {
-            $metka = $_POST['metka'];
-        } else {
-            $metka = 0;
-        }
-        $msg = $_POST['opis'];
+
+        $metka = !empty($input_post['metka']) ?: 0;
+        $msg = strip_tags($input_post['opis']);
+        
         if (strlen2($msg) > 1024) {
             $err = 'Длина описания превышает предел в 1024 символов';
         }
-        $msg = my_esc($msg);
+
         $img_x = imagesx($imgc);
         $img_y = imagesy($imgc);
+        
         if ($img_x > $set['max_upload_foto_x'] || $img_y>$set['max_upload_foto_y']) {
             $err = 'Размер изображения превышает ограничения в '.$set['max_upload_foto_x'].'*'.$set['max_upload_foto_y'];
         }
         if (!isset($err)) {
-            if (isset($_GET['avatar'])) {
-                $db->query("UPDATE `gallery_foto` SET `avatar` = '0' WHERE `id_user` = '$user[id]'");
-                $id_foto = $db->query("INSERT INTO `gallery_foto` (`id_gallery`, `name`, `ras`, `type`, `opis`, `id_user`,`avatar`, `metka`, `time`) values ('$gallery[id]', '$name', 'jpg', 'image/jpeg', '$msg', '$user[id]','1', '$metka', '$time')")->id();
+            if (isset($input_get['avatar'])) {
+                $db->query('UPDATE `gallery_foto` SET `avatar`=? WHERE `id_user`=?i', ['0', $user['id']]);
+                $id_foto = $db->query(
+                    "INSERT INTO `gallery_foto` (`id_gallery`, `name`, `ras`, `opis`, `id_user`,`avatar`, `metka`, `time`) VALUES (?i, ?, ?, ?, ?i, ?, ?i, ?i)",
+                                      [$gallery['id'], $name, 'jpg', $msg, $user['id'], '1', $metka, $time]
+                )->id();
             } else {
-                $id_foto = $db->query("INSERT INTO `gallery_foto` (`id_gallery`, `name`, `ras`, `type`, `opis`, `id_user`, `metka`, `time`) values ('$gallery[id]', '$name', 'jpg', 'image/jpeg', '$msg', '$user[id]', '$metka', '$time')")->id();
+                $id_foto = $db->query(
+                    "INSERT INTO `gallery_foto` (`id_gallery`, `name`, `ras`, `opis`, `id_user`, `metka`, `time`) VALUES (?i, ?, ?, ?, ?i, ?i, ?i)",
+                                      [$gallery['id'], $name, 'jpg', $msg, $user['id'], $metka, $time]
+                )->id();
             }
 
-            $db->query("UPDATE `gallery` SET `time` = '$time' WHERE `id` = '$gallery[id]' LIMIT 1");
-           
-            $q = $db->query("SELECT * FROM `frends` WHERE `user` = '$user[id]' AND `lenta_foto` = '1' AND `i` = '1'");
+            $db->query(
+                "UPDATE `gallery` SET `time`=?i WHERE `id`=?i",
+                       [$time, $gallery['id']]
+            );
+
             $foto['id'] = $id_foto;
-            /*
-            * Лента друзей
-            */
-            $db->query("UPDATE `tape` SET `count` = '0' WHERE  `type` = 'album' AND `read` = '1' AND `id_file` = '$gallery[id]'");
-            $q = $db->query("SELECT * FROM `frends` WHERE `user` = '" . $gallery['id_user'] . "' AND `i` = '1'");
-            while ($f = $q->row()) {
-                $a = get_user($f['frend']);
-    
-                // Общая настройка ленты
-                $lentaSet = $db->query("SELECT * FROM `tape_set` WHERE `id_user` = '".$a['id']."' LIMIT 1")->row();
-    
-                /* Фильтр рассылки */
-                if ($f['lenta_foto'] == 1 && $lentaSet['lenta_foto'] == 1) {
-                    /* Если грузим со страницы то отправляем как смену аватара */
-                    if (isset($_GET['avatar'])) {
-                        if ($a['id'] != $user['id'] && $foto['id'] != $avatar['id']) {
-                            $db->query("INSERT INTO `tape` (`id_user`, `avtor`, `type`, `time`, `id_file`, `count`, `avatar`) values('$a[id]', '$gallery[id_user]', 'avatar', '$time', '$foto[id]', '1', '$avatar[id]')");
+            // Лента друзей
+            $q = $db->query(
+                "SELECT fr.user, fr.lenta_foto, ts.lenta_foto as ts_foto FROM `frends` fr 
+JOIN tape_set ts ON ts.id_user=fr.user
+WHERE fr.`frend`=?i AND fr.`lenta_foto`=?i AND `i`=?i",
+                            [$gallery['id_user'], 1, 1]
+            );
+            while ($frend = $q->row()) {
+                // Фильтр рассылки
+                if ($frend['lenta_foto'] == 1 && $frend['ts_foto'] == 1) {
+                    // Если грузим со страницы то отправляем как смену аватара
+                    if (isset($input_get['avatar'])) {
+                        if ($frend['user'] != $user['id'] && $foto['id'] != $avatar['id']) {
+                            $db->query(
+                                "INSERT INTO `tape` (`id_user`, `avtor`, `type`, `time`, `id_file`, `count`, `avatar`) VALUES(?i, ?i, ?, ?i, ?i, ?i, ?i)",
+                                       [$frend['user'], $gallery['id_user'], 'avatar', $time, $foto['id'], 1, $avatar['id']]
+                            );
                         }
                     } else {
-                        /* Если нет то просто шлем в ленту как новое фото */
-                        if (!$db->query("SELECT COUNT(*) FROM `tape` WHERE `id_user` = '$a[id]' AND `type` = 'album' AND `id_file` = '$gallery[id]' LIMIT 1")->el()) {
-                            $db->query("INSERT INTO `tape` (`id_user`, `avtor`, `type`, `time`, `id_file`, `count`) values('$a[id]', '$gallery[id_user]', 'album', '$time', '$gallery[id]', '1')");
+                        // Если нет то просто шлем в ленту как новое фото
+                        if (!$db->query(
+                            "SELECT COUNT(*) FROM `tape` WHERE `id_user`=?i AND `type`=? AND `id_file`=?i",
+                                        [$frend['user'], 'album', $gallery['id']]
+                        )->el()) {
+                            $db->query(
+                                "INSERT INTO `tape` (`id_user`, `avtor`, `type`, `time`, `id_file`, `count`)
+                                       VALUES(?i, ?i, ?, ?i, ?i, ?i)",
+                                       [$frend['user'], $gallery['id_user'], 'album', $time, $gallery['id'], 1]
+                            );
                         } else {
-                            $tape = $db->query("SELECT * FROM `tape` WHERE `type` = 'album' AND `id_file` = '$gallery[id]'")->row();
-                            $db->query("UPDATE `tape` SET `count` = '".($tape['count']+1)."', `read` = '0', `time` = '$time' WHERE `id_user` = '$a[id]' AND `type` = 'album' AND `id_file` = '$gallery[id]' LIMIT 1");
+                            $db->query(
+                                "UPDATE `tape` SET `count`=`count`+?i, `read`=?, `time`=?i WHERE `id_user`=?i AND `type`=? AND `id_file`=?i LIMIT ?i",
+                                       [1, '0', $time, $frend['user'],  'album', $gallery['id'], 1]
+                            );
                         }
                     }
                 }
             }
             if ($img_x == $img_y) {
                 $dstW = 48; // ширина
-				$dstH = 48; // высота
+                $dstH = 48; // высота
             } elseif ($img_x > $img_y) {
                 $prop = $img_x / $img_y;
                 $dstW = 48;
@@ -110,13 +129,11 @@ if (isset($user) && $user['id'] == $ank['id'] && isset($_FILES['file'])) {
             }
             $screen = imagecreatetruecolor($dstW, $dstH);
             imagecopyresampled($screen, $imgc, 0, 0, 0, 0, $dstW, $dstH, $img_x, $img_y);
-            //imagedestroy($imgc);
             imagejpeg($screen, H."sys/gallery/48/$id_foto.jpg", 90);
-            @chmod(H."sys/gallery/48/$id_foto.jpg", 0777);
             imagedestroy($screen);
             if ($img_x == $img_y) {
                 $dstW = 128; // ширина
-				$dstH = 128; // высота
+                $dstH = 128; // высота
             } elseif ($img_x > $img_y) {
                 $prop = $img_x / $img_y;
                 $dstW = 128;
@@ -128,15 +145,12 @@ if (isset($user) && $user['id'] == $ank['id'] && isset($_FILES['file'])) {
             }
             $screen = imagecreatetruecolor($dstW, $dstH);
             imagecopyresampled($screen, $imgc, 0, 0, 0, 0, $dstW, $dstH, $img_x, $img_y);
-            //imagedestroy($imgc);
-            // $screen = img_copyright($screen); // наложение копирайта
             imagejpeg($screen, H."sys/gallery/128/$id_foto.jpg", 90);
-            @chmod(H."sys/gallery/128/$id_foto.jpg", 0777);
             imagedestroy($screen);
             if ($img_x > 640 || $img_y > 640) {
                 if ($img_x == $img_y) {
                     $dstW = 640; // ширина
-					$dstH = 640; // высота
+                    $dstH = 640; // высота
                 } elseif ($img_x > $img_y) {
                     $prop = $img_x / $img_y;
                     $dstW = 640;
@@ -148,33 +162,30 @@ if (isset($user) && $user['id'] == $ank['id'] && isset($_FILES['file'])) {
                 }
                 $screen = imagecreatetruecolor($dstW, $dstH);
                 imagecopyresampled($screen, $imgc, 0, 0, 0, 0, $dstW, $dstH, $img_x, $img_y);
-                // imagedestroy($imgc);
-                // $screen=img_copyright($screen); // наложение копирайта
                 imagejpeg($screen, H."sys/gallery/640/$id_foto.jpg", 90);
                 imagedestroy($screen);
-                $imgc=img_copyright($imgc); // наложение копирайта
+                // наложение копирайта
+                $imgc=img_copyright($imgc);
                 imagejpeg($imgc, H."sys/gallery/foto/$id_foto.jpg", 90);
-                @chmod(H."sys/gallery/foto/$id_foto.jpg", 0777);
             } else {
                 imagejpeg($imgc, H."sys/gallery/640/$id_foto.jpg", 90);
-                $imgc = img_copyright($imgc); // наложение копирайта
-    
+                // наложение копирайта
+                $imgc = img_copyright($imgc);
                 imagejpeg($imgc, H."sys/gallery/foto/$id_foto.jpg", 90);
-                @chmod(H."sys/gallery/foto/$id_foto.jpg", 0777);
             }
-            @chmod(H."sys/gallery/640/$id_foto.jpg", 0777);
             imagedestroy($imgc);
             crop(H."sys/gallery/640/$id_foto.jpg", H."sys/gallery/50/$id_foto.tmp.jpg");
             resize(H."sys/gallery/50/$id_foto.tmp.jpg", H."sys/gallery/50/$id_foto.jpg", 50, 50);
-            @chmod(H."sys/gallery/50/$id_foto.jpg", 0777);
-            @unlink(H."sys/gallery/50/$id_foto.tmp.jpg");
-            if (isset($_GET['avatar'])) {
+            if (is_file(H . 'sys/gallery/50/' . $id_foto . '.tmp.jpg')) {
+                unlink(H . 'sys/gallery/50/' . $id_foto . '.tmp.jpg');
+            }
+            if (isset($input_get['avatar'])) {
                 $_SESSION['message'] = 'Фото успешно установлено';
-                header("Location: /info.php");
+                header('Location: /info.php');
                 exit;
             }
             $_SESSION['message'] = 'Фото успешно загружено';
-            header("Location: /foto/$ank[id]/$gallery[id]/$id_foto/");
+            header('Location: /foto/' . $ank['id'] . '/' . $gallery['id'] . '/' . $id_foto . '/');
             exit;
         }
     } else {
@@ -182,30 +193,35 @@ if (isset($user) && $user['id'] == $ank['id'] && isset($_FILES['file'])) {
     }
 }
 // Редактирование альбома
-if (isset($_GET['edit']) && $_GET['edit'] == 'rename' && isset($_GET['ok']) && (isset($_POST['name']) || isset($_POST['opis']))) {
-    $name = $_POST['name'];
-    $pass = $_POST['pass'];
-    $privat = intval($_POST['privat']);
+if (isset($input_get['edit']) && $input_get['edit'] == 'rename' && isset($input_get['ok']) && (isset($input_post['name']) || isset($input_post['opis']))) {
+    $name = trim($input_post['name']);
+    $pass = trim($input_post['pass']);
+    $privat = !empty($input_post['privat']) ? abs($input_post['privat']) : 0;
+    $privat_komm = !empty($input_post['privat_komm']) ? abs($input_post['privat_komm']) : 0;
+    
     if (strlen2($name) < 3) {
         $err = 'Короткое название';
     }
     if (strlen2($name) > 32) {
         $err = 'Название не должно быть длиннее 32-х символов';
     }
-    $name = my_esc($name);
-    $pass = my_esc($pass);
-    $msg = $_POST['opis'];
+
+    $msg = trim($input_post['opis']);
+    
     if (strlen2($msg) > 1024) {
         $err = 'Длина описания превышает предел в 1024 символа';
     }
-    $msg = my_esc($msg);
+
     if (!isset($err)) {
-        if ($user['id']!=$ank['id']) {
-            admin_log('Фотогалерея', 'Фотографии', "Переименование альбома пользователя '[url=/id$ank[id]]" . user::nick($ank['id'], 0) . "[/url]'");
+        if ($user['id'] != $ank['id']) {
+            admin_log('Фотогалерея', 'Фотографии', 'Переименование альбома пользователя "[url=/id' . $ank['id'] . ']' . $ank['nick'] . '[/url]"');
         }
-        $db->query("UPDATE `gallery` SET `name` = '$name', `privat` = '$privat', `privat_komm` = '$privat_komm', `pass` = '$pass', `opis` = '$msg' WHERE `id` = '$gallery[id]' LIMIT 1");
+        $db->query(
+            "UPDATE `gallery` SET `name`=?, `privat`=?string, `privat_komm`=?string, `pass`=?, `opis`=? WHERE `id`=?i LIMIT ?i",
+                   [$name, $privat, $privat_komm, $pass, $msg, $gallery['id'],  1]
+        );
         $_SESSION['message'] = 'Изменения успешно приняты';
-        header("Location: /foto/$ank[id]/?");
+        header('Location: /foto/' . $ank['id'] . '/?');
         exit;
     }
 }

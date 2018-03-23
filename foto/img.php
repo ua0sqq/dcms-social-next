@@ -11,95 +11,115 @@ include_once '../sys/inc/downloadfile.php';
 //include_once '../sys/inc/user.php';
 //header("Last-Modified: ".gmdate("D, d M Y H:i:s", filemtime($time))." GMT");
 //header("Expires: ".gmdate("D, d M Y H:i:s", time() + 3600)." GMT");
-if (!isset($_GET['id']) || !isset($_GET['size'])) {
-    exit;
-}
+//if (!isset($_GET['id']) || !isset($_GET['size'])) {
+//    exit;
+//}
 
-$size = intval($_GET['size']);
-$if_foto = intval($_GET['id']);
-$foto = $db->query("SELECT * FROM `gallery_foto` WHERE `id` = '$if_foto'  LIMIT 1")->row();
-$gallery = $db->query("SELECT * FROM `gallery` WHERE `id` = '$foto[id_gallery]'  LIMIT 1")->row();
-$ank = $db->query("SELECT * FROM `gallery` WHERE `id` = '$gallery[id_user]' LIMIT 1")->row();
-if (isset($_SESSION['id_user'])) {
-    $user = $db->query("SELECT * FROM `gallery` WHERE `id` = '$_SESSION[id_user]' LIMIT 1")->row();
-} else {
-    $user = array('id' => '0', 'level' => '0', 'group_access' => '0');
-}
-if ($ank['id'] != $user['id'] && ($user['group_access'] == 0 || $user['group_access'] <= $ank['group_access']) && $foto['avatar'] == 0) {
-    // Настройки юзера
-    $uSet = $db->query("SELECT * FROM `user_set` WHERE `id_user` = '$ank[id]'  LIMIT 1")->row();
-    // Статус друг ли вы
-    $frend = $db->query("SELECT COUNT(*) FROM `frends` WHERE 
-	 (`user` = '$user[id]' AND `frend` = '$ank[id]') OR 
-	 (`user` = '$ank[id]' AND `frend` = '$user[id]') LIMIT 1")->el();
-    // Проверка завки в друзья
-    $frend_new = $db->query("SELECT COUNT(*) FROM `frends_new` WHERE 
-	 (`user` = '$user[id]' AND `to` = '$ank[id]') OR 
-	 (`user` = '$ank[id]' AND `to` = '$user[id]') LIMIT 1")->el();
-     
-    // Начинаем вывод если стр имеет приват настройки
-    if ($uSet['privat_str'] == 2 && $frend != 2) {
-        $if_foto = 0;
-    } // Если только для друзей
-    // Если только для меня
-    if ($uSet['privat_str'] == 0) {
-        $if_foto = 0;
+$args = [
+         'id' => [
+                  'filter'  => FILTER_VALIDATE_INT,
+                  'options' => [
+                                'default'   => null,
+                                'min_range' => 1,
+                                ],
+                  ],
+         'size' => [
+                  'filter'  => FILTER_VALIDATE_INT,
+                  'options' => [
+                                'default'   => 0,
+                                'min_range' => 1,
+                                ],
+                  ]
+         ];
+$in_get = filter_input_array(INPUT_GET, $args);
+unset($args);
+
+if ($in_get['id']) {
+    $ank = $db->query('SELECT glf.`id_gallery`, glf.`avatar`, g.`privat`, g.`pass`, u.`id`, u.`group_access` FROM `gallery_foto` glf
+JOIN `gallery` g ON g.id=glf.id_gallery
+JOIN `user` u ON u.id=g.id_user
+WHERE glf.`id`=?i ', [$in_get['id']])->row();
+
+    if (isset($_SESSION['id_user'])) {
+        $user = $db->query(
+        "SELECT `id`, `group_access` FROM `user` WHERE `id` =?i",
+                       [$_SESSION['id_user']]
+    )->row();
+    } else {
+        $user = ['id' => 0, 'group_access' => 0];
     }
+    if ($ank['id'] != $user['id'] && ($user['group_access'] == 0 || $user['group_access'] <= $ank['group_access']) && $ank['avatar'] == 0) {
+        // Настройки юзера
+        $uSet = $db->query("SELECT `privat_str` FROM `user_set` WHERE `id_user`=?i",
+						   [$ank['id']])->el();
+        // Статус друг ли вы
+        $frend = $db->query("SELECT COUNT(*) FROM `frends` WHERE  (`user`=?i AND `frend`=?i) OR  (`user`=?i AND `frend`=?i)",
+							[$user['id'], $ank['id'], $ank['id'], $user['id']])->el();
+        // Начинаем вывод если стр имеет приват настройки
+		// Если только для друзей
+        if ($uSet == 2 && $frend != 2) {
+            $in_get['id'] = 0;
+        } 
+        // Если только для меня
+        if ($uSet == 0) {
+            $in_get['id'] = 0;
+        }
+        // Если установлена приватность альбома
+        if ($ank['privat'] == 1 && ($frend != 2 || !isset($user)) && $user['group_access'] <= $ank['group_access'] && $user['id'] != $ank['id']) {
+            $in_get['id'] = 0;
+			header('Location: /foto/' . $ank['id'] . '/' . $ank['id_gallery'] . '/');
+        } elseif ($ank['privat'] == 2 && $user['id'] != $ank['id'] && $user['group_access'] <= $ank['group_access']) {
+            $in_get['id'] = 0;
+			header('Location: /foto/' . $ank['id'] . '/' . $ank['id_gallery'] . '/');
+        }
     
-    /*
-    * Если установлена приватность альбома
-    */
-    if ($gallery['privat'] == 1 && ($frend != 2 || !isset($user)) && $user['level'] <= $ank['level'] && $user['id'] != $ank['id']) {
-        $if_foto = 0;
-    } elseif ($gallery['privat'] == 2 && $user['id'] != $ank['id'] && $user['level'] <= $ank['level']) {
-        $if_foto = 0;
+        /*--------------------Альбом под паролем-------------------*/
+        if ($user['id'] != $ank['id'] && $ank['pass'] != null) {
+            if (!isset($_SESSION['pass']) || $_SESSION['pass'] != $ank['pass']) {
+                $in_get['id'] = 0;
+				header('Location: /foto/' . $ank['id'] . '/' . $ank['id_gallery'] . '/');
+            }
+        }
+        /*---------------------------------------------------------*/
     }
+    if ($in_get['size'] == 48) {
+        if (is_file(H.'sys/gallery/48/'.$in_get['id'].'.png')) {
+            downloadfile(H.'sys/gallery/48/'.$in_get['id'].'.png', 'Фото.png', ras_to_mime('png'));
+            exit;
+        }
     
-    /*--------------------Альбом под паролем-------------------*/
-    if ($user['id'] != $ank['id'] && $gallery['pass'] != null) {
-        if (!isset($_SESSION['pass']) || $_SESSION['pass'] != $gallery['pass']) {
-            $if_foto = 0;
+        if (is_file(H.'sys/gallery/48/'.$in_get['id'].'.gif')) {
+            downloadfile(H.'sys/gallery/48/'.$in_get['id'].'.gif', 'Фото.gif', ras_to_mime('gif'));
+            exit;
+        }
+    
+        if (is_file(H.'sys/gallery/48/'.$in_get['id'].'.jpg')) {
+            downloadfile(H.'sys/gallery/48/'.$in_get['id'].'.jpg', 'Фото.jpg', ras_to_mime('jpg'));
+            exit;
         }
     }
-    /*---------------------------------------------------------*/
-}
-if ($size == '48') {
-    if (is_file(H.'sys/gallery/48/'.$if_foto.'.png')) {
-        downloadfile(H.'sys/gallery/48/'.$if_foto.'.png', 'Фото.png', ras_to_mime('png'));
-        exit;
+    if ($in_get['size'] == 128) {
+        if (is_file(H.'sys/gallery/128/'.$in_get['id'].'.jpg')) {
+            downloadfile(H.'sys/gallery/128/'.$in_get['id'].'.jpg', 'Фото.jpg', ras_to_mime('jpg'));
+            exit;
+        }
     }
-    
-    if (is_file(H.'sys/gallery/48/'.$if_foto.'.gif')) {
-        downloadfile(H.'sys/gallery/48/'.$if_foto.'.gif', 'Фото.gif', ras_to_mime('gif'));
-        exit;
+    if ($in_get['size'] == 50) {
+        if (is_file(H.'sys/gallery/50/'.$in_get['id'].'.jpg')) {
+            downloadfile(H.'sys/gallery/50/'.$in_get['id'].'.jpg', 'Фото.jpg', ras_to_mime('jpg'));
+            exit;
+        }
     }
-    
-    if (is_file(H.'sys/gallery/48/'.$if_foto.'.jpg')) {
-        downloadfile(H.'sys/gallery/48/'.$if_foto.'.jpg', 'Фото.jpg', ras_to_mime('jpg'));
-        exit;
+    if ($in_get['size'] == 640) {
+        if (is_file(H.'sys/gallery/640/'.$in_get['id'].'.jpg')) {
+            downloadfile(H.'sys/gallery/640/'.$in_get['id'].'.jpg', 'Фото.jpg', ras_to_mime('jpg'));
+            exit;
+        }
     }
-}
-if ($size == '128') {
-    if (is_file(H.'sys/gallery/128/'.$if_foto.'.jpg')) {
-        downloadfile(H.'sys/gallery/128/'.$if_foto.'.jpg', 'Фото.jpg', ras_to_mime('jpg'));
-        exit;
-    }
-}
-if ($size == '50') {
-    if (is_file(H.'sys/gallery/50/'.$if_foto.'.jpg')) {
-        downloadfile(H.'sys/gallery/50/'.$if_foto.'.jpg', 'Фото.jpg', ras_to_mime('jpg'));
-        exit;
-    }
-}
-if ($size == '640') {
-    if (is_file(H.'sys/gallery/640/'.$if_foto.'.jpg')) {
-        downloadfile(H.'sys/gallery/640/'.$if_foto.'.jpg', 'Фото.jpg', ras_to_mime('jpg'));
-        exit;
-    }
-}
-if ($size == '0') {
-    if (is_file(H.'sys/gallery/foto/'.$if_foto.'.jpg')) {
-        downloadfile(H.'sys/gallery/foto/'.$if_foto.'.jpg', 'foto_'.$if_foto.'.jpg', ras_to_mime('jpg'));
-        exit;
+    if ($in_get['size'] == 0) {
+        if (is_file(H.'sys/gallery/foto/'.$in_get['id'].'.jpg')) {
+            downloadfile(H.'sys/gallery/foto/'.$in_get['id'].'.jpg', 'foto_'.$in_get['id'].'.jpg', ras_to_mime('jpg'));
+            exit;
+        }
     }
 }

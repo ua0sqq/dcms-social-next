@@ -1,5 +1,5 @@
 <?php
-if (isset($_GET['act']) && $_GET['act'] == 'rename')
+if (isset($input_get['act']) && $input_get['act'] == 'rename')
 {
 	?>
 	<form class="foot" action="?act=rename&amp;ok" method="post">
@@ -13,7 +13,7 @@ if (isset($_GET['act']) && $_GET['act'] == 'rename')
 	</form>
 	<?php
 }
-if (isset($_GET['act']) && $_GET['act'] == 'delete')
+if (isset($input_get['act']) && $input_get['act'] == 'delete')
 {
 	?>
 	<form class="foot" action="?act=delete&amp;ok" method="post">

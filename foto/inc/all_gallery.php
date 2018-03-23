@@ -1,32 +1,36 @@
 <?php
-
+// TODO: ???
 /* Бан пользователя */
 if (isset($user) && $db->query("SELECT COUNT(*) FROM `ban` WHERE `razdel` = 'foto' AND `id_user` = '$user[id]' AND (`time` > '$time' OR `view` = '0' OR `navsegda` = '1')")->el()) {
     header('Location: /ban.php?'.SID);
     exit;
 }
+
 $set['title'] = 'Фотоальбомы'; // заголовок страницы
 include_once '../sys/inc/thead.php';
 title();
 aut();
+
 $k_post = $db->query("SELECT COUNT(*) FROM `gallery`")->el();
 $k_page = k_page($k_post, $set['p_str']);
 $page = page($k_page);
 $start = $set['p_str']*$page-$set['p_str'];
+
 echo '<table class="post">';
 if ($k_post == 0) {
     echo '<div class="mess">';
     echo 'Нет фотоальбомов';
     echo '</div>';
 }
-$q = $db->query("SELECT * FROM `gallery` ORDER BY `time` DESC LIMIT $start, $set[p_str]");
+$q = $db->query("SELECT glr.*, (
+SELECT COUNT(*) FROM `gallery_foto` WHERE `id_gallery` =`glr`.`id`) cnt
+FROM `gallery` glr ORDER BY glr.`time` DESC LIMIT $start, $set[p_str]");
 while ($post = $q->row()) {
-    $ank = get_user($post['id_user']);
     // Лесенка
     echo '<div class="' . ($num % 2 ? "nav1" : "nav2") . '">';
     $num++;
     echo '<img src="/style/themes/' . $set['set_them'] . '/loads/14/' . ($post['pass'] != null || $post['privat'] != 0 ? 'lock.gif' : 'dir.png') . '" alt="*" /> ';
-    echo '<a href="/foto/' . $ank['id'] . '/' . $post['id'] . '/">' . text($post['name']) . '</a> (' . $db->query("SELECT COUNT(*) FROM `gallery_foto` WHERE `id_gallery` = '$post[id]'")->el() . ' фото)<br />';
+    echo '<a href="/foto/' . $post['id_user'] . '/' . $post['id'] . '/">' . text($post['name']) . '</a> (' . $post['cnt'] . ' фото)<br />';
     if ($post['opis'] == null) {
         echo 'Без описания<br />';
     } else {
@@ -34,7 +38,7 @@ while ($post = $q->row()) {
     }
     echo 'Создан: ' . vremja($post['time_create']) . '<br />';
     echo 'Автор: ';
-    echo user::avatar($ank['id'], 2) . user::nick($ank['id'], 1, 1, 1);
+    echo user::avatar($post['id_user'], 2) . user::nick($post['id_user'], 1, 1, 1);
     echo '</div>';
 }
 echo '</table>';

@@ -1,7 +1,7 @@
 <?php
 if ($user['level'] > $ank['level'] || $user['id'] == $ank['id'])
 {
-	if (isset($_GET['edit']) && $_GET['edit'] == 'rename')
+	if (isset($input_get['edit']) && $input_get['edit'] == 'rename')
 	{
 		?>
 		<div class="foot">
@@ -45,7 +45,7 @@ if ($user['level'] > $ank['level'] || $user['id'] == $ank['id'])
 		exit;
 	}
 }
-if ((user_access('foto_alb_del') || isset($user) && $user['id'] == $ank['id']) && isset($_GET['act']) && $_GET['act'] == 'delete')
+if ((user_access('foto_alb_del') || isset($user) && $user['id'] == $ank['id']) && isset($input_get['act']) && $input_get['act'] == 'delete')
 {
 	
 	?>
@@ -53,12 +53,12 @@ if ((user_access('foto_alb_del') || isset($user) && $user['id'] == $ank['id']) &
 	Вы действительно хотите удалить фотоальбом <b><?=text($gallery['name'])?></b>, и все фотографии в нем?<br />
 	<center>
 	<a href="?act=delete&amp;ok"><img src="/style/icons/ok.gif" alt="*"> Удалить</a> 
-	<a href="?act=delete&amp;ok"><img src="/style/icons/delete.gif" alt="*"> Отмена</a> 
+	<a href="./"><img src="/style/icons/delete.gif" alt="*"> Отмена</a> 
 	</center>
 	</div>
 	<?php
 }
-if (isset($user) && $user['id'] == $ank['id'] && isset($_GET['act']) && $_GET['act'] == 'upload')
+if (isset($user) && $user['id'] == $ank['id'] && isset($input_get['act']) && $input_get['act'] == 'upload')
 {
 	?>
 	<div class="foot">
