@@ -17,7 +17,7 @@ if(!$ank || $ank['id'] == 0)
 	exit;
 }
 only_reg();
-$frend = $db->query("SELECT * FROM `frends` WHERE `user` = '" . $user['id'] . "' AND `frend` = '$ank[id]' AND `i` = '1'", $db)->row();
+$frend = $db->query("SELECT * FROM `frends` WHERE `user` = '" . $user['id'] . "' AND `frend` = '$ank[id]' AND `i` = '1'")->row();
 if (!isset($frend['user']))
 {
 	header('Location: index.php?' . SID);

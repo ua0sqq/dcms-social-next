@@ -150,7 +150,7 @@ if ($db->query("SELECT COUNT(*) FROM `user_group` WHERE `id` = '".intval($_POST[
 {
 if ($ank['group_access']!=intval($_POST['group_access']))
 {
-admin_log('Пользователи','Изменение статуса',"Пользователь '$ank[nick]': Статус '$ank[group_name]' изменен на '".$db->query("SELECT `name` FROM `user_group` WHERE `id` = '".intval($_POST['group_access'])."'")."'");
+admin_log('Пользователи','Изменение статуса',"Пользователь '$ank[nick]': Статус '$ank[group_name]' изменен на '".$db->query("SELECT `name` FROM `user_group` WHERE `id` = '".intval($_POST['group_access'])."'")->el()."'");
 $ank['group_access']=intval($_POST['group_access']);
 $db->query("UPDATE `user` SET `group_access` = '$ank[group_access]' WHERE `id` = '$ank[id]' LIMIT 1");
 }

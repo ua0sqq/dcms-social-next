@@ -71,9 +71,7 @@ if (isset($_POST['delete'])) {
     $db->query("DELETE FROM `status_komm` WHERE `id_user` = '$ank[id]'");
     $db->query("DELETE FROM `status_count` WHERE `id_user` = '$ank[id]'");
     $db->query("DELETE FROM `mark_notes` WHERE `id_user` = '$ank[id]'");
-    $db->query("DELETE FROM `mark_files` WHERE `id_user` = '$ank[id]'");
     $db->query("DELETE FROM `mark_people` WHERE `id_user` = '$ank[id]'");
-    $db->query("DELETE FROM `mark_foto` WHERE `id_user` = '$ank[id]'");
     $db->query("DELETE FROM `tape_set` WHERE `id_user` = '$ank[id]'");
     $db->query("DELETE FROM `tape` WHERE `id_user` = '$ank[id]'");
     $db->query("DELETE FROM `tape` WHERE `avtor` = '$ank[id]'");
@@ -215,17 +213,7 @@ if (count($collisions)>1 && isset($_GET['all'])) {
     }
 }
 echo "<span class=\"ank_n\">Приватные сообщения:</span> <span class=\"ank_d\">$mail</span><br />\n";
-$komm_loads=$db->query("SELECT COUNT(*) FROM `loads_komm` WHERE `id_user` = '$ank[id]'")->el();
-if (count($collisions)>1 && isset($_GET['all'])) {
-    $komm_loads_coll=0;
-    for ($i=1;$i<count($collisions);$i++) {
-        $komm_loads_coll+=$db->query("SELECT COUNT(*) FROM `loads_komm` WHERE `id_user` = '$collisions[$i]'")->el();
-    }
-    if ($komm_loads_coll!=0) {
-        $komm_loads="$komm_loads +$komm_loads_coll*";
-    }
-}
-echo "<span class=\"ank_n\">Комментарии в загрузках:</span> <span class=\"ank_d\">$komm_loads</span><br />\n";
+
 $news_komm=$db->query("SELECT COUNT(*) FROM `news_komm` WHERE `id_user` = '$ank[id]'")->el();
 if (count($collisions)>1 && isset($_GET['all'])) {
     $news_komm_coll=0;

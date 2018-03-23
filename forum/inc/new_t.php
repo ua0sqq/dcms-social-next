@@ -32,9 +32,10 @@ if (isset($_POST['name']) && isset($_POST['msg'])) {
     $msg = my_esc($msg);
     if (!isset($err)) {
         $_SESSION['time_c_t_forum']=$time;
-        $them['id'] = $db->query("INSERT INTO `forum_t` (`id_forum`, `id_razdel`, `time_create`, `id_user`, `name`, `time`, `text`) values('$forum[id]', '$razdel[id]', '$time', '$user[id]', '$name', '$time', '$msg')")->id();
+        $them['id'] = $db->query("INSERT INTO `forum_t` (`id_forum`, `id_razdel`, `time_create`, `id_user`, `name`, `time`, `text`) VALUES(?i, ?i, ?i, ?i, ?, ?i, ?)",
+                                 [$forum['id'], $razdel['id'], $time, $user['id'], $name, $time, $msg])->id();
 
-        if ($forum['adm']!=1) {
+        if ($forum['adm']!=1) { 
             $db->query("INSERT INTO `stena`(`id_user`,`id_stena`,`time`,`info`,`info_1`,`type`) VALUES('".$user['id']."','".$user['id']."','".$time."','new them in forum','".$them['id']."','them')");
         }
         $q = $db->query("SELECT * FROM `frends` WHERE `user` = '".$user['id']."' AND `i` = '1'");

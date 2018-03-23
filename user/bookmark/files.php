@@ -44,7 +44,7 @@ if ($k_post == 0)
 	echo 'Нет файлов в закладках';
 	echo '</div>';
 }
-$q=$db->query("SELECT id_file,id FROM `bookmarks`  WHERE `id_user` = '$ank[id]' AND `type`='file' ORDER BY id DESC LIMIT $start, $set[p_str]");
+$q = $db->query("SELECT `id`, `id_file`, `id_object` FROM `bookmarks`  WHERE `id_user` = '$ank[id]' AND `type`='file' ORDER BY `id` DESC LIMIT $start, $set[p_str]");
 while ($post = $q->row())
 {	
 /*-----------зебра-----------*/ 

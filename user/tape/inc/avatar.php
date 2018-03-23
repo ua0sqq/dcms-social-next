@@ -44,6 +44,7 @@ if ($type == 'avatar')
 	echo '<br />';
 	
 	if ($foto['id'])
-	echo '<a href="/foto/' . $avtor['id'] . '/' . $gallery['id'] . '/' . $foto['id'] . '/"><img src="/style/icons/bbl5.png" alt="*"/> (' . $db->query("SELECT COUNT(*) FROM `gallery_komm` WHERE `id_foto` = '$foto[id]'") . ')</a> ';
+	echo '<a href="/foto/' . $avtor['id'] . '/' . $gallery['id'] . '/' . $foto['id'] . '/"><img src="/style/icons/bbl5.png" alt="*"/> (' .
+	$db->query("SELECT COUNT(*) FROM `gallery_komm` WHERE `id_foto` = '$foto[id]'")->el() . ')</a> ';
 }
 ?>

@@ -52,8 +52,9 @@ if (strlen2($name)<2)$err='Слишком короткое название';
 if (strlen2($name)>32)$err='Слишком днинное название';
 if (!isset($err))
 {
-	admin_log('Форум','Разделы',"Создание раздела '$name' в подфоруме '$forum[name]'");
-	$db->query("INSERT INTO `forum_r` (`id_forum`, `opis`,`name`, `time`) values('$forum[id]', '".my_esc($_POST['opis'])."','".my_esc($name)."', '$time')");
+	admin_log('Форум', 'Разделы', 'Создание раздела "' . $name . '" в подфоруме "' . $forum['name'] . '"');
+	$db->query("INSERT INTO `forum_r` (`id_forum`, `opis`,`name`, `time`) VALUES(?i, ?, ?, ?i)",
+			   [$forum['id'], $_POST['opis'], $name, $time]);
 	msg('Раздел успешно создан');
 }
 }

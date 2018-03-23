@@ -101,9 +101,9 @@ if (isset($_GET['metki'])) {
             echo " (Добавлено ".vremja($post['time']).")";
         } elseif ($post['type']=='foto') {
             $foto=$db->query("SELECT * FROM `gallery_foto` WHERE `id`='$post[id_object]' LIMIT 1")->row();
-            echo "<a href='/foto/".$foto['id_user']."/".$foto['id_gallery']."/".$foto['id']."/'><img src='/style/icons/PhotoIcon.gif'> ".htmlspecialchars($foto['name'])."</a><br/>";
+            echo "<a href='/foto/".$foto['id_user']."/".$foto['id_gallery']."/".$foto['id']."/'><img src='/style/icons/photo.png'> ".htmlspecialchars($foto['name'])."</a><br/>";
             echo "<img style='height:60px;' src='/foto/foto0/".$foto['id'].".".$foto['ras']."'>";
-            echo substr(htmlspecialchars($foto['opis']), 0, 40)."[...] (Добавлено ".vremja($post['time']).")";
+            echo !empty($foto['opis']) ? substr(htmlspecialchars($foto['opis']), 0, 40) .'[...]' : '' . ' (Добавлено '.vremja($post['time']).')';
         } elseif ($post['type']=='file') {
             $file_id = $db->query("SELECT id_dir,id,name,ras  FROM `obmennik_files` WHERE `id` = '" . $post['id_object'] . "'  LIMIT 1")->row();
             $dir = $db->query("SELECT `dir` FROM `obmennik_dir` WHERE `id` = '$file_id[id_dir]' LIMIT 1")->row();

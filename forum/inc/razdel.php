@@ -38,7 +38,8 @@ while ($them = $q->row()) {
         $up=null;
     }
     echo $up." ";
-    echo '<a href="/forum/' . $forum['id'] . '/' . $razdel['id'] . '/' . $them['id'] . '/">' . text($them['name']) . '</a> <font color="#666">(' . $db->query("SELECT COUNT(*) FROM `forum_p` WHERE `id_forum` = '$forum[id]' AND `id_razdel` = '$razdel[id]' AND `id_them` = '$them[id]'") . ')';
+    echo '<a href="/forum/' . $forum['id'] . '/' . $razdel['id'] . '/' . $them['id'] . '/">' . text($them['name']) . '</a> <font color="#666">(' .
+    $db->query("SELECT COUNT(*) FROM `forum_p` WHERE `id_forum` = '$forum[id]' AND `id_razdel` = '$razdel[id]' AND `id_them` = '$them[id]'")->el() . ')';
     echo ' '.$closed.' ';
     echo '<span style="float:right;">'.vremja($them['time_create']).'</span></font><br/>';
     echo user::nick($them['id_user']).'';
