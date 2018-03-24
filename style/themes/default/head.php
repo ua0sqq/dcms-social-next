@@ -1,12 +1,10 @@
 <?php
 $set['web'] = false;
-//header("Content-type: application/vnd.wap.xhtml+xml");
-//header("Content-type: application/xhtml+xml");
 header("Content-type: text/html");
-echo '<?xml version="1.0" encoding="utf-8"?>';
+
 ?>
-<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ru">
+<!DOCTYPE html>
+<html lang="ru">
 <head>
 <title>
 <?=$set['title']?>
@@ -16,20 +14,16 @@ echo '<?xml version="1.0" encoding="utf-8"?>';
 <body>
 <div class="body">
 <?php
-if (isset($_SESSION['message']))
-{
-	echo '<div class="msg">' . $_SESSION['message'] . '</div>';
-	$_SESSION['message'] = NULL;
+if (isset($_SESSION['message'])) {
+    echo '<div class="msg">' . $_SESSION['message'] . '</div>';
+    $_SESSION['message'] = null;
 }
-if ($_SERVER['PHP_SELF'] == '/index.php')
-{
-	?>
-	<center>
-	<div class="logo">
+if ($_SERVER['PHP_SELF'] == '/index.php') {
+    ?>
+	<div style="text-align: center;" class="logo">
 	<img src="/style/themes/<?=$set['set_them']?>/logo.png" alt="logo" /><br />
 	<?=$set['title']?>
 	</div>
-	</center>
 	<?php
-} 
+}
 ?>

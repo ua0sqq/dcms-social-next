@@ -25,7 +25,8 @@ for($i=0;$i<count($list);$i++)
 if (substr_count($list[$i], $sep)==0)continue;
 list($vopr,$otv)=explode($sep,trim($list[$i]));
 if (strlen2($vopr)<10 || strlen2($otv)<2)continue;
-$db->query("INSERT INTO `chat_vopros` (`vopros`, `otvet`) VALUES ('".my_esc($vopr)."', '".my_esc($otv)."')");
+$db->query("INSERT INTO `chat_vopros` (`vopros`, `otvet`) VALUES (?, ?)",
+           [$vopr, $otv]);
 $k_add++;
 }
 admin_log('Чат','Добавление',"Добавлено $k_add вопросов");

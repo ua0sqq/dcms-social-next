@@ -5,19 +5,41 @@
 -----------------------------------------------------------------
 */
 require 'classes/class.user.php';
-
+function search_ban($a, $b)
+{
+    $result = false;
+    foreach ($a as $aval) {
+        foreach ($b as $bval) {
+            if ($aval === $bval) {
+                return $aval;
+            }
+        }
+    }
+    return $result;
+}
 $sort = 'DESC';
 $insert = null;
 $otvet = null;
 $go_link = null;
 $respons = false;
 // Определение юзера
-if (isset($_SESSION['id_user']) && $db->query("SELECT COUNT(*) FROM `user` WHERE `id` = '$_SESSION[id_user]' LIMIT 1")->el()) {
+if (isset($_SESSION['id_user']) && $db->query("SELECT COUNT(*) FROM `user` WHERE `id`=?i",
+                                              [$_SESSION['id_user']])->el()) {
+// TODO: что то мне эта хрень с хитробаном не нравится
+    $ban_module = ['guest', 'notes', 'forum', 'obmen', 'chat', 'lib', 'foto'];
+    $module = search_ban(explode('/', $_SERVER['PHP_SELF']), $ban_module);
+    if ($module) {
+        if ($module == 'obmen') $module = 'files';
+        $whr = '(`razdel`="all" OR `razdel`="' . $module . '")';
+    } else {
+        $whr = '`razdel`="all"';
+    }
+
     $user = $db->query('SELECT `u`.*, `gr`.`name` AS `group_name`, `gr`.`level` AS `group_level`, (
-SELECT COUNT(*) FROM `ban` WHERE `razdel` = "all" AND `id_user` = `u`.`id` AND (`time` > ?i OR `view` = ? OR `navsegda` = "1")) as ban FROM user `u` 
+SELECT COUNT(*) FROM `ban` WHERE ?q AND `id_user` = `u`.`id` AND (`time` > ?i OR `view` = ? OR `navsegda` = "1")) as ban FROM user `u` 
 LEFT JOIN `user_group` `gr` ON `u`.`group_access`=`gr`.`id`
-WHERE `u`.`id`=?i', [time(), "0", $_SESSION['id_user']])->row();
-    //$db->query("UPDATE `user` SET `date_last` = '$time' WHERE `id` = ?i", [$user['id']]);
+WHERE `u`.`id`=?i', [$whr, time(), "0", $_SESSION['id_user']])->row();
+$db->setDebug(false);
     $user['type_input'] = 'session';
 } elseif (!isset($input_page) && isset($_COOKIE['id_user']) && isset($_COOKIE['pass']) && $_COOKIE['id_user'] && $_COOKIE['pass']) {
     if (!isset($_POST['token'])) {
@@ -106,7 +128,7 @@ SELECT COUNT(*) AS notificationset FROM `notification_set` WHERE `id_user` = ?i)
             $set_user += ['set_them' => $set['set_them']];
         }
     }
-    
+
     // Пишем ip пользователя
     $ip_add  = isset($ip2['add']) ? ip2long($ip2['add']) : 0;
     $ip_cl   = isset($ip2['cl']) ? ip2long($ip2['cl']) : 0;

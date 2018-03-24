@@ -11,15 +11,20 @@ if (!isset($set['forum_counter']) || $set['forum_counter']==0) {
                 $adm_add_mass[]=$adm_f['id'];
             }
             for ($zzz=0;$zzz<count($adm_add_mass);$zzz++) {
-                $adm_add.="`id_forum` <> '$adm_add_mass[$zzz]'";
+                $adm_add.='`id_forum` <> '.$adm_add_mass[$zzz];
                 if (count($adm_add_mass)!=$zzz+1) {
                     $adm_add.= ' AND ';
                 }
             }
         }
     }
-    echo '('.$db->query("SELECT COUNT(*) FROM `forum_p`$adm_add")->el().'/'.
-$db->query("SELECT COUNT(*) FROM `forum_t`$adm_add")->el().')';
+    $cnt = $db->query('SELECT * FROM (
+SELECT COUNT( * ) posts FROM `forum_p`?q)q, (
+SELECT COUNT( * ) themes FROM `forum_t`?q)q2', [$adm_add, $adm_add])->row();
+    echo '('.$cnt['posts'].'/'.$cnt['themes'].')';
 } else {
-    echo $db->query("SELECT COUNT(*) FROM `user` WHERE `date_last` > '".(time()-600)."' AND `url` like '/forum/%'")->el().' человек';
+    echo $db->query(
+        'SELECT COUNT(*) FROM `user` WHERE `date_last`>?i AND `url` LIKE "?e%"',
+                    [(time()-600), '/forum/']
+    )->el().' человек';
 }

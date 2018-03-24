@@ -35,7 +35,8 @@ if ($umnik_last==null || $umnik_last['umnik_st']==4 && $umnik_last['time']<time(
     $k_vopr=$db->query("SELECT COUNT(*) FROM `chat_vopros`")->el();
     $umnik_vopros = $db->query("SELECT * FROM `chat_vopros` LIMIT ".rand(0, $k_vopr).", 1")->row();
     $msg="[b]Вопрос:[/b] \"$umnik_vopros[vopros]\"\n[b]Ответ:[/b] слово из ".strlen2($umnik_vopros['otvet'])." букв";
-    $db->query("INSERT INTO `chat_post` (`umnik_st`, `time`, `msg`, `room`, `vopros`, `privat`) values('1', '$time', '$msg', '$room[id]', '$umnik_vopros[id]', '0')");
+    $db->query("INSERT INTO `chat_post` (`umnik_st`, `time`, `msg`, `room`, `vopros`, `privat`) values(?, ?i, ?, ?i, ?i, ?i)",
+               ['1', $time, $msg, $room['id'], $umnik_vopros['id'], 0]);
 }
 if ($umnik_last!=null && $umnik_last['umnik_st']==1 && $umnik_last['time']<time()-$set['umnik_help']) {
     $umnik_vopros = $db->query("SELECT * FROM `chat_vopros` WHERE `id` = '$umnik_last[vopros]' LIMIT 1")->row();
@@ -48,7 +49,8 @@ if ($umnik_last!=null && $umnik_last['umnik_st']==1 && $umnik_last['time']<time(
         $help.='*';
     }
     $msg="[b]Вопрос:[/b] \"$umnik_vopros[vopros]\"\n[b]Первая подсказка:[/b] $help (".strlen2($umnik_vopros['otvet'])." букв)";
-    $db->query("INSERT INTO `chat_post` (`umnik_st`, `time`, `msg`, `room`, `vopros`, `privat`) values('2', '$time', '$msg', '$room[id]', '$umnik_vopros[id]', '0')");
+    $db->query("INSERT INTO `chat_post` (`umnik_st`, `time`, `msg`, `room`, `vopros`, `privat`) values(?, ?i, ?, ?i, ?i, ?i)",
+               ['2', $time, $msg, $room['id'], $umnik_vopros['id'], 0]);
 }
 if ($umnik_last!=null && $umnik_last['umnik_st']==2 && $umnik_last['time']<time()-$set['umnik_help']) {
     $umnik_vopros = $db->query("SELECT * FROM `chat_vopros` WHERE `id` = '$umnik_last[vopros]' LIMIT 1")->row();
