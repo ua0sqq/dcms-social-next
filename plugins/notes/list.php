@@ -321,7 +321,7 @@ if (isset($user)) {
 //-------------------------------------------------------------//
 echo "<div class='main'>";
 echo 'В соц. сети: ';
-echo '<script type="text/javascript" src="//yandex.st/share/share.js" charset="utf-8"></script>
+echo '<script type="text/javascript" src="/style/share/share.js" charset="utf-8"></script>
 <span class="yashare-auto-init" data-yashareL10n="ru" data-yashareType="none" data-yashareQuickServices="vkontakte,twitter,odnoklassniki,moimir"></span>';
 echo "</div>";
 /*
