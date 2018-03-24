@@ -11,30 +11,50 @@ include_once '../sys/inc/user.php';
 
 user_access('adm_news', null, 'index.php?'.SID);
 
-if (!isset($_GET['id']) && !is_numeric($_GET['id'])) {
-    header("Location: index.php?".SID);
+$edit_id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+$args = [
+         'title' => FILTER_DEFAULT,
+         'msg' => FILTER_DEFAULT,
+         'link' => FILTER_DEFAULT,
+         'view' => FILTER_DEFAULT,
+         'ok' => FILTER_DEFAULT,
+         'mail' => FILTER_VALIDATE_INT,
+         'mn' => FILTER_VALIDATE_INT,
+         'ch' => FILTER_VALIDATE_INT,
+         ];
+$input_post = filter_input_array(INPUT_POST, $args);
+unset($args);
+
+if ($edit_id['id']) {
+    $_SESSION['message'] = 'Неверный запрос!';
+    header('Location: index.php?' . SID);
     exit;
 }
-if (!$db->query("SELECT COUNT(*) FROM `news` WHERE `id` = '".intval($_GET['id'])."' LIMIT 1")->el()) {
-    header("Location: index.php?".SID);
+if (!$db->query("SELECT COUNT(*) FROM `news` WHERE `id`=?i", [$edit_id])->el()) {
+    $_SESSION['message'] = 'Новость не найдена!';
+    header('Location: index.php?' . SID);
     exit;
 }
-$news = $db->query("SELECT * FROM `news` WHERE `id` = '".intval($_GET['id'])."' LIMIT 1")->row();
-if (isset($_POST['view'])) {
-    $news['title'] = $_POST['title'];
-    $news['msg'] = $_POST['msg'];
-    $news['link'] = $_POST['link'];
+
+$news = $db->query(
+    "SELECT * FROM `news` WHERE `id`=?i",
+                   [$edit_id]
+)->row();
+
+if (isset($input_post['view'])) {
+    $news['title'] = $input_post['title'];
+    $news['msg'] = $input_post['msg'];
+    $news['link'] = $input_post['link'];
     $news['id_user'] = $user['id'];
 }
-if (isset($_POST['title']) && isset($_POST['msg']) && isset($_POST['link']) && isset($_POST['ok'])) {
-    $title = esc($_POST['title'], 1);
-    $link = esc($_POST['link'], 1);
+if (isset($input_post['title']) && isset($input_post['msg']) && isset($input_post['link']) && isset($input_post['ok'])) {
+    $title = esc($input_post['title'], 1);
+    $link = esc($input_post['link'], 1);
+    $msg = esc($input_post['msg']);
     
     if ($link != null && !preg_match('#^https?://#', $link) && !preg_match('#^/#i', $link)) {
         $link='/'.$link;
     }
-    
-    $msg = esc($_POST['msg']);
     if (strlen2($title) > 50) {
         $err='Слишком большой заголовок новости';
     }
@@ -55,17 +75,21 @@ if (isset($_POST['title']) && isset($_POST['msg']) && isset($_POST['link']) && i
     if ($mat) {
         $err[] = 'В содержании обнаружен мат: '.$mat;
     }
-    $title = my_esc($_POST['title']);
-    $msg = my_esc($_POST['msg']);
+    $title = trim($input_post['title']);
+    $msg = trim($input_post['msg']);
     if (!isset($err)) {
-        $ch = intval($_POST['ch']);
-        $mn = intval($_POST['mn']);
+        $ch = $input_post['ch'];
+        $mn = $input_post['mn'];
         $main_time = time() + $ch * $mn * 60 * 60 * 24;
         if ($main_time <= time()) {
             $main_time = 0;
         }
-        $db->query("UPDATE `news` SET `title` = '$title', `msg` = '$msg', `link` = '$link', `main_time` = '$main_time', `time` = '$time' WHERE `id` = '$news[id]' LIMIT 1");
+        
+        $updt = ['title' => $title, 'msg' => $msg, 'link' => $link, 'main_time' => $main_time, 'time' => $time];
+        $tbl = $db->getTable('news');
+        $tbl->update($updt, ['id' => (int)$news['id']]);
         $db->query("UPDATE `user` SET `news_read` = '0'");
+        
         $_SESSION['message'] = 'Изменения успешно приняты';
         header("Location: news.php?id=$news[id]");
         exit;
@@ -76,7 +100,8 @@ include_once '../sys/inc/thead.php';
 title();
 err();
 aut(); // форма авторизации
-if (isset($_POST['view']) && !isset($err)) {
+
+if (isset($input_post['view']) && !isset($err)) {
     echo '<div class="main2">';
     
     echo text($news['title']);
@@ -101,12 +126,12 @@ if (is_file(H.'style/themes/'.$set['set_them'].'/altername_post_form.php')) {
 }
 echo 'Ссылка:<br /><input name="link" size="16" maxlength="64" value="' . text($news['link']) . '" type="text" /><br />';
 echo 'Показывать на главной:<br />';
-echo '<input type="text" name="ch" size="3" value="' . (isset($_POST['ch']) ? intval($_POST['ch']) : "1") . '" />';
+echo '<input type="text" name="ch" size="3" value="' . ($input_post['ch'] ? $input_post['ch'] : "1") . '" />';
 echo '<select name="mn">';
-echo '  <option value="0" '.(isset($_POST['mn']) && $_POST['mn'] == 0 ? "selected='selected'" : null).'>   </option>';
-echo '  <option value="1" '.(isset($_POST['mn']) && $_POST['mn'] == 1 ? "selected='selected'" : null).'>Дней</option>';
-echo '  <option value="7" '.(isset($_POST['mn']) && $_POST['mn'] == 7 ? "selected='selected'" : null).'>Недель</option>';
-echo '  <option value="31" '.(isset($_POST['mn']) && $_POST['mn'] == 31 ? "selected='selected'" : null).'>Месяцев</option>';
+echo '  <option value="0" '.($input_post['mn'] && $input_post['mn'] == 0 ? "selected='selected'" : null).'>   </option>';
+echo '  <option value="1" '.($input_post['mn'] && $input_post['mn'] == 1 ? "selected='selected'" : null).'>Дней</option>';
+echo '  <option value="7" '.($input_post['mn'] && $input_post['mn'] == 7 ? "selected='selected'" : null).'>Недель</option>';
+echo '  <option value="31" '.($input_post['mn'] && $input_post['mn'] == 31 ? "selected='selected'" : null).'>Месяцев</option>';
 echo '</select><br />';
 echo '<input value="Просмотр" type="submit" name="view"/> ';
 echo '<input value="Готово" type="submit" name="ok"/>';
@@ -114,4 +139,5 @@ echo '</form>';
 echo'<div class="foot">';
 echo '<img src="/style/icons/str.gif" alt="*"> <a href="index.php">Новости</a> | <a href="news.php?id=' . $news['id'] . '">' . text($news['title']) . '</a><br />';
 echo '</div>';
+
 include_once '../sys/inc/tfoot.php';

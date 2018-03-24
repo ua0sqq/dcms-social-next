@@ -1,6 +1,10 @@
 <?php
-$k_p = $db->query("SELECT COUNT(*) FROM `news`")->el();
-$k_n = $db->query("SELECT COUNT(*) FROM `news` WHERE `time` > '" . $ftime . "'")->el();
-if ($k_n == 0)$k_n = NULL; else $k_n = '+' . $k_n;
-echo '(' . $k_p . ') <font color="red">' . $k_n . '</font>';
-?>
+$cnt = $db->query('SELECT * FROM (
+SELECT COUNT(*) all_news FROM `news`)q, (
+SELECT COUNT(*) new_news FROM `news` WHERE `time`>?i)q2', [$ftime])->row();
+if (!$cnt['new_news']) {
+    $cnt['new_news'] = null;
+} else {
+    $cnt['new_news'] = '+' . $cnt['new_news'];
+}
+echo '(' . $cnt['all_news'] . ') <span style="color:red;">' . $cnt['new_news'] . '</span>';

@@ -21,7 +21,10 @@ $k_page = k_page($k_post, $set['p_str']);
 $page = page($k_page);
 $start = $set['p_str'] * $page - $set['p_str'];
 // Выборка новостей
-$q = $db->query("SELECT * FROM `news` ORDER BY `id` DESC LIMIT $start, $set[p_str]");
+$q = $db->query("SELECT nws.*, (
+SELECT COUNT( * ) FROM `news_komm` WHERE `id_news` =`nws`.`id`) cnt
+FROM `news` nws ORDER BY nws.`id` DESC LIMIT ?i OFFSET ?i",
+                [$set['p_str'], $start]);
 echo '<table class="post">';
 if ($k_post == 0) {
     echo '<div class="mess">';
@@ -37,7 +40,7 @@ while ($post = $q->row()) {
     echo '<a id="link_menu" href="news.php?id=' . $post['id'] . '"><img src="/style/icons/rss.png" alt="*" /> ' . text($post['title']) . '</a> ';
     
     // Колличество комментариев
-    echo '(' . $db->query("SELECT COUNT(*) FROM `news_komm` WHERE `id_news` = '$post[id]'")->el() . ')<br />';
+    echo '(' . $post['cnt'] . ')<br />';
     
     // Часть текста
     echo '<div class="text">' . output_text($post['msg']) . '</div>';

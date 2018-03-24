@@ -9,7 +9,7 @@ include_once '../sys/inc/ipua.php';
 include_once '../sys/inc/fnc.php';
 include_once '../sys/inc/user.php';
 
-if (!$db->query("SELECT COUNT(*) FROM `news` LIMIT 1")->el()) {
+if (!$db->query("SELECT COUNT(*) FROM `news`")->el()) {
     exit;
 }
 header("Content-type: application/rss+xml");
@@ -20,7 +20,7 @@ echo "<link>http://".$_SERVER['SERVER_NAME']."</link>\n";
 echo "<description>Новости ".$_SERVER['SERVER_NAME']."</description>\n";
 echo "<language>ru-RU</language>\n";
 //echo "<webMaster>$set[adm_mail]</webMaster>\n";
-echo "<lastBuildDate>".date("r", $db->query("SELECT MAX(time) FROM `news`"))."</lastBuildDate>\n";
+echo "<lastBuildDate>".date("r", $db->query("SELECT MAX(time) FROM `news`")->el())."</lastBuildDate>\n";
 $q=$db->query("SELECT * FROM `news` ORDER BY `id` DESC LIMIT $set[p_str]");
 while ($post = $q->row()) {
     echo "<item>\n";
