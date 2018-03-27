@@ -2,7 +2,9 @@
 include_once '../sys/inc/stemmer.php';
 $stemmer = new Lingua_Stem_Ru();
 if (isset($_POST['in']) && $_POST['in'] != null && preg_match('#^(r|f)([0-9]+)$#', $_POST['in'], $in)) {
-    if ($in[1] == 'f' && $db->query("SELECT COUNT(*) FROM `forum_f` WHERE `id` = '$in[2]' " . ((!isset($user) || $user['level'] == 0) ? "AND `adm` = '0'" : null)) == 1) {
+	$query = ((!isset($user) || $user['level'] == 0) ? 'AND `adm`="0"' : null);
+	if ($in[1] == 'f' && $db->query('SELECT COUNT(*) FROM `forum_f` WHERE `id`=?i ?q',
+									[$in[2], $query])->el()) {
         $searched['in']['m'] = 'f';
         $searched['in']['id'] = $in[2];
     } elseif ($in[1] == 'r') {
@@ -21,7 +23,7 @@ if (!isset($_POST['text']) || strlen2($_POST['text']) < 3) {
             continue;
         }
         $searched['mark'][$i]='#('.$st.'[a-zа-я0-9]*)#uim';
-        $s_arr_mysql[$i] = my_esc('+'.$st.'*');
+        $s_arr_mysql[$i] = '+'.$st.'*';
     }
 }
 if (isset($s_arr_mysql)) {
@@ -29,9 +31,9 @@ if (isset($s_arr_mysql)) {
     $adm_add2 = null;
     
     if (!isset($user) || $user['level'] == 0) {
-        $q222 = $db->query("SELECT * FROM `forum_f` WHERE `adm` = '1'");
+        $q222 = $db->query('SELECT * FROM `forum_f` WHERE `adm`="1"');
         while ($adm_f = $q222->row()) {
-            $adm_add[] = "`forum_p`.`id_forum` <> '$adm_f[id]'";
+            $adm_add[] = '`forum_p`.`id_forum` <> ' . $adm_f['id'];
         }
         if (sizeof($adm_add) != 0) {
             $adm_add2 = implode(' AND ', $adm_add).' AND ';
@@ -50,11 +52,11 @@ if (isset($s_arr_mysql)) {
 	`forum_t`.`time_create`,
 	`forum_p`.`id` AS `id_post`,
 	`forum_p`.`msg`
-	FROM `forum_t` LEFT JOIN `forum_p` ON `forum_p`.`id_them` = `forum_t`.`id` WHERE ".$adm_add2.
+	FROM `forum_t` LEFT JOIN `forum_p` ON `forum_p`.`id_them` = `forum_t`.`id` WHERE ?q;".
     ($searched['in']['m'] == 'f' ? "`forum_t`.`id_forum` = '" . $searched['in']['id'] . "' AND " : null). // только в выбранном форуме
     ($searched['in']['m'] == 'r' ? "`forum_t`.`id_razdel` = '" . $searched['in']['id'] . "' AND " : null). // только в выбранном разделе
-    "MATCH (`forum_p`.`msg`,`forum_t`.`name`) AGAINST ('$searched[query]' IN BOOLEAN MODE) GROUP BY `forum_t`.`id`";
-    $q = $db->query($searched['sql_query']);
+    "MATCH (`forum_p`.`msg`,`forum_t`.`name`) AGAINST (? IN BOOLEAN MODE) GROUP BY `forum_t`.`id`";
+    $q = $db->query($searched['sql_query'], [$adm_add2, $searched['query']]);
     while ($result = $q->row()) {
         $searched['result'][] = $result;
     }

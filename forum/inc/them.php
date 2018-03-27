@@ -1,61 +1,83 @@
 <?php
 
-if (isset($_GET['act']) && $_GET['act']=='txt') {
+if (isset($input_get['act']) && $input_get['act'] == 'txt') {
     ob_clean();
     ob_implicit_flush();
     header('Content-Type: text/plain; charset=utf-8', true);
-    header('Content-Disposition: attachment; filename="'.retranslit($them['name']).'.txt";');
-    echo "Тема: $them[name] ($forum[name]/$razdel[name])\r\n";
-    $q=$db->query("SELECT * FROM `forum_p` WHERE `id_them` = '$them[id]' AND `id_forum` = '$forum[id]' AND `id_razdel` = '$razdel[id]' ORDER BY `time` ASC");
-    //echo "\r\n";
+    header('Content-Disposition: attachment; filename="' . retranslit($them['name']) . '.txt";');
+
+    echo 'Тема: ' . $them['name'] . ' (' . $forum['name'] . '/' . $razdel['name'] . ')' . PHP_EOL;
+    $q = $db->query(
+        "SELECT `pst`.*, `u`.nick AS nick_post, `pst2`.msg AS msg_cit, `pst2`.`time` AS time_cit, `cit`.nick AS nick_cit 
+FROM `forum_p` `pst`
+LEFT JOIN `user` `u` ON `pst`.id_user=`u`.id
+LEFT JOIN forum_p `pst2` ON `pst`.cit=`pst2`.id
+LEFT JOIN `user` `cit` ON `pst2`.id_user=`cit`.id
+WHERE `pst`.`id_them`=?i AND `pst`.`id_forum`=?i  AND `pst`.`id_razdel`=?i ORDER BY `pst`.`time` ASC",
+[$them['id'], $forum['id'], $razdel['id']]
+    );
     while ($post = $q->row()) {
-        echo "\r\n";
-        $ank=get_user($post['id_user']);
-        echo "$ank[nick] (".date("j M Y в H:i", $post['time']).")\r\n";
-        if ($post['cit']!=null && $db->query("SELECT COUNT(*) FROM `forum_p` WHERE `id` = '$post[cit]'")->el()) {
-            $cit=$db->query("SELECT * FROM `forum_p` WHERE `id` = '$post[cit]' LIMIT 1")->row();
-            $ank_c=get_user($cit['id_user']);
-            echo "--Цитата--\r\n";
-            echo "$ank_c[nick] (".date("j M Y в H:i", $cit['time'])."):\r\n";
-            echo trim(br($cit['msg'], "\r\n"))."\r\n";
-            echo "----------\r\n";
+        echo PHP_EOL;
+        echo $post['nick_post'] . '(' . date("j M Y в H:i", $post['time']) . ')' . PHP_EOL;
+        if (!empty($post['cit'])) {
+            echo '--Цитата--' . PHP_EOL;
+            echo $post['nick_cit'] . '(' . date("j M Y в H:i", $post['time_cit']) . '):' . PHP_EOL;
+            // Удаляем теги нахрен
+            $msg_cit = preg_replace('/\[\/?(\w+).*?\]/is', '', $post['msg_cit']);
+            echo trim(br($msg_cit, PHP_EOL)) . PHP_EOL;
+            echo '----------' . PHP_EOL;
         }
-        echo trim(br($post['msg'], "\r\n"))."\r\n";
+        // Удаляем теги нахрен
+        $msg = preg_replace('/\[\/?(\w+).*?\]/is', '', $post['msg']);
+        echo trim(br($msg, PHP_EOL)) . PHP_EOL;
     }
-    echo "\r\nИсточник: http://$_SERVER[SERVER_NAME]/forum/$forum[id]/$razdel[id]/$them[id]/\r\n";
+    echo PHP_EOL . 'Источник: http://' . $_SERVER['SERVER_NAME'] . '/forum/' . $forum['id'] . '/' . $razdel['id'] . '/' . $them['id'] . '/' . PHP_EOL;
     exit;
 }
-if (isset($user) && isset($_GET['f_del']) && is_numeric($_GET['f_del']) && isset($_SESSION['file'][$_GET['f_del']])) {
-    @unlink($_SESSION['file'][$_GET['f_del']]['tmp_name']);
+    
+if (isset($user) && isset($input_get['f_del']) && /*is_numeric($input_get['f_del']) && */isset($_SESSION['file'][$input_get['f_del']])) {
+    @unlink($_SESSION['file'][$input_get['f_del']]['tmp_name']);
 }
-if (isset($user) && isset($_GET['zakl']) && $_GET['zakl']==1) {
-    if ($db->query("SELECT COUNT(*) FROM `bookmarks` WHERE `id_user` = $user[id] AND `type`='forum' AND `id_object` = '$them[id]'")->el()) {
-        $err[]="Тема уже есть в ваших закладках";
+if (isset($user) && isset($input_get['zakl']) && $input_get['zakl'] == 1) {
+    if ($db->query(
+        "SELECT COUNT(*) FROM `bookmarks` WHERE `id_user`=?i AND `type`=? AND `id_object`=?i",
+                   [$user['id'], 'forum', $them['id']]
+    )->el()) {
+        $err[] = 'Тема уже есть в ваших закладках';
     } else {
-        $db->query("INSERT INTO `bookmarks` (`id_user`, `time`,  `id_object`, `type`) values('$user[id]', '$time', '$them[id]', 'forum')");
+        $db->query(
+            "INSERT INTO `bookmarks` (`id_user`, `time`,  `id_object`, `type`) VALUES(?i, ?i, ?i, ?)",
+                   [$user['id'], $time, $them['id'], 'forum']
+        );
         msg('Тема добавлена в закладки');
     }
-} elseif (isset($user) && isset($_GET['zakl']) && $_GET['zakl']==0) {
-    $db->query("DELETE FROM `bookmarks` WHERE `id_user` = '$user[id]' AND `type`='forum' AND `id_object` = '$them[id]'");
+} elseif (isset($user) && isset($input_get['zakl']) && $input_get['zakl'] == 0) {
+    $db->query(
+        "DELETE FROM `bookmarks` WHERE `id_user`=?i AND `type`=? AND `id_object`=?i",
+               [$user['id'], 'forum', $them['id']]
+    );
     msg('Тема удалена из закладок');
 }
-if (isset($user) && isset($_GET['act']) && $_GET['act']=='new' && isset($_FILES['file_f']) && preg_match('#\.#', $_FILES['file_f']['name']) && isset($_POST['file_s'])) {
-    copy($_FILES['file_f']['tmp_name'], H.'sys/tmp/'.$user['id'].'_'.md5_file($_FILES['file_f']['tmp_name']).'.forum.tmp');
-    chmod(H.'sys/tmp/'.$user['id'].'_'.md5_file($_FILES['file_f']['tmp_name']).'.forum.tmp', 0777);
+if (isset($user) && isset($input_get['act']) && $input_get['act'] == 'new' && isset($_FILES['file_f'])
+    && preg_match('#\.#', $_FILES['file_f']['name']) && isset($_POST['file_s'])) {
+    
+    copy($_FILES['file_f']['tmp_name'], H . 'sys/tmp/' . $user['id'] . '_' . md5_file($_FILES['file_f']['tmp_name']) . '.forum.tmp');
+    
     if (isset($_SESSION['file'])) {
-        $next_f=count($_SESSION['file']);
+        $next_f = count($_SESSION['file']);
     } else {
         $next_f=0;
     }
-    $file=esc($_FILES['file_f']['name']);
-    $_SESSION['file'][$next_f]['name']=preg_replace('#\.[^\.]*$#i', null, $file); // имя файла без расширения
-    $_SESSION['file'][$next_f]['ras']=strtolower(preg_replace('#^.*\.#i', null, $file));
-    $_SESSION['file'][$next_f]['tmp_name']=H.'sys/tmp/'.$user['id'].'_'.md5_file($_FILES['file_f']['tmp_name']).'.forum.tmp';
-    $_SESSION['file'][$next_f]['size']=filesize(H.'sys/tmp/'.$user['id'].'_'.md5_file($_FILES['file_f']['tmp_name']).'.forum.tmp');
-    $_SESSION['file'][$next_f]['type']=$_FILES['file_f']['type'];
+    $file = esc($_FILES['file_f']['name']);
+    $_SESSION['file'][$next_f]['name'] = preg_replace('#\.[^\.]*$#i', null, $file); // имя файла без расширения
+    $_SESSION['file'][$next_f]['ras'] = strtolower(preg_replace('#^.*\.#i', null, $file));
+    $_SESSION['file'][$next_f]['tmp_name'] = H . 'sys/tmp/' . $user['id'] . '_' . md5_file($_FILES['file_f']['tmp_name']) . '.forum.tmp';
+    $_SESSION['file'][$next_f]['size'] = filesize(H . 'sys/tmp/' . $user['id'] . '_' . md5_file($_FILES['file_f']['tmp_name']) . '.forum.tmp');
+    $_SESSION['file'][$next_f]['type'] = $_FILES['file_f']['type'];
 }
-if (isset($user) && ($them['close'] == 0 || $them['close'] == 1 && user_access('forum_post_close')) && isset($_GET['act']) && $_GET['act'] == 'new' && isset($_POST['msg']) && !isset($_POST['file_s'])) {
-    $msg = $_POST['msg'];
+
+if (isset($user) && ($them['close'] == 0 || $them['close'] == 1 && user_access('forum_post_close')) && isset($input_get['act']) && $input_get['act'] == 'new' && isset($_POST['msg']) && !isset($_POST['file_s'])) {
+    $msg = trim($_POST['msg']);
     if (strlen2($msg) < 2) {
         $err = 'Короткое сообщение';
     }
@@ -66,23 +88,39 @@ if (isset($user) && ($them['close'] == 0 || $them['close'] == 1 && user_access('
     if ($mat) {
         $err[] = 'В тексте сообщения обнаружен мат: ' . $mat;
     }
-    if ($db->query("SELECT COUNT(*) FROM `forum_p` WHERE `id_them` = '$them[id]' AND `id_forum` = '$forum[id]' AND `id_razdel` = '$razdel[id]' AND `id_user` = '$user[id]' AND `msg` = '" . my_esc($msg) . "' LIMIT 1")->el()) {
+    if ($db->query(
+        'SELECT COUNT(*) FROM `forum_p` WHERE `id_them`=?i AND `id_forum`=?i AND `id_razdel`=?i AND `id_user`=?i AND `msg`=?',
+                   [$them['id'], $forum['id'], $razdel['id'], $user['id'], $msg]
+    )->el()) {
         $err = 'Ваше сообщение повторяет предыдущее';
     }
     if (!isset($err)) {
-        if (isset($_POST['cit']) && is_numeric($_POST['cit']) && $db->query("SELECT COUNT(*) FROM `forum_p` WHERE `id` = '" . intval($_POST['cit']) . "' AND `id_them` = '" . intval($_GET['id_them']) . "' AND `id_razdel` = '" . intval($_GET['id_razdel']) . "' AND `id_forum` = '" . intval($_GET['id_forum']) . "'")->el()) {
-            $cit = intval($_POST['cit']);
+        if (isset($_POST['cit']) && is_numeric($_POST['cit'])
+            && $db->query(
+                "SELECT COUNT(*) FROM `forum_p` WHERE `id`=?i AND `id_them`=?i AND `id_razdel`=?i AND `id_forum`=?i",
+                          [$_POST['cit'], $input_get['id_them'], $input_get['id_razdel'], $input_get['id_forum']]
+            )->el()) {
+            $cit = $_POST['cit'];
         } else {
-            $cit = 'null';
+            $cit = null;
         }
-        $db->query("UPDATE `user` SET `balls` = '" . ($user['balls'] + 1) . "' WHERE `id` = '$user[id]' LIMIT 1");
-        $db->query("UPDATE `forum_zakl` SET `time_obn` = '$time' WHERE `id_them` = '$them[id]'");
-        $post_id = $db->query("INSERT INTO `forum_p` (`id_forum`, `id_razdel`, `id_them`, `id_user`, `msg`, `time`, `cit`) values('$forum[id]', '$razdel[id]', '$them[id]', '$user[id]', '" . my_esc($msg) . "', '$time', $cit)")->id();
+        $db->query('UPDATE `user` SET `balls`=`balls`+?i WHERE `id`=?i', [1, $user['id']]);
+        $db->query(
+            'UPDATE `forum_zakl` SET `time_obn`=?i WHERE `id_them`=?i',
+                   [$time, $them['id']]
+        );
+        $post_id = $db->query(
+            "INSERT INTO `forum_p` (`id_forum`, `id_razdel`, `id_them`, `id_user`, `msg`, `time`, `cit`) VALUES(?i, ?i, ?i, ?i, ?, ?i, ?in)",
+                              [$forum['id'], $razdel['id'], $them['id'], $user['id'], $msg, $time, $cit]
+        )->id();
 
         if (isset($_SESSION['file']) && isset($user)) {
             for ($i = 0; $i < count($_SESSION['file']); $i++) {
                 if (isset($_SESSION['file'][$i]) && is_file($_SESSION['file'][$i]['tmp_name'])) {
-                    $file_id = $db->query("INSERT INTO `forum_files` (`id_post`, `name`, `ras`, `size`, `type`) values('$post_id', '" . $_SESSION['file'][$i]['name'] . "', '" . $_SESSION['file'][$i]['ras'] . "', '" . $_SESSION['file'][$i]['size'] . "', '" . $_SESSION['file'][$i]['type'] . "')")->id();
+                    $file_id = $db->query(
+                        "INSERT INTO `forum_files` (`id_post`, `name`, `ras`, `size`, `type`) VALUES(?i, ?, ?, ?i, ?)",
+                                          [$post_id, $_SESSION['file'][$i]['name'], $_SESSION['file'][$i]['ras'], $_SESSION['file'][$i]['size'], $_SESSION['file'][$i]['type']]
+                    )->id();
                     copy($_SESSION['file'][$i]['tmp_name'], H . 'sys/forum/files/' . $file_id . '.frf');
                     unlink($_SESSION['file'][$i]['tmp_name']);
                 }
@@ -90,51 +128,66 @@ if (isset($user) && ($them['close'] == 0 || $them['close'] == 1 && user_access('
             unset($_SESSION['file']);
         }
         unset($_SESSION['msg']);
-        $ank = get_user($them['id_user']); // Определяем автора
-        $db->query("UPDATE `user` SET `rating_tmp` = '" . ($user['rating_tmp'] + 1) . "' WHERE `id` = '$user[id]' LIMIT 1");
-        $db->query("UPDATE `forum_r` SET `time` = '$time' WHERE `id` = '$razdel[id]' LIMIT 1");
-        /*
-             ====================================
-             Обсуждения
-             ====================================
-            */
-        $q = $db->query("SELECT * FROM `frends` WHERE `user` = '" . $them['id_user'] . "' AND `i` = '1'");
-        while ($f = $q->row()) {
-            $a = get_user($f['frend']);
-            $discSet = $db->query("SELECT * FROM `discussions_set` WHERE `id_user` = '" . $a['id'] . "' LIMIT 1")->row(); // Общая настройка обсуждений
-            if ($f['disc_forum'] == 1 && $discSet['disc_forum'] == 1) /* Фильтр рассылки */ {
+
+        $db->query("UPDATE `user` SET `rating_tmp`=`rating_tmp`+1 WHERE `id`=?i", [$user['id']]);
+        $db->query("UPDATE `forum_t` SET `time`=?i WHERE `id`=?i", [time(), $them['id']]);
+        $db->query(
+            "UPDATE `forum_r` SET `time`=?i WHERE `id`=?i",
+                   [$time, $razdel['id']]
+        );
+   
+        // Обсуждения
+        $q = $db->query(
+            "SELECT `frn`.`disc_forum`, `u`.`id`, `dsc`.`disc_forum` AS `dscforum`
+FROM `frends` `frn` JOIN `user` `u` ON `u`.`id`=`frn`.`frend`
+JOIN `discussions_set` `dsc` ON `dsc`.`id_user`=`u`.`id` WHERE `frn`.`user`=?i AND `frn`.`i`=?i AND `frn`.`frend`<>?i",
+                        [1, $them['id_user'], $user['id']]
+        );
+        while ($frend = $q->row()) {
+            // Фильтр рассылкi
+            if ($frend['disc_forum'] == 1 && $frend['dscforum'] == 1) {
                 // друзьям автора
-                if (!$db->query("SELECT COUNT(*) FROM `discussions` WHERE `id_user` = '$a[id]' AND `type` = 'them' AND `id_sim` = '$them[id]' LIMIT 1")->el()) {
-                    if ($them['id_user'] != $a['id'] || $a['id'] != $user['id']) {
-                        $db->query("INSERT INTO `discussions` (`id_user`, `avtor`, `type`, `time`, `id_sim`, `count`) values('$a[id]', '$them[id_user]', 'them', '$time', '$them[id]', '1')");
-                    }
-                } else {
-                    $disc = $db->query("SELECT * FROM `discussions` WHERE `id_user` = '$a[id_user]' AND `type` = 'them' AND `id_sim` = '$them[id]' LIMIT 1")->row();
-                    if ($them['id_user'] != $a['id'] || $a['id'] != $user['id']) {
-                        $db->query("UPDATE `discussions` SET `count` = '" . ($disc['count'] + 1) . "', `time` = '$time' WHERE `id_user` = '$a[id]' AND `type` = 'them' AND `id_sim` = '$them[id]' LIMIT 1");
+                if ($them['id_user'] != $frend['id']/* || $frend['id'] != $user['id']*/) {
+                    if (!$db->query(
+                    "SELECT COUNT(*) FROM `discussions` WHERE `id_user`=?i AND `type`=? AND `id_sim`=?i",
+                                [$frend['id'], 'them', $them['id']]
+                )->el()) {
+                        $db->query(
+                        "INSERT INTO `discussions` (`id_user`, `avtor`, `type`, `time`, `id_sim`, `count`) VALUES(?i, ?i, ?, ?i, ?i, ?i)",
+                                   [$frend['id'], $them['id_user'], 'them', $time, $them['id'], 1]
+                    );
+                    } else {
+                        $db->query(
+                        "UPDATE `discussions` SET `count`=`count`+1, `time`=?i WHERE `id_user`=?i AND `type`=? AND `id_sim`=?i LIMIT ?i",
+                                   [$time, $frend['id'], 'them', $them['id'], 1]
+                    );
                     }
                 }
             }
         }
         // отправляем автору
-        if (!$db->query("SELECT COUNT(*) FROM `discussions` WHERE `id_user` = '$them[id_user]' AND `type` = 'them' AND `id_sim` = '$them[id]' LIMIT 1")->el()) {
+        if (!$db->query(
+            "SELECT COUNT(*) FROM `discussions` WHERE `id_user`=?i AND `type`=? AND `id_sim`=?i",
+                        [$them['id_user'], 'them', $them['id']]
+        )->el()) {
             if ($them['id_user'] != $user['id'] && $them['id_user'] != $ank_reply['id']) {
-                $db->query("INSERT INTO `discussions` (`id_user`, `avtor`, `type`, `time`, `id_sim`, `count`) values('$them[id_user]', '$them[id_user]', 'them', '$time', '$them[id]', '1')");
+                $db->query(
+                    "INSERT INTO `discussions` (`id_user`, `avtor`, `type`, `time`, `id_sim`, `count`) VALUES(?i, ?i, ?, ?i, ?i, ?i)",
+                           [$them['id_user'], $them['id_user'], 'them', $time, $them['id'], 1]
+                );
             }
         } else {
-            $disc = $db->query("SELECT * FROM `discussions` WHERE `id_user` = '$them[id_user]' AND `type` = 'them' AND `id_sim` = '$them[id]' LIMIT 1")->row();
             if ($them['id_user'] != $user['id'] && $them['id_user'] != $ank_reply['id']) {
-                $db->query("UPDATE `discussions` SET `count` = '" . ($disc['count'] + 1) . "', `time` = '$time' WHERE `id_user` = '$them[id_user]' AND `type` = 'them' AND `id_sim` = '$them[id]' LIMIT 1");
+                $db->query(
+                    "UPDATE `discussions` SET `count`=`count`+1, `time`=?i WHERE `id_user`=?i AND `type`=? AND `id_sim`=?i LIMIT ?i",
+                           [$time, $them['id_user'], 'them', $them['id'], 1]
+                );
             }
         }
-        /*
-          ==========================
-          Уведомления об ответах
-          ==========================
-         */
+        
+        // Уведомления об ответах
         if (isset($user) && ($respons == true || isset($_POST['cit']))) {
-    
-// 	Уведомление при цитате
+            // 	Уведомление при цитате
             if (isset($_POST['cit'])) {
                 $cit2=$db->query("SELECT * FROM `forum_p` WHERE `id` = '$cit' LIMIT 1")->row();
                 $ank_reply['id'] = $cit2['id_user'];
@@ -142,13 +195,21 @@ if (isset($user) && ($them['close'] == 0 || $them['close'] == 1 && user_access('
         
             $notifiacation = $db->query("SELECT * FROM `notification_set` WHERE `id_user` = '" . $ank_reply['id'] . "' LIMIT 1")->row();
     
-            if ($notifiacation['komm'] == 1) {
-                $db->query("INSERT INTO `notification` (`avtor`, `id_user`, `id_object`, `type`, `time`) VALUES ('$user[id]', '$ank_reply[id]', '$them[id]', 'them_komm', '$time')");
+            if ($db->query(
+    
+                "SELECT COUNT(*) FROM `notification_set` WHERE `komm`=1 AND `id_user`=?i",
+                           [$ank_reply['id']]
+    
+            )->el()) {
+                $db->query(
+                    "INSERT INTO `notification` (`avtor`, `id_user`, `id_object`, `type`, `time`) VALUES (?i, ?i, ?i, ?, ?i)",
+                           [$user['id'], $ank_reply['id'], $them['id'], 'them_komm', $time]
+                );
             }
         }
     
         $_SESSION['message'] = 'Сообщение успешно добавлено';
-        header("Location: ?page=" . intval($_GET['page']) . "");
+        header('Location: ?page=' . $input_get['page']);
         exit;
     }
 }
@@ -159,13 +220,19 @@ if (isset($user) && ($them['close'] == 0 || $them['close'] == 1 && user_access('
 в зависимости от раздела
 ================================
 */
-if (isset($_GET['spam']) && isset($user)) {
-    $mess = $db->query("SELECT * FROM `forum_p` WHERE `id` = '".intval($_GET['spam'])."' limit 1")->row();
-    $spamer = get_user($mess['id_user']);
-    if (!$db->query("SELECT COUNT(*) FROM `spamus` WHERE `id_user` = '$user[id]' AND `id_spam` = '$spamer[id]' AND `razdel` = 'forum' AND `spam` = '".$mess['msg']."'")->el()) {
+if (isset($input_get['spam']) && isset($user)) {
+    $mess = $db->query(
+        "SELECT pst.id, pst.id_user, pst.msg, pst.`time`, u.nick FROM `forum_p` pst
+JOIN `user` u ON u.id=pst.id_user WHERE `pst`.`id`=?i",
+                       [$input_get['spam']]
+    )->row();
+    if (!$db->query(
+        "SELECT COUNT(*) FROM `spamus` WHERE `id_user`=?i AND `id_spam`=?i AND `razdel`=? AND `spam`=?",
+                    [$user['id'], $mess['id_user'], 'forum', $mess['msg']]
+    )->el()) {
         if (isset($_POST['spamus'])) {
-            if ($mess['id_user']!=$user['id']) {
-                $msg=my_esc($_POST['spamus']);
+            if ($mess['id_user'] != $user['id']) {
+                $msg=trim($_POST['spamus']);
                 if (strlen2($msg)<3) {
                     $err='Укажите подробнее причину жалобы';
                 }
@@ -173,28 +240,38 @@ if (isset($_GET['spam']) && isset($user)) {
                     $err='Длина текста превышает предел в 512 символов';
                 }
                 if (isset($_POST['types'])) {
-                    $types=intval($_POST['types']);
+                    $types = intval($_POST['types']);
                 } else {
                     $types='0';
                 }
                 if (!isset($err)) {
-                    $db->query("INSERT INTO `spamus` (`id_object`, `id_user`, `msg`, `id_spam`, `time`, `types`, `razdel`, `spam`) values('$them[id]', '$user[id]', '$msg', '$spamer[id]', '$time', '$types', 'forum', '".my_esc($mess['msg'])."')");
+                    $db->query(
+                        "INSERT INTO `spamus` (`id_object`, `id_user`, `msg`, `id_spam`, `time`, `types`, `razdel`, `spam`)
+                               VALUES(?i, ?i, ?, ?i, ?i, ?i, ?, ?)",
+                               [$them['id'], $user['id'], $msg, $mess['id_user'], $time, $types, 'forum', $mess['msg']]
+                    );
                     $_SESSION['message'] = 'Заявка на рассмотрение отправлена';
-                    header("Location: /forum/$forum[id]/$razdel[id]/$them[id]/?spam=$mess[id]&page=$pageEnd");
+                    header('Location: /forum/' . $forum['id'] . '/' . $razdel['id'] . '/' . $them['id'] . '/?page=' . $pageEnd);
                     exit;
                 }
             }
         }
+    } else {
+        $_SESSION['err'] = 'Хватит стучать!';
+        header('Location: /forum/' . $forum['id'] . '/' . $razdel['id'] . '/' . $them['id'] . '/?page=' . $pageEnd);
     }
     aut();
     err();
-    if (!$db->query("SELECT COUNT(*) FROM `spamus` WHERE `id_user` = '$user[id]' AND `id_spam` = '$spamer[id]' AND `razdel` = 'forum'")->el()) {
+    if (!$db->query(
+        'SELECT COUNT(*) FROM `spamus` WHERE `id_user`=?i AND `id_spam`=?i AND `razdel`=?',
+                    [$user['id'], $mess['id_user'], 'forum']
+    )->el()) {
         echo "<div class='mess'>Ложная информация может привести к блокировке ника. 
 Если вас постоянно достает один человек - пишет всякие гадости, вы можете добавить его в черный список.</div>";
-        echo "<form class='nav1' method='post' action='/forum/$forum[id]/$razdel[id]/$them[id]/?spam=$mess[id]&amp;page=".intval($_GET['page'])."'>\n";
+        echo "<form class='nav1' method='post' action='/forum/$forum[id]/$razdel[id]/$them[id]/?spam=$mess[id]&amp;page=".$input_get['page']."'>\n";
         echo "<b>Пользователь:</b> ";
-        echo " ".avatar($spamer['id'])."  ".group($spamer['id'])." <a href=\"/info.php?id=$spamer[id]\">$spamer[nick]</a>\n";
-        echo "".medal($spamer['id'])." ".online($spamer['id'])." (".vremja($mess['time']).")<br />";
+        echo " ".avatar($mess['id_user'])."  ".group($mess['id_user'])." <a href=\"/info.php?id={$mess['id_user']}\">$mess[nick]</a>\n";
+        echo "".medal($mess['id_user'])." ".online($mess['id_user'])." (".vremja($mess['time']).")<br />";
         echo "<b>Нарушение:</b> <font color='green'>".output_text($mess['msg'])."</font><br />";
         echo "Причина:<br />\n<select name='types'>\n";
         echo "<option value='1' selected='selected'>Спам/Реклама</option>\n";
@@ -207,34 +284,49 @@ if (isset($_GET['spam']) && isset($user)) {
         echo "<input value=\"Отправить\" type=\"submit\" />\n";
         echo "</form>\n";
     } else {
-        echo "<div class='mess'>Жалоба на <font color='green'>$spamer[nick]</font> будет рассмотрена в ближайшее время.</div>";
+        echo "<div class='mess'>Жалоба на <font color='green'>$mess[nick]</font> будет рассмотрена в ближайшее время.</div>";
     }
     echo "<div class='foot'>\n";
-    echo "<img src='/style/icons/str2.gif' alt='*'> <a href='?page=".intval($_GET['page'])."'>Назад</a><br />\n";
+    echo "<img src='/style/icons/str2.gif' alt='*'> <a href='?page=".$input_get['page']."'>Назад</a><br />\n";
     echo "</div>\n";
     include_once '../sys/inc/tfoot.php';
     exit;
 }
+
 if ($them['close']==1) {
     $err = 'Тема закрыта для обсуждения';
 }
-if (isset($user) &&  $user['balls']>=50 && $user['rating']>=0 && isset($_GET['id_file'])
-&&
-$db->query("SELECT COUNT(*) FROM `forum_files` WHERE `id` = '".intval($_GET['id_file'])."'")->el()
-&& !$db->query("SELECT COUNT(*) FROM `forum_files_rating` WHERE `id_user` = '$user[id]' AND `id_file` = '".intval($_GET['id_file'])."'")->el()) {
-    if (isset($_GET['rating']) && $_GET['rating']=='down') {
-        $db->query("INSERT INTO `forum_files_rating` (`id_user`, `id_file`, `rating`) values('$user[id]', '".intval($_GET['id_file'])."', '-1')");
-        msg('Ваш отрицательный отзыв принят');
-    } elseif (isset($_GET['rating']) && $_GET['rating']=='up') {
-        $db->query("INSERT INTO `forum_files_rating` (`id_user`, `id_file`, `rating`) values('$user[id]', '".intval($_GET['id_file'])."', '1')");
-        msg('Ваш положительный отзыв принят');
+// rating files
+if (isset($input_get['rating']) && isset($user) &&  $user['balls']>=50 && $user['rating']>=0
+    && !$db->query(
+        "SELECT COUNT(*) FROM `forum_files_rating` WHERE `id_user`=?i AND `id_file`=?i",
+                   [$user['id'], $input_get['id_file']]
+    )->el()) {
+    if ($input_get['rating'] == 'down') {
+        $data_rating = [$user['id'], $input_get['id_file'], -1];
+        $send = 'Ваш отрицательный отзыв принят';
+    } elseif ($input_get['rating'] == 'up') {
+        $data_rating = [$user['id'], $input_get['id_file'], 1];
+        $send = 'Ваш положительный отзыв принят';
     }
+    $db->query(
+        'INSERT INTO `forum_files_rating` (`id_user`, `id_file`, `rating`) VALUES(?i, ?i, ?i)',
+               $data_rating
+    );
+    msg($send);
 }
-    $k_post=$db->query("SELECT COUNT(*) FROM `forum_p` WHERE `id_them` = '$them[id]' AND `id_forum` = '$forum[id]' AND `id_razdel` = '$razdel[id]'")->el();
-    $k_page=k_page($k_post, $set['p_str']);
-    $page=page($k_page);
-    $start=$set['p_str']*$page-$set['p_str'];
-$avtor=get_user($them['id_user']);
+
+// BODY THEM
+$k_post = $db->query(
+    
+    "SELECT COUNT(*) FROM `forum_p` WHERE `id_them`=?i AND `id_forum`=?i AND `id_razdel`=?i",
+                     [$them['id'], $forum['id'], $razdel['id']]
+    
+)->el();
+$k_page=k_page($k_post, $set['p_str']);
+$page=page($k_page);
+$start=$set['p_str']*$page-$set['p_str'];
+
 err();
 aut();
 echo "<div class='foot'>";
@@ -245,7 +337,7 @@ echo "</div>\n";
 Перемещение темы
 ======================================
 */
-if (isset($_GET['act']) && $_GET['act']=='mesto' && (user_access('forum_them_edit') || $ank2['id']==$user['id'])) {
+if (isset($input_get['act']) && $input_get['act'] == 'mesto' && (user_access('forum_them_edit') || $ank2['id'] == $user['id'])) {
     echo "<form method=\"post\" action=\"/forum/$forum[id]/$razdel[id]/$them[id]/?act=mesto&amp;ok\">\n";
     echo "<div class='mess'>";
     echo "Перемещение темы <b>".output_text($them['name'])."</b>\n";
@@ -257,14 +349,20 @@ if (isset($_GET['act']) && $_GET['act']=='mesto' && (user_access('forum_them_edi
         $q = $db->query("SELECT * FROM `forum_f` ORDER BY `pos` ASC");
         while ($forums = $q->row()) {
             echo "<optgroup label='$forums[name]'>\n";
-            $q2 = $db->query("SELECT * FROM `forum_r` WHERE `id_forum` = '$forums[id]' ORDER BY `time` DESC");
+            $q2 = $db->query(
+                "SELECT * FROM `forum_r` WHERE `id_forum`=?i ORDER BY `time` DESC",
+                             [$forums['id']]
+            );
             while ($razdels = $q2->row()) {
                 echo "<option".($razdel['id']==$razdels['id']?' selected="selected"':null)." value=\"$razdels[id]\">" . text($razdels['name']) . "</option>\n";
             }
             echo "</optgroup>\n";
         }
     } else {
-        $q2 = $db->query("SELECT * FROM `forum_r` WHERE `id_forum` = '$forum[id]' ORDER BY `time` DESC");
+        $q2 = $db->query(
+            "SELECT * FROM `forum_r` WHERE `id_forum`=?i ORDER BY `time` DESC",
+                         [$forum['id']]
+        );
         while ($razdels = $q2->row()) {
             echo "<option".($razdel['id']==$razdels['id']?' selected="selected"':null)." value='$razdels[id]'>" . text($razdels['name']) . "</option>\n";
         }
@@ -285,7 +383,7 @@ if (isset($_GET['act']) && $_GET['act']=='mesto' && (user_access('forum_them_edi
 Редактирование темы
 ======================================
 */
-if (isset($_GET['act']) && $_GET['act']=='set' && (user_access('forum_them_edit') || $ank2['id']==$user['id'])) {
+if (isset($input_get['act']) && $input_get['act']=='set' && (user_access('forum_them_edit') || $ank2['id']==$user['id'])) {
     echo "<form method='post' action='/forum/$forum[id]/$razdel[id]/$them[id]/?act=set&amp;ok'>\n";
     echo "<div class='mess'>";
     echo "Редактирование темы <b>".output_text($them['name'])."</b>\n";
@@ -321,18 +419,31 @@ if (isset($_GET['act']) && $_GET['act']=='set' && (user_access('forum_them_edit'
     include_once '../sys/inc/tfoot.php';
     exit;
 }
-        if (user_access('forum_post_ed') && isset($_GET['del'])) { // удаление поста
-            $db->query("DELETE FROM `forum_p` WHERE `id` = '" . intval($_GET['del']) . "' LIMIT 1");
-            $_SESSION['message'] = 'Сообщение успешно удалено';
-            header("Location: /forum/$forum[id]/$razdel[id]/$them[id]/?page=" . intval($_GET['page']) . "");
-            exit;
+// удаление поста
+if (user_access('forum_post_ed') && isset($input_get['del'])) {
+    $db->query(
+        "DELETE FROM `forum_p` WHERE `id`=?i",
+               [$input_get['del']]
+    );
+    $res = $db->query('SELECT `id` FROM `forum_files` WHERE `id_post` NOT IN(SELECT `id` FROM `forum_p`)')->col();
+    if (count($res)) {
+        foreach ($res as $id) {
+            if (is_file(H . 'sys/forum/files/'.$id.'.frf')) {
+                unlink(H . 'sys/forum/files/'.$id.'.frf');
+            }
         }
-/*
-======================================
-Удаление темы
-======================================
-*/
-if (isset($_GET['act']) && $_GET['act']=='del' && user_access('forum_them_del') && ($ank2['level']<=$user['level'] || $ank2['id']==$user['id'])) {
+        $db->query('DELETE FROM `forum_files` WHERE `id` IN(?li)', [$res]);
+        $db->query('DELETE FROM `forum_files_rating` WHERE `id_file` NOT IN(SELECT `id` FROM `forum_files`)');
+    }
+    $db->query('OPTIMIZE TABLE `forum_p`, `forum_files`, `forum_files_rating`');
+    
+    $_SESSION['message'] = 'Сообщение успешно удалено';
+    header('Location: /forum/' . $forum['id'] . '/' . $razdel['id'] . '/' . $them['id'] . '/?page=' . $input_get['page']);
+    exit;
+}
+
+// Удаление темы
+if (isset($input_get['act']) && $input_get['act']=='del' && user_access('forum_them_del') && ($ank2['level']<=$user['level'] || $ank2['id']==$user['id'])) {
     echo "<div class=\"mess\">\n";
     echo "Подтвердите удаление темы <b>".output_text($them['name'])."</b><br />\n";
     echo "</div>\n";
@@ -350,15 +461,17 @@ if (isset($_GET['act']) && $_GET['act']=='del' && user_access('forum_them_del') 
 Опрос от VoronoZ
 =========
 */
-if (isset($_GET['act']) && $_GET['act'] == 'vote' && (user_access('forum_them_edit') || $ank2['id'] == $user['id'])) {
-    if ($db->query("SELECT COUNT(`id`) FROM `votes_forum` WHERE `them` = '".abs(intval($them['id']))."' LIMIT 1")->el()) {
+if (isset($input_get['act']) && $input_get['act'] == 'vote' && (user_access('forum_them_edit') || $ank2['id'] == $user['id'])) {
+    if ($db->query("SELECT COUNT(`id`) FROM `votes_forum` WHERE `them`=?i", [$them['id']])->el()) {
         if (isset($_POST['del']) && isset($user)) {
-            $db->query("UPDATE `forum_t` SET `vote`='',`vote_time`='',`vote_close` ='0' WHERE `id` = '$them[id]' LIMIT 1");
-            $db->query("DELETE FROM `votes_forum` WHERE `them` = '$them[id]'  ");
-            $db->query("DELETE FROM `votes_user` WHERE `them` = '$them[id]'  ");
+            $db->query('UPDATE `forum_t` SET `vote`="", `vote_time`="", `vote_close`="0" WHERE `id`=?i', [$them['id']]);
+            $db->query('DELETE FROM `votes_forum` WHERE `them`=?i', [$them['id']]);
+            $db->query('DELETE FROM `votes_user` WHERE `them`=?i', [$them['id']]);
+            
             $_SESSION['message'] = 'Опрос удалён!';
             header("Location:/forum/$forum[id]/$razdel[id]/$them[id]/");
         }
+        
         if (isset($_POST['send']) && isset($user)) {
             $close=(isset($_POST['close'])? 1: 0);
             $text=my_esc($_POST['text']);
@@ -373,7 +486,10 @@ if (isset($_GET['act']) && $_GET['act'] == 'vote' && (user_access('forum_them_ed
                 $err[] = 'В теме опроса  обнаружен мат: '.$mat;
             }
             if (!isset($err)) {
-                $db->query("UPDATE `forum_t` SET `vote`='$text',`vote_close` ='$close' WHERE `id` = '$them[id]' LIMIT 1");
+                $db->query(
+                    "UPDATE `forum_t` SET `vote`=?,`vote_close`=? WHERE `id`=?i",
+                           [$text, $close, $them['id']]
+                );
             }
             for ($x=1; $x<7; $x++) {
                 $add=my_esc($_POST['vote_'.$x.'']);
@@ -388,7 +504,10 @@ if (isset($_GET['act']) && $_GET['act'] == 'vote' && (user_access('forum_them_ed
                     $err = 'В варианте опроса № '.$x.'  обнаружен мат: '.$mat;
                 }
                 if (!isset($err)) {
-                    $db->query("UPDATE `votes_forum` SET `var`='$add' WHERE `num` = '$x' LIMIT 1");
+                    $db->query(
+                        "UPDATE `votes_forum` SET `var`=? WHERE `num`=? LIMIT ?i",
+                               [$add, $x, 1]
+                    );
                     $_SESSION['message'] = 'Опрос изменён!';
                     header("Location:/forum/$forum[id]/$razdel[id]/$them[id]/");
                 }
@@ -407,22 +526,27 @@ if (isset($_GET['act']) && $_GET['act'] == 'vote' && (user_access('forum_them_ed
         }
         echo "<form method='post' action='/forum/$forum[id]/$razdel[id]/$them[id]/?act=vote'>";
         echo "<div class='nav1'>";
-        echo "<img src='/style/icons/rating.png' alt='*'> Опрос: <b>" .(mb_strlen($them['vote'])<=15 ? output_text($them['vote']) : output_text(sub($them['vote'], 15))). "</b><br/>";
+        echo "<img src='/style/icons/rating.png' alt='*'> Опрос: <b>" .(mb_strlen($them['vote']) < 16 ?
+                                                                        output_text($them['vote']) : output_text(sub($them['vote'], 15))). "</b><br/>";
         echo "</div>";
         echo "<div class='main'>";
-        echo "<b>Тема опроса</b>: <div style='border-top: 1px dashed red; padding: 2px;'>".$tPanel."<textarea name='text'>" . output_text($them['vote']) . "</textarea></div><br/>";
-        $q=$db->query("SELECT * FROM `votes_forum` WHERE `them` = '".abs(intval($them['id']))."' ORDER BY `id` ASC  LIMIT 6");
+        echo "<b>Тема опроса</b>: <div style='border-top: 1px dashed red; padding: 2px;'>".$tPanel."<textarea name='text'>" .
+        output_text($them['vote']) . "</textarea></div><br/>";
+        $q=$db->query(
+            "SELECT * FROM `votes_forum` WHERE `them`=?i ORDER BY `id` ASC  LIMIT ?i",
+                      [$them['id'], 6]
+        );
         while ($row = $q->row()) {
-            echo "Вариант № $row[num] <div style='border-top: 1px dashed red; padding: 2px;'><input name='vote_$row[num]' type='text' value='".(isset($row['var'])? output_text($row['var']):null)."' maxlength='24' placeholder='Не заполнено'  /></div>";
+            echo "Вариант № $row[num] <div style='border-top: 1px dashed red; padding: 2px;'><input name='vote_$row[num]' type='text' value='" .
+            (isset($row['var']) ? output_text($row['var']) : null)."' maxlength='24' placeholder='Не заполнено'  /></div>";
         }
-        echo "<label><input type='checkbox' name='close' ".($them['vote_close']=='1'? "checked='checked' value='1' /> Открыть опроc" : "value='1'/> Закрыть опрос")." </label>
-";
+        echo "<label><input type='checkbox' name='close' ".($them['vote_close']=='1'? "checked='checked' value='1' /> Открыть опроc" : "value='1'/> Закрыть опрос")." </label>";
         echo '<input value="Изменить" name="send" type="submit" />  
       <input value="Удалить опрос" name="del" type="submit" /> 
   </form>';
     } else {
         if (isset($_POST['send']) && isset($user)) {
-            $text=my_esc($_POST['text']);
+            $text = trim($_POST['text']);
             if (strlen2($text)<3) {
                 $err[] = 'Короткая тема опроса';
             }
@@ -434,14 +558,17 @@ if (isset($_GET['act']) && $_GET['act'] == 'vote' && (user_access('forum_them_ed
                 $err[] = 'В теме опроса  обнаружен мат: '.$mat;
             }
             if (!isset($err)) {
-                $db->query("UPDATE `forum_t` SET `vote`='$text',`vote_close` ='0' WHERE `id` = '$them[id]' LIMIT 1");
+                $db->query(
+                    "UPDATE `forum_t` SET `vote`=?, `vote_close` =? WHERE `id`=?i",
+                           [$text, '0', $them['id']]
+                );
             }
-            for ($x=1; $x<7; $x++) {
-                $add=my_esc($_POST['add_'.$x.'']);
-                if (strlen2($add)>23) {
-                    $err = 'Вариант опроса № '.$x.' слишком длинный';
+            for ($x = 1; $x < 7; $x++) {
+                $add = trim($_POST['add_' . $x]);
+                if (strlen2($add) > 23) {
+                    $err = 'Вариант опроса № ' . $x . ' слишком длинный';
                 }
-                if ($_POST['add_1']==null || $_POST['add_2']==null) {
+                if ($_POST['add_1'] == null || $_POST['add_2'] == null) {
                     $err = 'Два первых варианта должны быть заполнены';
                 }
                 $mat = antimat($add);
@@ -449,9 +576,13 @@ if (isset($_GET['act']) && $_GET['act'] == 'vote' && (user_access('forum_them_ed
                     $err = 'В варианте опроса № '.$x.'  обнаружен мат: '.$mat;
                 }
                 if (!isset($err)) {
-                    $db->query("INSERT INTO `votes_forum` (`them`,`var`,`num`) values('$them[id]','$add','$x')");
+                    $db->query(
+                        "INSERT INTO `votes_forum` (`them`,`var`,`num`) values(?i, ?, ?)",
+                               [$them['id'], $add, $x]
+                    );
+                    
                     $_SESSION['message'] = 'Опрос добавлен!';
-                    header("Location:/forum/$forum[id]/$razdel[id]/$them[id]/");
+                    header('Location:/forum/' . $forum['id'] . '/' . $razdel['id'] . '/' . $them['id'] . '/');
                 }
             }
         }
@@ -473,15 +604,27 @@ if (isset($_GET['act']) && $_GET['act'] == 'vote' && (user_access('forum_them_ed
     include_once '../sys/inc/tfoot.php';
     exit;
 }
-if (isset($_GET['vote_user']) && $db->query("SELECT * FROM `votes_user` WHERE `var` = '".intval($_GET['vote_user'])."' AND `them`='$them[id]' ")!=0) {
-    $us=intval($_GET['vote_user']);
-    $k_post = $db->query("SELECT * FROM `votes_user` WHERE  `var` = '$us' AND `them`='$them[id]'")->el();
+if (isset($input_get['vote_user']) && $db->query(
+    "SELECT COUNT(*) FROM `votes_user` WHERE `var`=?i AND `them`=?i",
+                                                 [$input_get['vote_user'], $them['id']]
+)->el()) {
+    $us = $input_get['vote_user'];
+    
+    $k_post = $db->query(
+    
+        "SELECT * FROM `votes_user` WHERE  `var`=?i AND `them`=?i",
+                         [$us, $them['id']]
+    
+    )->el();
     $k_page=k_page($k_post, $set['p_str']);
     $page=page($k_page);
     $start=$set['p_str']*$page-$set['p_str'];
-    $q=$db->query("SELECT `id_user`,`time` FROM `votes_user` WHERE  `var` = '$us' AND `them`='$them[id]' ORDER BY `time`  LIMIT $start, $set[p_str] ");
+    $q = $db->query(
+        "SELECT vts.`id_user`, vts.`time` FROM `votes_user` vts WHERE  vts.`var`=?i AND vts.`them`=?i ORDER BY vts.`time`  LIMIT ?i OFFSET ?i",
+                    [$us, $them['id'], $set['p_str'], $start]
+    );
     while ($row = $q->row()) {
-        $ank=get_user($row['id_user']); ?><table class="post"><?php
+        ?><table class="post"><?php
     #Div Block's
     if ($num==0) {
         ?><div class="nav1"><?php
@@ -490,11 +633,11 @@ if (isset($_GET['vote_user']) && $db->query("SELECT * FROM `votes_user` WHERE `v
         ?><div class="nav2"><?php
 $num=0;
     }
-        echo avatar($ank['id']).group($ank['id']).' ';
-        echo user::nick($ank['id'], 1, 1, 1).' '.vremja($row['time']).'</div>';
+        echo avatar($row['id_user']) . group($row['id_user']);
+        echo user::nick($row['id_user'], 1, 1, 1) . ' ' . vremja($row['time']) . '</div>';
     }
     if ($k_page > 1) {
-        str("/forum/$forum[id]/$razdel[id]/$them[id]/?vote_user=$us&", $k_page, $page);
+        str("/forum/$forum[id]/$razdel[id]/$them[id]/?vote_user=$us&amp;", $k_page, $page);
     } ?><div class="foot">
 <img src="/style/icons/fav.gif" alt="*"> <a href="/forum/<?=$forum['id']; ?>/<?=$razdel['id']; ?>/<?=$them['id']; ?>/?">В тему</a>
 </div><?php
@@ -504,9 +647,15 @@ include_once '../sys/inc/tfoot.php';
 /* End Vote */
 /* Голосование в опросе*/
  if (isset($_POST['go']) && isset($_POST['vote']) && isset($user)) {
-     $vote=abs(intval($_POST['vote']));
-     if (!$db->query("SELECT * FROM `votes_user` WHERE `them` = '".abs(intval($them['id']))."'  AND `id_user`='$user[id]' LIMIT 1")->el()  && $them['vote_close']!='1' && $them['close']=='0') {
-         $db->query("INSERT INTO `votes_user` (`them`,`id_user`,`var`,`time`) values('$them[id]','$user[id]','$vote','".time()."')");
+     $vote=abs($_POST['vote']);
+     if (!$db->query(
+         "SELECT COUNT(*) FROM `votes_user` WHERE `them`=?i  AND `id_user`=?i",
+                     [$them['id'], $user['id']]
+     )->el()  && $them['vote_close'] != '1' && $them['close']=='0') {
+         $db->query(
+             "INSERT INTO `votes_user` (`them`, `id_user`, `var`, `time`) VALUES(?i, ?i, ?i, ?i)",
+                    [$them['id'], $user['id'], $vote, time()]
+         );
          $_SESSION['message'] = 'Ваш голос принят!';
          header("Location:/forum/$forum[id]/$razdel[id]/$them[id]/");
      } else {
@@ -529,32 +678,51 @@ echo "<div class='nav2'>".output_text($them['text'])." ";
 Опрос
 ==========
 */
-$vote_c=$db->query("SELECT COUNT(*) FROM `votes_forum` WHERE `them` = '".abs(intval($them['id']))."' LIMIT 1")->el();
- if ($vote_c!=0) {
-     ?><div class="round_corners poll_block stnd_padd"><div style="font-size:14px;">Опрос: <b><?=output_text($them['vote']); ?></b></div><?php
-$q=$db->query("SELECT * FROM `votes_forum` WHERE `them` = '".abs(intval($them['id']))."' AND `var` != '' LIMIT 6"); ?><form action="" method="post"><?php 
+$vote_c = $db->query(
+    'SELECT COUNT(*) FROM `votes_forum` WHERE `them`=?i',
+                     [$them['id']]
+)->el();
+ if ($vote_c != 0) {
+     ?>
+<div class="round_corners poll_block stnd_padd">
+    <div style="font-size:14px;">
+        Опрос: <strong><?= output_text($them['vote']); ?></strong>
+    </div><?php
+$q = $db->query(
+         "SELECT vtf.*, (
+SELECT COUNT(*) FROM `votes_user` WHERE `them`=vtf.them) vote_sum, (
+SELECT COUNT(*) FROM `votes_user` WHERE `them`=vtf.them AND `var`=vtf.num) votec_var, (
+SELECT COUNT(*) FROM `votes_user` WHERE `them`=?i  AND `id_user`=?i) vote_user
+FROM `votes_forum` vtf WHERE vtf.`them`=?i AND vtf.`var`<>'' LIMIT ?i",
+                [$them['id'], $user['id'], $them['id'], 6]
+     ); ?>
+<form action="" method="post">
+<?php 
 while ($row = $q->row()) {
-    $sum=$db->query("SELECT COUNT(*) FROM `votes_user` WHERE `them` = '$row[them]'")->el();
-    $var=$db->query("SELECT COUNT(*) FROM `votes_user` WHERE `them` = '$row[them]' AND `var` = '$row[num]'")->el();
-    if ($sum==0) {
+    
+    if ($row['vote_sum'] == 0) {
         $poll=0;
-    } elseif ($var==0) {
+    } elseif ($row['votec_var'] == 0) {
         $poll=0;
     } else {
-        $poll=($var/$sum)*100;
+        $poll=($row['votec_var']/$row['vote_sum'])*100;
     }
-    $us=$db->query("SELECT COUNT(*) FROM `votes_user` WHERE `them` = '".abs(intval($them['id']))."'  AND `id_user`='$user[id]' LIMIT 1")->el();
-    if ($us=='0' && isset($user)) {
-        ?><input type="radio" value="<?=$row['num']; ?>" name="vote"/>&nbsp;<?=output_text($row['var']); ?></a> - <a href="?vote_user=<?=$row['num']; ?>"><?=$var; ?> чел.</a></br>
+    
+    if ($row['vote_user'] == 0 && isset($user)) {
+        ?>
+        <input type="radio" value="<?= $row['num']; ?>" name="vote"/>
+        &nbsp;<?= output_text($row['var']); ?></a> - <a href="?vote_user=<?=$row['num']; ?>"><?=$row['votec_var']; ?> чел.</a><br />
 <?php
     } else {
         ?>
-<?=output_text($row['var']); ?> <a href="?vote_user=<?=$row['num']; ?>"><?=$var; ?></a></br><img src="/forum/img.php?img=<?=$poll; ?>" alt="*"/></br> 
+<?= output_text($row['var']); ?> <a href="?vote_user=<?= $row['num']; ?>"><?= $row['votec_var']; ?></a><br />
+<img src="/forum/img.php?img=<?= $poll; ?>" alt="*"/><br /> 
 <?php
     }
 }
-     if (isset($user) && $us==0 && $them['vote_close']!='1' && $them['close']==0) {
-         ?><input type="submit" name="go" value="Голосовать"/><?php
+     if (isset($user) && $row['vote_user'] == 0 && $them['vote_close'] != 1 && $them['close'] == 0) {
+         ?>
+         <input type="submit" name="go" value="Голосовать"/><?php
      }
      echo '</form></div>';
  }
@@ -571,17 +739,29 @@ if (!empty($them['id_edit'])) {
     echo "<div class='nav2'>";
     echo "<span style='color:#666;'><img src='/style/icons/topic_locked.gif'> Тема закрыта ".user::nick($them['id_edit'])." ".vremja($them['time_edit'])."</span></div>";
 }
+$parent = 'SELECT * FROM (
+SELECT COUNT( * ) share_note FROM `notes` WHERE `share_id`=?i AND `share_type`="forum")q, (
+SELECT COUNT( * ) user_note FROM `notes` WHERE `id_user`=?i AND `share_type`="forum" AND `share_id`=?i)q2';
+$data_note = [$them['id'], $user['id'], $them['id']];
+if (isset($user)) {
+    $parent = 'SELECT * FROM (
+SELECT COUNT( * ) share_note FROM `notes` WHERE `share_id`=?i AND `share_type`="forum")q, (
+SELECT COUNT( * ) user_note FROM `notes` WHERE `id_user`=?i AND `share_type`="forum" AND `share_id`=?i)q2, (
+SELECT COUNT( * ) marks FROM `bookmarks` WHERE `id_object`=?i AND `id_user`=?i AND `type`="forum")q4';
+    $data_note = [$them['id'], $user['id'], $them['id'], $them['id'], $user['id']];
+}
+$cnt = $db->query($parent, $data_note)->row();
 echo "<div class='mess'>";
-$share=$db->query("SELECT COUNT(`id`)FROM `notes` WHERE `share_id`='".$them['id']."' AND `share_type`='forum'")->el();
-if (!$db->query("SELECT COUNT(`id`)FROM `notes` WHERE `id_user`='".$user['id']."' AND `share_type`='forum' AND `share_id`='".$them['id']."' LIMIT 1")->el() && isset($user)) {
-    echo " <a href='/forum/share.php?id=".$them['id']."'><img src='/style/icons/action_share_color.gif'> Поделиться: (".$share.")</a>";
+
+if (isset($user) && !$cnt['user_note']) {
+    echo " <a href='/forum/share.php?id=".$them['id']."'><img src='/style/icons/action_share_color.gif'> Поделиться: (" . $cnt['share_note'] . ")</a>";
 } else {
-    echo "<img src='/style/icons/action_share_color.gif'> Поделились  (".$share.")";
+    echo "<img src='/style/icons/action_share_color.gif'> Поделились  (" . $cnt['share_note'] . ")";
 }
 if (isset($user)) {
-    $markinfo=$db->query("SELECT COUNT(`id`) FROM `bookmarks` WHERE `id_object` = '".$them['id']."' AND `type`='forum'")->el();
+    
     echo "<br/><img src='/style/icons/add_fav.gif' alt='*' /> ";
-    if (!$db->query("SELECT COUNT(`id`) FROM `bookmarks` WHERE `id_object` = '$them[id]' AND `id_user` = '$user[id]' AND `type`='forum'")->el()) {
+    if (!$cnt['marks']) {
         echo " <a href=\"?page=$page&amp;zakl=1\" title='Добавить в закладки'>Добавить в закладки</a><br />\n";
     } else {
         echo " <a href=\"?page=$page&amp;zakl=0\" title='Удалить из закладок'>Удалить из закладок</a><br />\n";
@@ -593,7 +773,7 @@ echo "</div>";
 Кнопки действия с темой
 ======================================
 */
-if (isset($user) && (((!isset($_GET['act']) || $_GET['act']!='post_delete') && (user_access('forum_post_ed') || $ank2['id']==$user['id']))
+if (isset($user) && (((!isset($input_get['act']) || $input_get['act']!='post_delete') && (user_access('forum_post_ed') || $ank2['id']==$user['id']))
 || ((user_access('forum_them_edit') || $ank2['id']==$user['id']))
 || (user_access('forum_them_del') || $ank2['id']==$user['id']))) {
     echo "<div class=\"foot\">\n";
@@ -612,7 +792,8 @@ if (isset($user) && (((!isset($_GET['act']) || $_GET['act']!='post_delete') && (
     echo "</div>\n";
 }
 echo "<div class='foot'>Комментарии:</div>";
-/*------------сортировка по времени--------------*/
+
+// сортировка по времени
 if (isset($user)) {
     echo "<div id='comments' class='menus'>";
     echo "<div class='webmenu'>";
@@ -623,21 +804,31 @@ if (isset($user)) {
     echo "</div>";
     echo "</div>";
 }
-/*---------------alex-borisi---------------------*/
-if ((user_access('forum_post_ed') || isset($user) && $ank2['id']==$user['id']) && isset($_GET['act']) && $_GET['act']=='post_delete') {
+
+// alex-borisi
+if ((user_access('forum_post_ed') || isset($user) && $ank2['id']==$user['id']) && isset($input_get['act']) && $input_get['act']=='post_delete') {
     $lim=null;
 } else {
     $lim=" LIMIT $start, $set[p_str]";
 }
-$q=$db->query("SELECT * FROM `forum_p` WHERE `id_them` = '$them[id]' AND `id_forum` = '$forum[id]' AND `id_razdel` = '$razdel[id]' ORDER BY `time` $sort$lim")->assoc();
+
+$q=$db->query(
+    'SELECT pst.*, u.id AS id_user, u.nick, u.`level`, sts.msg AS status, (
+SELECT COUNT( * ) FROM `ban` WHERE (`razdel`="all" OR `razdel`="forum") AND `post`=1 AND `id_user`=`pst`.`id_user` AND (`time`>?i OR `navsegda`=1)) ban, (
+SELECT COUNT( * ) FROM forum_files WHERE id_post=pst.id) file
+FROM `forum_p` pst 
+JOIN `user` u ON u.id=pst.id_user
+JOIN `status` sts ON sts.id_user=pst.id_user
+WHERE pst.`id_them`=?i AND pst.`id_forum`=?i AND pst.`id_razdel`=?i ORDER BY pst.`time`?q;?q',
+[$time, $them['id'], $forum['id'], $razdel['id'], $sort, $lim]
+)->assoc();
+
 if (!count($q)) {
     echo "<div class='mess'>";
     echo "Нет сообщений в теме\n";
     echo "</div>";
 }
 foreach ($q as $post) {
-    $ank=get_user($post['id_user']);
-    /*-----------зебра-----------*/
     if ($num==0) {
         echo '<div class="nav1">';
         $num=1;
@@ -645,27 +836,26 @@ foreach ($q as $post) {
         echo '<div class="nav2">';
         $num=0;
     }
-    /*---------------------------*/
-    if ((user_access('forum_post_ed') || isset($user) && $ank2['id']==$user['id']) && isset($_GET['act']) && $_GET['act']=='post_delete') {
+
+    if ((user_access('forum_post_ed') || isset($user) && $ank2['id']==$user['id']) && isset($input_get['act']) && $input_get['act']=='post_delete') {
         echo '<input type="checkbox" name="post_'.$post['id'].'" value="1" />';
     }
     echo user::avatar($post['id_user']);
-    echo user::nick($ank['id'], 1, 1, 1).' <span style="float:right;color:#666;">'.vremja($post['time']).'</span><br/>';
-    $postBan = $db->query("SELECT COUNT(*) FROM `ban` WHERE (`razdel` = 'all' OR `razdel` = 'forum') AND `post` = '1' AND `id_user` = '$ank[id]' AND (`time` > '$time' OR `navsegda` = '1')")->el();
-    if ($postBan == 0) { // Блок сообщения
-if ($them['id_user'] == $post['id_user']) { // Отмечаем автора темы
+    echo user::nick($post['id_user'], 1, 1, 1).' <span style="float:right;color:#666;">'.vremja($post['time']).'</span><br/>';
+    
+    if ($post['ban'] == 0) { // Блок сообщения
+    if ($them['id_user'] == $post['id_user']) { // Отмечаем автора темы
         echo '<font color="#999">Автор темы</font><br />';
-}
-        /*------------Вывод статуса-------------*/
-        $status=$db->query("SELECT * FROM `status` WHERE `pokaz` = '1' AND `id_user` = '$ank[id]' LIMIT 1")->row();
-        if ($status['id'] && $set['st']==1) {
+    }
+        // Вывод статуса
+        if ($set['st'] == 1 && !empty($post['status'])) {
             echo "<div class='st_1'></div>";
             echo "<div class='st_2'>";
-            echo "".output_text($status['msg'])."";
+            echo "".output_text($post['status'])."";
             echo "</div>\n";
         }
-        /*---------------------------------------*/
-        # Цитирование поста
+        
+        // Цитирование поста
         if ($post['cit']!=null && $db->query("SELECT COUNT(*) FROM `forum_p` WHERE `id` = '$post[cit]'")->el()) {
             $cit=$db->query("SELECT * FROM `forum_p` WHERE `id` = '$post[cit]' LIMIT 1")->row();
             $ank_c=get_user($cit['id_user']);
@@ -675,28 +865,30 @@ if ($them['id_user'] == $post['id_user']) { // Отмечаем автора т�
 		  </div>';
         }
         echo output_text($post['msg']).'<br />'; // Посты темы
-        echo '<table>';
-        include H.'/forum/inc/file.php'; // Прекрепленные файлы
-        echo '</table>';
+        if ($post['file']) {
+            echo '<table>';
+            include H.'/forum/inc/file.php'; // Прекрепленные файлы
+            echo '</table>';
+        }
     } else {
         echo output_text($banMess).'<br />';
     }
     if (isset($user)) {
         if ($them['close']==0) {
-            if (isset($user) &&  $user['id']!=$ank['id'] && $ank['id']!=0) {
-                echo '<a href="/forum/'.$forum['id'].'/'.$razdel['id'].'/'.$them['id'].'/?response='.$ank['id'].'&amp;page='.$page.'" title="Ответить '.$ank['nick'].'">Ответ</a> | ';
-                echo '<a href="/forum/'.$forum['id'].'/'.$razdel['id'].'/'.$them['id'].'/'.$post['id'].'/cit" title="Цитировать '.$ank['nick'].'">Цитата</a>';
+            if (isset($user) &&  $user['id']!=$post['id_user'] && $post['id_user']!=0) {
+                echo '<a href="/forum/'.$forum['id'].'/'.$razdel['id'].'/'.$them['id'].'/?response='.$post['id_user'].'&amp;page='.$page.'" title="Ответить '.$post['nick'].'">Ответ</a> | ';
+                echo '<a href="/forum/'.$forum['id'].'/'.$razdel['id'].'/'.$them['id'].'/'.$post['id'].'/cit" title="Цитировать '.$post['nick'].'">Цитата</a>';
             }
         }
         echo '<span style="float:right;">';
         if ($them['close']==0) { // если тема закрыта, то скрываем кнопки
-            if (user_access('forum_post_ed') && ($ank['level']<=$user['level'] || $ank['level']==$user['level'] &&  $post['id_user']==$user['id'])) {
-                echo "<a href=\"/forum/$forum[id]/$razdel[id]/$them[id]/$post[id]/edit\" title='Изменить пост $ank[nick]'  class='link_s'><img src='/style/icons/edit.gif' alt='*'> </a> \n";
+            if (user_access('forum_post_ed') && ($post['level']<=$user['level'] || $post['level']==$user['level'] &&  $post['id_user']==$user['id'])) {
+                echo "<a href=\"/forum/$forum[id]/$razdel[id]/$them[id]/$post[id]/edit\" title='Изменить пост {$post['nick']}'  class='link_s'><img src='/style/icons/edit.gif' alt='*'> </a> \n";
             } elseif ($user['id']==$post['id_user'] && $post['time']>time()-600) {
                 echo "<a href=\"/forum/$forum[id]/$razdel[id]/$them[id]/$post[id]/edit\" title='Изменить мой пост'  class='link_s'><img src='/style/icons/edit.gif' alt='*'> (".($post['time']+600-time())." сек)</a> \n";
             }
             
-            if ($user['id']!=$ank['id'] && $ank['id']!=0) { // Кроме автора поста и системы
+            if ($user['id']!=$post['id_user'] && $post['id_user']!=0) { // Кроме автора поста и системы
                 echo "<a href=\"/forum/$forum[id]/$razdel[id]/$them[id]/?spam=$post[id]&amp;page=$page\" title='Это спам'  class='link_s'><img src='/style/icons/blicon.gif' alt='*' title='Это спам'></a>\n";
             }
         }
@@ -704,17 +896,17 @@ if ($them['id_user'] == $post['id_user']) { // Отмечаем автора т�
             echo "<a href=\"/forum/$forum[id]/$razdel[id]/$them[id]/?del=$post[id]&amp;page=$page\" title='Удалить'  class='link_s'><img src='/style/icons/delete.gif' alt='*' title='Удалить'></a>\n";
         }
         echo "&nbsp;\n";
-    
-    
         echo '</span><br/>';
     }
-    echo ' '.($webbrowser ? null : '<br/>').' </div>';
+    echo ' '.($webbrowser ? null : '<br/>').' </div>';// TODO: хуй разберешь что у индусов в голове:)
 }
-if ((user_access('forum_post_ed') || isset($user) && $ank2['id'] == $user['id']) && isset($_GET['act']) && $_GET['act'] == 'post_delete') {
+
+if ((user_access('forum_post_ed') || isset($user) && $ank2['id'] == $user['id']) && isset($input_get['act']) && $input_get['act'] == 'post_delete') {
 } elseif ($k_page > 1) {
     str("/forum/$forum[id]/$razdel[id]/$them[id]/?", $k_page, $page);
 } // Вывод страниц
-if ((user_access('forum_post_ed') || isset($user) && $ank2['id'] == $user['id']) && isset($_GET['act']) && $_GET['act'] == 'post_delete') {
+
+if ((user_access('forum_post_ed') || isset($user) && $ank2['id'] == $user['id']) && isset($input_get['act']) && $input_get['act'] == 'post_delete') {
 } elseif (isset($user) && ($them['close'] == 0 || $them['close'] == 1 && user_access('forum_post_close'))) {
     if (isset($user)) {
         echo "<div class='foot'>";

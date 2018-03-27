@@ -8,11 +8,7 @@ include_once '../sys/inc/db_connect.php';
 include_once '../sys/inc/ipua.php';
 include_once '../sys/inc/fnc.php';
 include_once '../sys/inc/user.php';
-/* Бан пользователя */
-if (isset($user['id']) && $db->query("SELECT COUNT(*) FROM `ban` WHERE `razdel` = 'forum' AND `id_user` = '$user[id]' AND (`time` > '$time' OR `view` = '0' OR `navsegda` = '1')")->el()) {
-    header('Location: /ban.php?'.SID);
-    exit;
-}
+
 $searched = &$_SESSION['searched'];
 if (!isset($searched) || isset($_GET['newsearch']) || isset($_GET['null'])) {
     // зануляем весь запрос
@@ -32,6 +28,7 @@ include_once '../sys/inc/thead.php';
 title();
 aut(); // форма авторизации
 err();
+
 if (isset($_GET['newsearch'])) {
     if (count($searched['result'])!=0) {
         msg('По запросу "' . htmlentities($searched['text'], ENT_QUOTES, 'UTF-8') . '" найдено совпадений:' . count($searched['result']));
@@ -52,12 +49,12 @@ if (count($res)) {
     for ($i = $start; $i < $end; $i++) {
         $them = $res[$i];
      
-        if ($db->query("SELECT COUNT(*) FROM `forum_p` WHERE `id_them` = '$them[id]'")->el() == $them['k_post']) {
+        if ($db->query("SELECT COUNT(*) FROM `forum_p` WHERE `id_them`=?i", [$them['id']])->el()/* == $them['k_post']*/) {
             // Определение подфорума
-            $forum = $db->query("SELECT * FROM `forum_f` WHERE `id` = '$them[id_forum]' LIMIT 1")->row();
+            $forum = $db->query("SELECT * FROM `forum_f` WHERE `id`=?i", [$them['id_forum']])->row();
              
             // Определение раздела
-            $razdel = $db->query("SELECT * FROM `forum_r` WHERE `id` = '$them[id_razdel]' LIMIT 1")->row();
+            $razdel = $db->query("SELECT * FROM `forum_r` WHERE `id`=?i", [$them['id_razdel']])->row();
              
             // Лесенка дивов
             if ($num == 0) {
@@ -74,16 +71,22 @@ if (count($res)) {
             // Ссылка на тему
             echo '<a href="/forum/' . $forum['id'] . '/' . $razdel['id'] . '/' . $them['id'] . '/">' . text($them['name']) . '</a> 
             <a href="/forum/' . $forum['id'] . '/' . $razdel['id'] . '/' . $them['id'] . '/?page=' . $pageEnd . '"> 
-            (' . $db->query("SELECT COUNT(*) FROM `forum_p` WHERE `id_forum` = '$forum[id]' AND `id_razdel` = '$razdel[id]' AND `id_them` = '$them[id]'")->el() . ')</a><br/>';
-             
+            (' . $db->query(
+                "SELECT COUNT(*) FROM `forum_p` WHERE `id_forum`=?i AND `id_razdel`=?i AND `id_them`=?i",
+                            [$forum['id'], $razdel['id'], $them['id']])->el() . ')</a><br />';
+            
+            echo esc(br(bbcode(preg_replace($searched['mark'], "<span class='search_cit'>$1</span>", htmlentities($them['msg'], ENT_QUOTES, 'UTF-8')))))."\n";
+            echo "Совпадений: (".$them['k_post'].")<br />\n";             
             // Подфорум и раздел
-            echo '<a href="/forum/' . $forum['id'] . '/">' . text($forum['name']) . '</a> > <a href="/forum/' . $forum['id'] . '/' . $razdel['id'] . '/">' . text($razdel['name']) . '</a>';
+            echo '<a href="/forum/' . $forum['id'] . '/">' . text($forum['name']) . '</a> > <a href="/forum/' . $forum['id'] . '/' . $razdel['id'] . '/">' . text($razdel['name']) . '</a><br />';
              
             // Автор темы
             $ank = get_user($them['id_user']);
-            echo 'Автор: <a href="/info.php?id=' . $ank['id'] . '">' . $ank['nick'] . '</a> (' . vremja($them['time_create']) . ') ';
+            echo 'Автор: <a href="/info.php?id=' . $ank['id'] . '">' . $ank['nick'] . '</a> (' . vremja($them['time_create']) . ')<br />';
             // Последний пост
-            $post = $db->query("SELECT * FROM `forum_p` WHERE `id_them` = '$them[id]' AND `id_razdel` = '$razdel[id]' AND `id_forum` = '$forum[id]' ORDER BY `time` DESC LIMIT 1")->row();
+            $post = $db->query(
+                "SELECT * FROM `forum_p` WHERE `id_them`=?i AND `id_razdel`=?i AND `id_forum`=?i ORDER BY `time` DESC LIMIT ?i",
+                               [$them['id'], $razdel['id'], $forum['id'],  1])->row();
              
             // Автор последнего поста
             if (isset($post['id_user'])) {
@@ -93,7 +96,7 @@ if (count($res)) {
              
             echo '</div>';
         } else {
-            echo esc(br(bbcode(preg_replace($searched['mark'], "<span class='search_cit'>1</span>", htmlentities($them['msg'], ENT_QUOTES, 'UTF-8')))))."\n";
+            echo esc(br(bbcode(preg_replace($searched['mark'], "<span class='search_cit'>$1</span>", htmlentities($them['msg'], ENT_QUOTES, 'UTF-8')))))."\n";
             echo "Всего совпадений: ".$them['k_post']."\n";
         }
     }
@@ -109,9 +112,9 @@ if (count($res)) {
 // Меню возврата
 echo '<div class="foot">';
 if (count($searched['result']) != 0) {
-    echo '<img src="/style/icons/str2.gif" /> <a href="?null=' . $passgen . '">Новый поиск</a> 
-';
+    echo '<img src="/style/icons/str2.gif" /> <a href="?null=' . $passgen . '">Новый поиск</a>';
 }
 echo '<img src="/style/icons/str2.gif" /> <a href="/forum/">Форум</a> | <b>Поиск по форуму</b>';
 echo '</div>';
+
 include_once '../sys/inc/tfoot.php';

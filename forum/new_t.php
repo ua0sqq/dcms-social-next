@@ -10,11 +10,6 @@ include_once '../sys/inc/ipua.php';
 include_once '../sys/inc/fnc.php';
 include_once '../sys/inc/user.php';
 
-/* Бан пользователя */
-if (isset($user) && $db->query("SELECT COUNT(*) FROM `ban` WHERE `razdel` = 'forum' AND `id_user` = '$user[id]' AND (`time` > '$time' OR `view` = '0' OR `navsegda` = '1')")->el()) {
-    header('Location: /ban.php?'.SID);
-    exit;
-}
 // Заголовок страницы
 $set['title']='Форум - новые темы';
 include_once '../sys/inc/thead.php';
@@ -24,24 +19,34 @@ aut(); // форма авторизации
 echo '<div class="foot">';
 echo '<img src="/style/icons/str2.gif" /> <a href="/forum/">Форум</a> | <b>Новые темы</b>';
 echo '</div>';
-$adm_add = [];
-$adm_add2 = '';
-if (!isset($user) || $user['level']==0) {
-    $q222=$db->query("SELECT * FROM `forum_f` WHERE `adm` = '1'");
-    
-    while ($adm_f = $q222->row()) {
-        $adm_add[]="`id_forum` <> '$adm_f[id]'";
-    }
-    if (sizeof($adm_add)!=0) {
-        $adm_add2=' WHERE'.implode(' AND ', $adm_add);
+
+$id_forum=[0];
+
+if (!isset($user) || $user['level'] == 0) {
+    $q222=$db->query('SELECT * FROM `forum_f` WHERE `adm`="1"')->assoc();
+    if (count($q222)) {
+        unset($id_forum[0]);
+        foreach ($q222 as $adm_f) {
+            //$adm_add[] = '`id_forum` <> ' . $adm_f['id'];
+            $id_forum[] = $adm_f['id'];
+        }
     }
 }
-$k_post=$db->query("SELECT COUNT(*) FROM `forum_t`$adm_add2")->el();
+$k_post=$db->query('SELECT COUNT(*) FROM `forum_t` WHERE `id_forum` NOT IN(?li)', [$id_forum])->el();
 $k_page=k_page($k_post, $set['p_str']);
 $page=page($k_page);
 $start=$set['p_str']*$page-$set['p_str'];
+
 echo '<table class="post">';
-$q=$db->query("SELECT * FROM `forum_t`$adm_add2 ORDER BY `time_create` DESC  LIMIT $start, $set[p_str]");
+$q=$db->query(
+    'SELECT thm.*, frm.name AS frm_name, rzd.name AS rzd_name, a.id AS autor_id, (
+	SELECT COUNT(*) FROM `forum_p` WHERE `id_forum` =thm.id_forum AND `id_razdel` =thm.id_razdel AND `id_them` =thm.id) as cnt
+FROM `forum_t` thm
+JOIN `forum_f` frm ON frm.id=thm.id_forum
+JOIN `forum_r` rzd ON rzd.id=thm.id_razdel
+JOIN `user` a ON a.`id`=thm.id_user
+WHERE thm.`id_forum` NOT IN(?li) ORDER BY thm.`time_create` DESC  LIMIT ?i OFFSET ?i',
+              [$id_forum, $set['p_str'], $start]);
 // Если список пуст
 if ($k_post == 0) {
     echo '<div class="mess">';
@@ -49,40 +54,26 @@ if ($k_post == 0) {
     echo '</div>';
 }
 while ($them = $q->row()) {
-    // Определение подфорума
-    $forum = $db->query("SELECT * FROM `forum_f` WHERE `id` = '$them[id_forum]' LIMIT 1")->row();
-    
-    // Определение раздела
-    $razdel = $db->query("SELECT * FROM `forum_r` WHERE `id` = '$them[id_razdel]' LIMIT 1")->row();
-    
     echo '<div class="' . ($num % 2 ? "nav1" : "nav2") . '">';
     $num++;
-    
     // Иконка темы
     echo '<img src="/style/themes/' . $set['set_them'] . '/forum/14/them_' . $them['up'] . $them['close'] . '.png" alt="" /> ';
-    
     // Ссылка на тему
-    echo '<a href="/forum/' . $forum['id'] . '/' . $razdel['id'] . '/' . $them['id'] . '/">' . text($them['name']) . '</a> 
-	<a href="/forum/' . $forum['id'] . '/' . $razdel['id'] . '/' . $them['id'] . '/?page=' . $pageEnd . '">
-	(' . $db->query("SELECT COUNT(*) FROM `forum_p` WHERE `id_forum` = '$forum[id]' AND `id_razdel` = '$razdel[id]' AND `id_them` = '$them[id]'")->el() . ')</a><br/>';
+    echo '<a href="/forum/' . $them['id_forum'] . '/' . $them['id_razdel'] . '/' . $them['id'] . '/">' . text($them['name']) . '</a> 
+	<a href="/forum/' . $them['id_forum'] . '/' . $them['id_razdel'] . '/' . $them['id'] . '/?page=' . $pageEnd . '"> (' . $them['cnt'] . ')</a><br/>';
     
     // Подфорум и раздел
-    echo '<a href="/forum/' . $forum['id'] . '/">' . text($forum['name']) . '</a> &gt; <a href="/forum/' . $forum['id'] . '/' . $razdel['id'] . '/">' . text($razdel['name']) . '</a><br />';
-    
-    // Автор темы
-    $ank = $db->query("SELECT * FROM `user` WHERE `id` = $them[id_user] LIMIT 1")->row();
-    echo 'Автор: <a href="/info.php?id=' . $ank['id'] . '">' . $ank['nick'] . '</a> (' . vremja($them['time_create']) . ')<br />';
-    // Последний пост
-    $post = $db->query("SELECT * FROM `forum_p` WHERE `id_them` = '$them[id]' AND `id_razdel` = '$razdel[id]' AND `id_forum` = '$forum[id]' ORDER BY `time` DESC LIMIT 1")->row();
-    if ($post['id']) {
-        // Автор последнего поста
-        $ank2 = $db->query("SELECT * FROM `user` WHERE `id` = $post[id_user] LIMIT 1")->row();
-    
-        if ($ank2['id']) {
-            echo 'Посл.: <a href="/info.php?id=' . $ank2['id'] . '">' . $ank2['nick'] . '</a> (' . vremja($post['time']) . ')<br />';
-        }
+    echo '<a href="/forum/' . $them['id_forum'] . '/">' . text($them['frm_name']) . '</a> &gt; <a href="/forum/' . $them['id_forum'] . '/' . $them['id_razdel'] . '/">' . text($them['rzd_name']) . '</a><br />';
+    echo 'Автор: <a href="/info.php?id=' . $them['autor_id'] . '">' . user::nick($them['autor_id']) . '</a> (' . vremja($them['time_create']) . ')<br />';
+    $post = $db->query(
+        "SELECT p.time, u.id, u.nick FROM `forum_p` p
+JOIN `user` u ON u.id=p.id_user
+WHERE `id_them`=?i AND `id_razdel`=?i AND `id_forum`=?i ORDER BY p.`time` DESC LIMIT ?i",
+[$them['id'], $them['id_razdel'], $them['id_forum'], 1])->row();
+	
+    if ($post) {
+        echo 'Посл.: <a href="/info.php?id=' . $post['id'] . '">' . $post['nick'] . '</a> (' . vremja($post['time']) . ')<br />';
     }
-    
     echo '</div>';
 }
 echo '</table>';
@@ -94,4 +85,5 @@ if ($k_page>1) {
 echo '<div class="foot">';
 echo '<img src="/style/icons/str2.gif" /> <a href="/forum/">Форум</a> | <b>Мои темы</b>';
 echo '</div>';
+
 include_once '../sys/inc/tfoot.php';

@@ -34,7 +34,7 @@ if (isset($_GET['act']) && $_GET['act']=='del')
 {
     echo "<div class=\"err\">\n";
     echo "Подтвердите удаление раздела<br />\n";
-    echo "<a href=\"/forum/$forum[id]/$razdel[id]/?act=delete&amp;ok\">Да</a> / <a href=\"/forum/$forum[id]/$razdel[id]/\">Нет</a><br />";
+    echo "<a href=\"/forum/$forum[id]/$razdel[id]/?act=razdel_delete&amp;ok\">Да</a> / <a href=\"/forum/$forum[id]/$razdel[id]/\">Нет</a><br />";
     echo "</div>\n";
 }
 echo "<div class=\"foot\">\n";

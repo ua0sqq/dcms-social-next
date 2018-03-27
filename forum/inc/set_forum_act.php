@@ -32,7 +32,7 @@ $forum=$db->query("SELECT * FROM `forum_f` WHERE `id` = '$forum[id]' LIMIT 1")->
 msg('Изменения успешно приняты');
 }
 }
-if (isset($_GET['act']) && isset($_GET['ok']) && $_GET['act']=='delete' && user_access('forum_for_delete'))
+if (isset($_GET['act']) && isset($_GET['ok']) && $_GET['act']=='forum_delete' && user_access('forum_for_delete'))
 {
 $db->query("DELETE FROM `forum_f` WHERE `id` = '$forum[id]'");
 $db->query("DELETE FROM `forum_r` WHERE `id_forum` = '$forum[id]'");

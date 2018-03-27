@@ -53,7 +53,7 @@ if (user_access('forum_for_edit') && (isset($_GET['act']) && $_GET['act']=='set'
 if (isset($_GET['act']) && $_GET['act']=='del' && user_access('forum_for_delete')) {
     echo "<div class='err'>\n";
     echo "Подтвердите удаление форума \n";
-    echo '<a href="/forum/'.$forum['id'].'/?act=delete&ok">Да</a> / <a href="/forum/'.$forum['id'].'/">Нет</a>';
+    echo '<a href="/forum/'.$forum['id'].'/?act=forum_delete&ok">Да</a> / <a href="/forum/'.$forum['id'].'/">Нет</a>';
     echo "</div>\n";
 }
 if (user_access('forum_razd_create') || user_access('forum_for_edit') || user_access('forum_for_delete')) {

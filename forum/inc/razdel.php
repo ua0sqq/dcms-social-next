@@ -14,7 +14,7 @@ echo '<table class="post">';
 $q=$db->query("SELECT * FROM `forum_t` WHERE `id_forum` = '$forum[id]' AND `id_razdel` = '$razdel[id]' ORDER BY `up` DESC,`time` DESC  LIMIT $start, $set[p_str]");
 if (!$k_post) {
     echo '<div class="mess">';
-    echo 'Нет тем в разделе "' . text($razdel['name']);
+    echo 'Нет тем в разделе ' . text($razdel['name']);
     echo '</div>';
 }
 while ($them = $q->row()) {
