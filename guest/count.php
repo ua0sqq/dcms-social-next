@@ -1,12 +1,13 @@
 <?php
 
-$k_p = $db->query("SELECT COUNT(*) FROM `guest`")->el();
-$k_n = $db->query("SELECT COUNT(*) FROM `guest` WHERE `time` > '" . $ftime . "'")->el();
+$cnt = $db->query('SELECT * FROM (
+SELECT COUNT(*) all_cnt FROM `guest`)q, (
+SELECT COUNT(*) new_cnt FROM `guest` WHERE `time`>?i)q2', [$ftime])->row();
 
-if ($k_n == 0) {
-    $k_n = null;
+if ($cnt['new_cnt'] == 0) {
+    $cnt['new_cnt'] = null;
 } else {
-    $k_n = '+' . $k_n;
+    $cnt['new_cnt'] = '+' . $cnt['new_cnt'];
 }
 
-echo '(' . $k_p . ') <font color="red">' . $k_n . '</font>';
+echo '(' . $cnt['all_cnt'] . ') <span style="color:red;">' . $cnt['new_cnt'] . '</span>';
