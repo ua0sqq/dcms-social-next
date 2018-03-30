@@ -20,12 +20,17 @@ if (isset($_GET['delete'])) {
         $_GET['page'] = 1;
     }
     if (isset($_GET['ok'])) {
-        $db->query("DELETE FROM `user_music` WHERE `id_file` = '$file_id[id]' AND `dir` = 'obmen'");
-        $db->query("DELETE FROM `obmennik_files` WHERE `id` = '$file_id[id]'");
+        $db->query(
+        'DELETE FROM `user_music` WHERE `id_file`=?i AND `dir`="obmen"',
+                   [$file_id['id']]);
+        $db->query(
+            'DELETE FROM `obmennik_files` WHERE `id`=?i',
+                   [$file_id['id']]);
         if (is_file(H.'sys/obmen/files/'.$file_id['id'].'.dat')) {
             unlink(H.'sys/obmen/files/'.$file_id['id'].'.dat');
         }
         array_map('unlink', glob(H.'sys/obmen/screens/*/'.$file_id['id'].'.*'));
+        
         $_SESSION['message']='Файл успешно удален';
         header("Location: ?page=".intval($_GET['page'])."");
         exit;

@@ -15,9 +15,12 @@ http://dcms-social.ru
 =======================================
 */
 if (isset($_SESSION['obmen_dir'])) {
-    $dir_id = $db->query("SELECT * FROM `obmennik_dir` WHERE `id` = '" . intval($_SESSION['obmen_dir']) . "' LIMIT 1")->row();
+    $dir_id = $db->query(
+        'SELECT * FROM `obmennik_dir` WHERE `id`=?i',
+                         [$_SESSION['obmen_dir']])->row();
 } else {
-    $dir_id = $db->query("SELECT * FROM `obmennik_dir` WHERE `my` = '1' LIMIT 1")->row();
+    $dir_id = $db->query(
+                         'SELECT * FROM `obmennik_dir` WHERE `my`=1 LIMIT 1')->row();
 }
 if ($dir_id['upload']==1) {
     if (isset($_GET['upload']) && $_GET['upload']=='enter') {
@@ -53,43 +56,65 @@ if ($dir_id['upload']==1) {
             $opis=stripslashes(htmlspecialchars(esc($_POST['msg'])));
         }
         if (!isset($err)) {
-            $db->query("UPDATE `user` SET `rating_tmp` = '".($user['rating_tmp']+3)."' WHERE `id` = '$user[id]' LIMIT 1");
-            $id_file = $db->query("INSERT INTO `obmennik_files` (`metka`, `id_dir`, `name`, `ras`, `type`, `size`, `time`, `time_last`, `id_user`, `opis`, `my_dir` )
-VALUES ('$metka', '$dir_id[id]', '$name', '$ras', '$type', '$size', '$time', '$time', '$user[id]', '$opis' , '$dir[id]')")->id();
+            $db->query(
+                "UPDATE `user` SET `rating_tmp`=`rating_tmp`+3 WHERE `id`=?i",
+                       [$user['id']]);
+            $id_file = $db->query(
+                "INSERT INTO `obmennik_files` (`metka`, `id_dir`, `name`, `ras`, `type`, `size`, `time`, `time_last`, `id_user`, `opis`, `my_dir` )
+VALUES (?i, ?i, ?, ?, ?, ?i, ?i, ?i, ?i, ?, ?i)",
+                                  [$metka, $dir_id['id'], $name, $ras, $type, $size, $time, $time, $user['id'], $opis, $dir['id']])->id();
 
             /*----------------------Лента------------------------*/
             if (!$dir['pass']) {
-                $q = $db->query("SELECT * FROM `frends` WHERE `user` = '".$dir['id_user']."' AND `i` = '1'"); /* Список друзей пользователя */
-                while ($f = $q->row()) {
-                    $a=get_user($f['frend']);
-                    $lentaSet = $db->query("SELECT * FROM `tape_set` WHERE `id_user` = '".$a['id']."' LIMIT 1")->row(); // Общая настройка ленты
-                    if ($f['lenta_obmen']==1 && $lentaSet['lenta_files']==1) /* Фильтр рассылки */
-{
-    if (!$db->query("SELECT COUNT(*) FROM `tape` WHERE `id_user` = '$a[id]' AND `type` = 'obmen' AND `id_file` = '$dir[id]'")->el()) {
-        /* Если нет в ленте этой папки */
-        $db->query("INSERT INTO `tape` (`id_user`, `avtor`, `type`, `time`, `id_file`, `count`) values('$a[id]', '$dir[id_user]', 'obmen', '$time', '$dir[id]', '1')");
-    } elseif ($db->query("SELECT COUNT(*) FROM `tape` WHERE `id_user` = '$a[id]' AND `type` = 'obmen' AND `id_file` = '$dir[id]' AND `read` = '1'")->el()) {
-        /* Если папка есть в ленте то удаляем запись и создаем новую */
-        $db->query("DELETE FROM `tape` WHERE `id_user` = '$a[id]' AND `type` = 'obmen' AND `id_file` = '$dir[id]'");
-        $db->query("INSERT INTO `tape` (`id_user`, `avtor`, `type`, `time`, `id_file`, `count`) values('$a[id]', '$dir[id_user]', 'obmen', '$time', '$dir[id]', '1')");
-    } else {
-        /* Обновляем колличество новых файлов */
-        $tape = $db->query("SELECT * FROM `tape` WHERE `id_user` = '$a[id]' AND `type` = 'obmen' AND `id_file` = '$dir[id]'")->row();
-        $db->query("UPDATE `tape` SET `count` = '".($tape['count']+1)."', `read` = '0', `time` = '$time' WHERE `id_user` = '$a[id]' AND `type` = 'obmen' AND `id_file` = '$dir[id]' LIMIT 1");
-    }
-}
+                // Лента друзей
+                $q = $db->query(
+                'SELECT fr.user, fr.lenta_obmen, ts.lenta_files as ts_foto FROM `frends` fr 
+JOIN tape_set ts ON ts.id_user=fr.user
+WHERE fr.`frend`=?i AND fr.`lenta_obmen`=?i AND `i`=?i',
+                            [$gallery['id_user'], 1, 1]);
+                while ($frend = $q->row()) {
+                    // Фильтр рассылки
+                    if ($frend['lenta_obmen']==1 && $frend['lenta_files']==1) {
+                        if (!$db->query(
+        'SELECT COUNT(*) FROM `tape` WHERE `id_user`=?i AND `type`=? AND `id_file`=?i',
+                    [$frend['user'], 'obmen', $dir['id']])->el()) {
+                            /* Если нет в ленте этой папки */
+                            $db->query(
+            'INSERT INTO `tape` (`id_user`, `avtor`, `type`, `time`, `id_file`, `count`) VALUES(?i, ?i, ?, ?i, ?i, ?i)',
+                   [$frend['user'], $dir['id_user'], 'obmen', $time, $dir['id'], 1]);
+                        } elseif ($db->query(
+        'SELECT COUNT(*) FROM `tape` WHERE `id_user`=?i AND `type`=? AND `id_file`=?i =?iAND `read`=?',
+                         [$frend['user'], 'obmen', $dir['id'],  '1'])->el()) {
+                            /* Если папка есть в ленте то удаляем запись и создаем новую */
+                            $db->query(
+            'DELETE FROM `tape` WHERE `id_user`=?i AND `type`=? AND `id_file`=?i',
+                   [$frend['user'], 'obmen', $dir['id']]);
+                            $db->query(
+            'INSERT INTO `tape` (`id_user`, `avtor`, `type`, `time`, `id_file`, `count`) VALUES(?i, ?i, ?, ?i, ?i, ?i)',
+                   [$frend['user'], $dir['id_user'], 'obmen', $time, $dir['id'], 1]);
+                        } else {
+                            /* Обновляем колличество новых файлов */
+                            $tape = $db->query(
+            'SELECT * FROM `tape` WHERE `id_user`=?i AND `type`=? AND `id_file`=?i',
+                           [$frend['user'], 'obmen', $dir['id']])->row();
+                            $db->query(
+            'UPDATE `tape` SET `count`=`count`+1, `read`="0", `time`=?i WHERE `id_user`=?i AND `type`=? AND `id_file`=?i LIMIT ?i',
+                   [$time, $frend['user'], 'obmen', $dir['id'], 1]);
+                        }
+                    }
                 }
             }
             /*-------------------alex-borisi--------------------*/
-            if (!move_uploaded_file($_FILES['file']['tmp_name'], H."sys/obmen/files/$id_file.dat")) {
-                $db->query("DELETE FROM `obmennik_files` WHERE `id` = '$id_file' LIMIT 1");
+            if (!move_uploaded_file($_FILES['file']['tmp_name'], H . 'sys/obmen/files/' . $id_file . '.dat')) {
+                $db->query(
+                    'DELETE FROM `obmennik_files` WHERE `id`=?i',
+                           [$id_file]);
                 $err[]='Ошибка при выгрузке';
             }
         }
         if (!isset($err)) {
-            
             chmod(H."sys/obmen/files/$id_file.dat", 0666);
-            if (isset($_FILES['screen']) && $imgc=imagecreatefromstring(file_get_contents($_FILES['screen']['tmp_name']))) {
+            if (isset($_FILES['screen']) && is_uploaded_file($_FILES['screen']['tmp_name']) && $imgc=imagecreatefromstring(file_get_contents($_FILES['screen']['tmp_name']))) {
                 $img_x=imagesx($imgc);
                 $img_y=imagesy($imgc);
                 if ($img_x==$img_y) {
@@ -118,7 +143,7 @@ VALUES ('$metka', '$dir_id[id]', '$name', '$ras', '$type', '$size', '$time', '$t
         }
     }
 }
-if ($dir_id['upload']==1 && isset($user)) {
+if ($dir_id['upload'] == 1 && isset($user)) {
     $set['title'] = 'Загрузка файла';
     include_once '../../sys/inc/thead.php';
     title();
@@ -156,4 +181,13 @@ if ($dir_id['upload']==1 && isset($user)) {
     echo "<div class='foot'>";
     echo "<img src='/style/icons/up_dir.gif' alt='*'> ".($dir['osn']==1?'<a href="/user/personalfiles/'.$ank['id'].'/'.$dir['id'].'/">Файлы</a>':'')." ".user_files($dir['id_dires'])." ".($dir['osn']==1?'':'&gt; <a href="/user/personalfiles/'.$ank['id'].'/'.$dir['id'].'/">'.text($dir['name']).'</a>')."\n";
     echo "</div>";
+} else {
+    $set['title'] = 'Ошибка';
+    title() . aut();
+    echo '<div class="err">Загрузка запрещена</div>'."\n";
+    if (isset($user)) {
+        echo '<div class="mess" style="text-align:center;">Обратитесь к администрации</div>'."\n";
+    } else {
+        echo '<div class="mess" style="text-align:center;">Только авторизованым!</div>'."\n";
+    }
 }

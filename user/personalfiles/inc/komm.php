@@ -5,7 +5,7 @@
 Автор: Искатель
 ---------------------------------------
 Этот скрипт распостроняется по лицензии
-движка Dcms-Social. 
+движка Dcms-Social.
 При использовании указывать ссылку на
 оф. сайт http://dcms-social.ru
 ---------------------------------------
@@ -14,81 +14,87 @@ ICQ: 587863132
 http://dcms-social.ru
 =======================================
 */
-$k_post=$db->query("SELECT COUNT(*) FROM `obmennik_komm` WHERE `id_file` = '$file_id[id]'")->el();
-$k_page=k_page($k_post,$set['p_str']);
+$k_post  = $db->query(
+    'SELECT COUNT(*) FROM `obmennik_komm` WHERE `id_file`=?i',
+                   [$file_id['id']]
+)->el();
+$k_page=k_page($k_post, $set['p_str']);
 $page=page($k_page);
 $start=$set['p_str']*$page-$set['p_str'];
-echo "<table class='post'>\n";
-echo '<div class="foot">';
-echo "Комментарии:";
-echo '</div>';
-if ($k_post==0)
-{
-echo '<div class="mess">';
-echo "Нет сообщений\n";
-echo '</div>';
+
+echo '<div class="foot">'."\n";
+echo "Комментарии:\n";
+echo '</div>'."\n";
+if ($k_post==0) {
+    echo '<div class="mess">'."\n";
+    echo "Нет сообщений\n";
+    echo '</div>'."\n";
+} elseif (isset($user)) {
+    // сортировка по времени
+    if (isset($user)) {
+        echo "<div id='comments' class='menus'>\n";
+        echo "<div class='webmenu'>\n";
+        echo "<a href='?id_file=$file_id[id]&amp;sort=1' class='".($user['sort']==1?'activ':'')."'>Внизу</a>\n";
+        echo "</div>\n";
+        echo "<div class='webmenu'>\n";
+        echo "<a href='?id_file=$file_id[id]&amp;sort=0' class='".($user['sort']==0?'activ':'')."'>Вверху</a>\n";
+        echo "</div>\n";
+        echo "</div>\n";
+    }
 }
-else if (isset($user))
-{
-	/*------------сортировка по времени--------------*/
-	if (isset($user)){
-	echo "<div id='comments' class='menus'>";
-	echo "<div class='webmenu'>";
-	echo "<a href='?id_file=$file_id[id]&amp;sort=1' class='".($user['sort']==1?'activ':'')."'>Внизу</a>";
-	echo "</div>"; 
-	echo "<div class='webmenu'>";
-	echo "<a href='?id_file=$file_id[id]&amp;sort=0' class='".($user['sort']==0?'activ':'')."'>Вверху</a>";
-	echo "</div>"; 
-	echo "</div>";
-	}
-	/*---------------alex-borisi---------------------*/
+$q=$db->query(
+    'SELECT obk.*, u.id AS id_user, u.nick, (
+SELECT COUNT(*) FROM `ban` WHERE (`razdel`="all" OR `razdel`="files") AND `post`=1 AND `id_user`=obk.id_user AND (`time` > '.$time.' OR `navsegda`=1)) ban
+FROM `obmennik_komm` obk
+JOIN `user` u ON u.id=obk.id_user
+WHERE obk.`id_file`=?i ORDER BY obk.`id` ?q LIMIT ?i OFFSET ?i',
+              [$file_id['id'], $sort, $set['p_str'], $start]);
+
+while ($post = $q->row()) {
+    if ($num==0) {
+        echo '<div class="nav1">'."\n";
+        $num=1;
+    } elseif ($num==1) {
+        echo '<div class="nav2">'."\n";
+        $num=0;
+    }
+    echo " ".group($post['id_user'])." <a href='/info.php?id={$post['id_user']}'>{$post['nick']}</a>\n";
+    if (isset($user) && $post['id_user'] != $user['id']) {
+        echo ' <a href="?id_file='.$file_id['id'].'&amp;page='.$page.'&amp;response='.$post['id_user'].'">[*]</a> ';
+    }
+    echo "".online($post['id_user'])." (".vremja($post['time']).")<br />\n";
+    
+    // Блок сообщения
+    if ($post['ban'] == 0) {
+        echo output_text($post['msg'])."<br />\n";
+    } else {
+        echo output_text($banMess).'<br />';
+    }
+    if (isset($user)) {
+        echo '<div style="text-align:right;">'."\n";
+        if ($post['id_user']!=$user['id']) {
+            echo "<a href=\"?id_file=$file_id[id]&amp;page=$page&amp;spam=$post[id]\"><img src='/style/icons/blicon.gif' alt='*' title='Это спам'></a>\n";
+        }
+        if (user_access('obmen_komm_del') || $post['id_user'] == $user['id']) {
+            echo '<a href="?id_file='.$file_id['id'].'&amp;page='.$page.'&amp;del_post='.$post['id'].'"><img src="/style/icons/delete.gif" alt="*"></a>'."\n";
+        }
+        echo "   </div>\n";
+    }
+    echo "   </div>\n";
 }
-$q=$db->query("SELECT * FROM `obmennik_komm` WHERE `id_file` = '$file_id[id]' ORDER BY `id` $sort LIMIT $start, $set[p_str]");
-while ($post = $q->row())
-{
-	$anketa=$db->query("SELECT * FROM `user` WHERE `id` = '$post[id_user]' LIMIT 1")->row();
-/*-----------зебра-----------*/ 
-	if ($num==0){
-		echo '<div class="nav1">';
-		$num=1;
-	}
-	elseif ($num==1){
-		echo '<div class="nav2">';
-		$num=0;
-	}
-/*---------------------------*/
-	echo " ".group($anketa['id'])." <a href='/info.php?id=$anketa[id]'>$anketa[nick]</a>";
-	if (isset($user) && $anketa['id'] != $user['id'])echo ' <a href="?id_file='.$file_id['id'].'&amp;page='.$page.'&amp;response='.$anketa['id'].'">[*]</a> ';
-	echo "".online($anketa['id'])." (".vremja($post['time']).")<br />\n";
-	
-$postBan = $db->query("SELECT COUNT(*) FROM `ban` WHERE (`razdel` = 'all' OR `razdel` = 'files') AND `post` = '1' AND `id_user` = '$anketa[id]' AND (`time` > '$time' OR `navsegda` = '1')")->el();
-if ($postBan == 0) // Блок сообщения
-{	
-	echo esc(trim(br(bbcode(smiles(links(stripcslashes(htmlspecialchars($post['msg']))))))))."<br />\n";
-}else{
-	echo output_text($banMess).'<br />';
+
+if ($k_page>1) {
+    str('?id_file='.$file_id['id'].'&amp;', $k_page, $page);
+} // Вывод страниц
+if (isset($user)) {
+    echo "<form method=\"post\" name='message' action=\"?id_file=$file_id[id]".$go_link."\">\n";
+
+    if ($set['web'] && is_file(H.'style/themes/'.$set['set_them'].'/altername_post_form.php')) {
+        include_once H.'style/themes/'.$set['set_them'].'/altername_post_form.php';
+    } else {
+        echo "$tPanel<textarea name=\"msg\">$insert</textarea><br />\n";
+    }
+
+    echo "<input value=\"Отправить\" type=\"submit\" />\n";
+    echo "</form>\n";
 }
-if (isset($user))
-{
-echo '<div style="text-align:right;">';
-	if ($anketa['id']!=$user['id'])
-		echo "<a href=\"?id_file=$file_id[id]&amp;page=$page&amp;spam=$post[id]\"><img src='/style/icons/blicon.gif' alt='*' title='Это спам'></a> "; 
-	if (user_access('obmen_komm_del') || $anketa['id'] == $user['id'])
-		echo '<a href="?id_file='.$file_id['id'].'&amp;page='.$page.'&amp;del_post='.$post['id'].'"><img src="/style/icons/delete.gif" alt="*"></a>';
-	echo "   </div>\n";
-}
-	echo "   </div>\n";
-}
-echo "</table>\n";
-if ($k_page>1)str('?id_file='.$file_id['id'].'&amp;',$k_page,$page); // Вывод страниц
-if (isset($user))
-{
-echo "<form method=\"post\" name='message' action=\"?id_file=$file_id[id]".$go_link."\">\n";
-if ($set['web'] && is_file(H.'style/themes/'.$set['set_them'].'/altername_post_form.php'))
-include_once H.'style/themes/'.$set['set_them'].'/altername_post_form.php';
-else
-echo "$tPanel<textarea name=\"msg\">$insert</textarea><br />\n";
-echo "<input value=\"Отправить\" type=\"submit\" />\n";
-echo "</form>\n";
-}
-?>

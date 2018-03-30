@@ -25,11 +25,6 @@ include_once '../../sys/inc/fnc.php';
 include_once '../../sys/inc/user.php';
 
 include_once '../../sys/inc/files.php';
-/* Бан пользователя */
-if (isset($user) && $db->query("SELECT COUNT(*) FROM `ban` WHERE `razdel` = 'files' AND `id_user` = '$user[id]' AND (`time` > '$time' OR `view` = '0' OR `navsegda` = '1')")->el()) {
-    header('Location: /ban.php?'.SID);
-    exit;
-}
 
 include_once '../../sys/inc/thead.php';
 if (isset($user)) {
@@ -44,25 +39,36 @@ if (!isset($ank['id'])) {
 }
 
  // Определяем id автора папки
-$ank = get_user($ank['id']);
-if (!$ank) {
+$ank_id = $db->query('SELECT id FROM `user` WHERE id=?i', [$ank['id']])->el();
+if (!$ank_id) {
     header("Location: /index.php?".SID);
     exit;
 }
  // Если у юзера нет основной папки создаем
-if (!$db->query("SELECT COUNT(*) FROM `user_files` WHERE `id_user` = '$ank[id]' AND `osn` = '1'")->el()) {
-    $db->query("INSERT INTO `user_files` (`id_user`, `name`,  `osn`) values('$ank[id]', 'Файлы', '1')");
-    $dir = $db->query("SELECT * FROM `user_files`  WHERE `id_user` = '$ank[id]' AND `osn` = '1'")->row();
-    header("Location: /user/personalfiles/$ank[id]/$dir[id]/".SID);
+if (!$db->query(
+    "SELECT COUNT(*) FROM `user_files` WHERE `id_user`=?i AND `osn`=?i",
+                [$ank_id, 1])->el()) {
+    $db->query(
+        "INSERT INTO `user_files` (`id_user`, `name`,  `osn`) values(?i, ?, ?i)",
+               [$ank_id, 'Файлы', 1]);
+    $dir = $db->query(
+        "SELECT * FROM `user_files`  WHERE `id_user`=?i AND `osn`=?i",
+                [$ank_id, 1])->row();
+    header('Location: /user/personalfiles/' . $ank_id . '/' . $dir['id'] . '/' . SID);
 }
  // Основная папка
-$dir_osn = $db->query("SELECT * FROM `user_files` WHERE `id_user` = '$ank[id]' AND `osn` = '1' LIMIT 1")->row();
+$dir_osn = $db->query(
+    "SELECT * FROM `user_files` WHERE `id_user`=?i AND `osn`=?i LIMIT ?i",
+                      [$ank_id, 1, 1])->row();
  // Текущая папка
-$dir = $db->query("SELECT * FROM `user_files` WHERE `id_user` = '$ank[id]' AND `id` = '".intval($_GET['dir'])."' LIMIT 1")->row();
+$dir = $db->query(
+    "SELECT * FROM `user_files` WHERE `id_user`=?i AND `id`=?i",
+                  [$ank_id, $_GET['dir']])->row();
  // Блокируем в случае отсутствия папки
-if ($dir['id_user']!=$ank['id']) {
-    echo "Ошибка! Возможно папка была удалена, проверьте правильность адреса!";
-    exit;
+if ($dir['id_user'] != $ank_id) {
+    title() . aut();
+    echo '<div class="err">'."\n".'Ошибка! Возможно папка была удалена, проверьте правильность адреса!'."\n".'</div>'."\n";
+    include_once '../../sys/inc/tfoot.php';
 }
 if (isset($_GET['id']) && isset($_GET['dir'])  && !isset($_GET['add']) && !isset($_GET['upload']) && !isset($_GET['id_file'])) {
     // Вывод папок
