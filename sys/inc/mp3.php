@@ -474,7 +474,7 @@ array(2,1),
         if ($bits[19] == 1) {
             $bitrate += 1;
         }
-        $this->bitrate = $bitrates[$this->layer][$bitrate];
+        $this->bitrate = @$bitrates[$this->layer][$bitrate];
         $frequency = array(
 '1' => array(
 '0' => array(44100, 48000),
@@ -521,7 +521,7 @@ array('', 'CCITT j.17'),
 '3' => 576
 ),
 );
-        $this->samples_per_frame = $samplesperframe[$this->mpeg_ver][$this->layer];
+        $this->samples_per_frame = @$samplesperframe[$this->mpeg_ver][$this->layer];
         if ($this->encoding_type != 'VBR') {
             if ($this->bitrate == 0) {
                 $s = -1;

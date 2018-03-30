@@ -9,6 +9,7 @@ include_once '../sys/inc/ipua.php';
 include_once '../sys/inc/fnc.php';
 include_once '../sys/inc/adm_check.php';
 include_once '../sys/inc/user.php';
+
 if (!user_access('user_ban_set') && !user_access('user_ban_set_h') && !user_access('user_ban_unset')) {
     header("Location: /index.php?".SID);
     exit;
@@ -19,7 +20,8 @@ if (isset($_GET['id'])) {
     header("Location: /index.php?".SID);
     exit;
 }
-if (!$db->query("SELECT COUNT(*) FROM `user` WHERE `id` = '$ank[id]' LIMIT 1")->el()) {
+if (!$db->query("SELECT COUNT(*) FROM `user` WHERE `id`=?i",
+                [$ank['id']])->el()) {
     header("Location: /index.php?".SID);
     exit;
 }
@@ -31,11 +33,15 @@ if ($user['level']<=$ank['level']) {
 $set['title']='Бан пользователя '.$ank['nick'];
 include_once '../sys/inc/thead.php';
 title();
-if (isset($_GET['delete']) && $db->query("SELECT COUNT(*) FROM `ban` WHERE `id_user` = '$ank[id]' AND `id` = '".intval($_GET['delete'])."'")->el() && user_access('user_ban_unset')) {
-    $ban_info=$db->query("SELECT * FROM `ban` WHERE `id_user` = '$ank[id]' AND `id` = '".intval($_GET['delete'])."'")->row();
-    $ank2=$db->query("SELECT * FROM `user` WHERE `id` = '$ban_info[id_ban]' LIMIT 1")->row();
+if (isset($_GET['delete']) && $db->query("SELECT COUNT(*) FROM `ban` WHERE `id_user`=?i AND `id`=?i",
+                                         [$ank['id'], $_GET['delete']])->el() && user_access('user_ban_unset')) {
+    $ban_info=$db->query("SELECT * FROM `ban` WHERE `id_user`=?i AND `id`=?i",
+                                         [$ank['id'], $_GET['delete']])->row();
+    $ank2=$db->query("SELECT * FROM `user` WHERE `id`=?i",
+                     [$ban_info['id_ban']])->row();
     if (($user['level']>$ank2['level'] || $user['id']==$ank2['id']) || $user['level']==4) {
-        $db->query("DELETE FROM `ban` WHERE `id` = '".intval($_GET['delete'])."' LIMIT 1");
+        $db->query("DELETE FROM `ban` WHERE `id`=?i",
+                   [$_GET['delete']]);
         admin_log('Пользователи', 'Бан', "Удаление нарушения с пользователя '[url=/amd_panel/ban.php?id=$ank[id]]$ank[nick][/url]'");
         $_SESSION['message'] = 'Нарушение удалено';
         header("Location: ?id=$ank[id]");
@@ -44,11 +50,15 @@ if (isset($_GET['delete']) && $db->query("SELECT COUNT(*) FROM `ban` WHERE `id_u
         $err[]='Нет прав';
     }
 }
-if (isset($_GET['unset']) && $db->query("SELECT COUNT(*) FROM `ban` WHERE `id_user` = '$ank[id]' AND `id` = '".intval($_GET['unset'])."'")->el() && user_access('user_ban_unset')) {
-    $ban_info=$db->query("SELECT * FROM `ban` WHERE `id_user` = '$ank[id]' AND `id` = '".intval($_GET['unset'])."'")->row();
-    $ank2=$db->query("SELECT * FROM `user` WHERE `id` = '$ban_info[id_ban]' LIMIT 1")->row();
+if (isset($_GET['unset']) && $db->query("SELECT COUNT(*) FROM `ban` WHERE `id_user`=?i AND `id`=?i",
+                                        [$ank['id'], $_GET['unset']])->el() && user_access('user_ban_unset')) {
+    $ban_info=$db->query("SELECT * FROM `ban` WHERE `id_user`=?i AND `id`=?i",
+                                        [$ank['id'], $_GET['unset']])->row();
+    $ank2=$db->query("SELECT * FROM `user` WHERE `id`=?i",
+                     [$ban_info['id_ban']])->row();
     if (($user['level']>$ank2['level'] || $user['id']==$ank2['id']) || $user['level']==4) {
-        $db->query("UPDATE `ban` SET `time` = '$time', `navsegda` = '0' WHERE `id` = '".intval($_GET['unset'])."' LIMIT 1");
+        $db->query("UPDATE `ban` SET `time`=?i, `navsegda`=?i WHERE `id`=?i",
+                   [$time, 0, $_GET['unset']]);
         admin_log('Пользователи', 'Бан', "Снятие бана пользователя '[url=/amd_panel/ban.php?id=$ank[id]]$ank[nick][/url]'");
         $_SESSION['message'] = 'Время бана обнулено';
         header("Location: ?id=$ank[id]");
@@ -90,7 +100,9 @@ if (isset($_POST['ban_pr']) && isset($_POST['time']) && isset($_POST['vremja']) 
     }
     $prich=my_esc($prich);
     if (!isset($err)) {
-        $db->query("INSERT INTO `ban` (`id_user`, `id_ban`, `prich`, `time`, `pochemu`, `razdel`, `post`, `navsegda`) VALUES ('$ank[id]', '$user[id]', '$prich', '$timeban', '$pochemu', '$razdel', '$post', '$navsegda')");
+        $db->query("INSERT INTO `ban` (`id_user`, `id_ban`, `prich`, `time`, `pochemu`, `razdel`, `post`, `navsegda`)
+VALUES (?i, ?i, ?, ?i, ?i, ?, ?i, ?i)",
+                   [$ank['id'], $user['id'], $prich, $timeban, $pochemu, $razdel, $post, $navsegda]);
         admin_log('Пользователи', 'Бан', "Бан пользователя '[url=/adm_panel/ban.php?id=$ank[id]]$ank[nick][/url]' до ".vremja($timeban)." по причине '$prich'");
         $_SESSION['message'] = 'Пользователь успешно забанен';
         header("Location: ?id=$ank[id]");
@@ -99,7 +111,8 @@ if (isset($_POST['ban_pr']) && isset($_POST['time']) && isset($_POST['vremja']) 
 }
 err();
 aut();
-$k_post=$db->query("SELECT COUNT(*) FROM `ban` WHERE `id_user` = '$ank[id]'")->el();
+$k_post=$db->query("SELECT COUNT(*) FROM `ban` WHERE `id_user`=?i",
+                   [$ank['id']])->el();
 $k_page=k_page($k_post, $set['p_str']);
 $page=page($k_page);
 $start=$set['p_str']*$page-$set['p_str'];
@@ -109,16 +122,19 @@ if ($k_post==0) {
     echo "Нет нарушений\n";
     echo "</div>\n";
 }
-$q=$db->query("SELECT * FROM `ban` WHERE `id_user` = '$ank[id]' ORDER BY `time` DESC LIMIT $start, $set[p_str]");
+$q=$db->query("SELECT * FROM `ban` WHERE `id_user`=?i ORDER BY `time` DESC LIMIT ?i OFFSET ?i",
+              [$ank['id'], $set['p_str'], $start]);
 while ($post = $q->row()) {
-    /*-----------зебра-----------*/if ($num==0) {
+
+    if ($num==0) {
         echo "  <div class='nav1'>\n";
         $num=1;
     } elseif ($num==1) {
         echo "  <div class='nav2'>\n";
         $num=0;
-    }/*---------------------------*/
-    $ank2=$db->query("SELECT * FROM `user` WHERE `id` = $post[id_ban] LIMIT 1")->row();
+    }
+    $ank2=$db->query("SELECT * FROM `user` WHERE `id`=?i",
+                     [$post['id_ban']])->row();
     if ($set['set_show_icon']==2) {
         avatar($ank2['id']);
     } elseif ($set['set_show_icon']==1) {
@@ -132,7 +148,7 @@ while ($post = $q->row()) {
     }
     echo '<b>Причина:</b> '.$pBan[$post['pochemu']].'<br />';
     echo '<b>Раздел:</b> '.$rBan[$post['razdel']].'<br />';
-    echo '<b>Комментарий:</b> '.esc(trim(br(bbcode(smiles(links(stripcslashes(htmlspecialchars($post['prich']))))))))."<br />\n";
+    echo '<b>Комментарий:</b> '.output_text($post['prich'])."<br />\n";
     if ($post['time']>$time && user_access('user_ban_unset')) {
         echo "<font color=red><b>Активен</b></font> | <a href='?id=$ank[id]&amp;unset=$post[id]'>Снять бан</a><br />\n";
     }

@@ -163,16 +163,11 @@ if (isset($input_post['msg']) && isset($user)) {
         // Обсуждения
         
         // Отправляем друзьям
-        $q =$db->query(
-            "SELECT * FROM `frends` WHERE `user`=?i AND `i`=?i",
-                       [$gallery['id_user'], 1]
-        );
         $q = $db->query(
             "SELECT fr.user, fr.disc_foto, dsc.disc_foto as dsc_foto FROM `frends` fr 
 JOIN discussions_set dsc ON dsc.id_user=fr.user
 WHERE fr.`frend`=?i AND fr.`disc_foto`=?i AND `i`=?i",
-                        [$gallery['id_user'], 1, 1]
-            );
+                        [$gallery['id_user'], 1, 1]);
         while ($frend = $q->row()) {
             if ($frend['disc_foto'] == 1 && $frend['dsc_foto'] == 1) {
                 if (!$db->query(

@@ -26,10 +26,11 @@ $respons = false;
 if (isset($_SESSION['id_user']) && $db->query("SELECT COUNT(*) FROM `user` WHERE `id`=?i",
                                               [$_SESSION['id_user']])->el()) {
 // TODO: что то мне эта хрень с хитробаном не нравится
-    $ban_module = ['guest', 'notes', 'forum', 'obmen', 'chat', 'lib', 'foto'];
+    $ban_module = ['guest', 'notes', 'forum', 'obmen', 'chat', 'lib', 'foto','personalfiles'];
     $module = search_ban(explode('/', $_SERVER['PHP_SELF']), $ban_module);
     if ($module) {
         if ($module == 'obmen') $module = 'files';
+        if ($module == 'personalfiles') $module = 'files';
         $whr = '(`razdel`="all" OR `razdel`="' . $module . '")';
     } else {
         $whr = '`razdel`="all"';
@@ -39,7 +40,7 @@ if (isset($_SESSION['id_user']) && $db->query("SELECT COUNT(*) FROM `user` WHERE
 SELECT COUNT(*) FROM `ban` WHERE ?q AND `id_user` = `u`.`id` AND (`time` > ?i OR `view` = ? OR `navsegda` = "1")) as ban FROM user `u` 
 LEFT JOIN `user_group` `gr` ON `u`.`group_access`=`gr`.`id`
 WHERE `u`.`id`=?i', [$whr, time(), "0", $_SESSION['id_user']])->row();
-$db->setDebug(false);
+
     $user['type_input'] = 'session';
 } elseif (!isset($input_page) && isset($_COOKIE['id_user']) && isset($_COOKIE['pass']) && $_COOKIE['id_user'] && $_COOKIE['pass']) {
     if (!isset($_POST['token'])) {
