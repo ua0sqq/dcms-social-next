@@ -1,11 +1,12 @@
 <?php
-$my_dir = $db->query("SELECT id FROM `obmennik_dir` WHERE `my` = '1' LIMIT 1")->row();
-$k_p=$db->query("SELECT COUNT(*) FROM `obmennik_files` WHERE `id_dir` != '$my_dir[id]'")->el();
-$k_n= $db->query("SELECT COUNT(*) FROM `obmennik_files` WHERE `id_dir` != '$my_dir[id]' AND `time_go` > '".$ftime."'")->el();
-if ($k_n==0) {
-    $k_n=null;
+
+$cnt = $db->query('SELECT * FROM (
+SELECT COUNT(*)  all_cnt FROM `obmennik_files` WHERE `id_dir` NOT IN(SELECT id FROM obmennik_dir WHERE `my`=1))q, (
+SELECT COUNT(*) new_cnt FROM `obmennik_files` WHERE `id_dir` NOT IN(SELECT id FROM obmennik_dir WHERE `my`=1) AND `time` > '.$ftime.')q2')->row();
+
+if ($cnt['new_cnt']==0) {
+    $cnt['new_cnt']=null;
 } else {
-    $k_n='+'.$k_n;
+    $cnt['new_cnt']='+'.$cnt['new_cnt'];
 }
-echo "($k_p) <font color='red'>$k_n</font>";
-?>
+echo '(' . $cnt['all_cnt'] . ') <span style="color:red;">' . $cnt['new_cnt'] . '</span>';

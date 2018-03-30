@@ -4,9 +4,10 @@ Dcms-Social
 Искатель
 http://mydcms.ru
 */
-if (isset($_GET['act']) && $_GET['act']=='upload' && isset($_GET['ok']) && $l!='/' && $user['id']==$trans['id_user']) {
-    $dir_my=$db->query("SELECT * FROM `obmennik_dir` WHERE `id` = '$trans[id_dir]' LIMIT 1")->row();
-    //if ($db->query("SELECT COUNT(*) FROM `obmennik_files` WHERE `size` = '$trans[size]'")>1 && $dir_my['my']!=1)$err = 'Такой в файл уже есть в обменнике';
+if (isset($_GET['act']) && $_GET['act'] == 'upload' && isset($_GET['ok']) && $l != '/' && $user['id'] == $trans['id_user']) {
+    $dir_my=$db->query(
+        "SELECT * FROM `obmennik_dir` WHERE `id`=?i",
+                       [$trans['id_dir']])->row();
     if ($dir_id['upload']==1) {
         $ras=$trans['ras'];
         $rasss=explode(';', $dir_id['ras']);
@@ -20,13 +21,15 @@ if (isset($_GET['act']) && $_GET['act']=='upload' && isset($_GET['ok']) && $l!='
             $err='Неверное расширение файла';
         }
         if (!isset($err)) {
-            $db->query("UPDATE `obmennik_files` SET `id_dir` = '$dir_id[id]' WHERE `id` = '$trans[id]' LIMIT 1");
+            $db->query(
+                'UPDATE `obmennik_files` SET `id_dir`=?i WHERE `id`=?i',
+                       [$dir_id['id'], $trans['id']]);
             $_SESSION['message'] = 'Файл успешно добавлен в папку '.$dir_id['name'].' зоны обмена';
-            header('Location: /user/personalfiles/'.$trans['id_user'].'/'.$trans['my_dir'].'/?id_file='.$trans['id'].'');
+            header('Location: /user/personalfiles/' . $trans['id_user'] . '/' . $trans['my_dir'] . '/?id_file=' . $trans['id']);
             exit;
         } else {
             $_SESSION['message'] = $err;
-            header('Location: /user/personalfiles/'.$trans['id_user'].'/'.$trans['my_dir'].'/?id_file='.$trans['id'].'');
+            header('Location: /user/personalfiles/' . $trans['id_user'] . '/' . $trans['my_dir'] . '/?id_file=' . $trans['id']);
             exit;
         }
     } else {
