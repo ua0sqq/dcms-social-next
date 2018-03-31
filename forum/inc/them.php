@@ -817,8 +817,8 @@ $q=$db->query(
 SELECT COUNT( * ) FROM `ban` WHERE (`razdel`="all" OR `razdel`="forum") AND `post`=1 AND `id_user`=`pst`.`id_user` AND (`time`>?i OR `navsegda`=1)) ban, (
 SELECT COUNT( * ) FROM forum_files WHERE id_post=pst.id) file
 FROM `forum_p` pst 
-JOIN `user` u ON u.id=pst.id_user
-JOIN `status` sts ON sts.id_user=pst.id_user
+LEFT JOIN `user` u ON u.id=pst.id_user
+LEFT JOIN `status` sts ON sts.id_user=pst.id_user
 WHERE pst.`id_them`=?i AND pst.`id_forum`=?i AND pst.`id_razdel`=?i ORDER BY pst.`time`?q;?q',
 [$time, $them['id'], $forum['id'], $razdel['id'], $sort, $lim]
 )->assoc();
