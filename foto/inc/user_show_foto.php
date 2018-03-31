@@ -113,7 +113,7 @@ if (isset($user) && $user['id'] != $ank['id'] && !$db->query(
         }
     
         $db->query(
-            "INSERT INTO `gallery_rating` (`id_user`, `id_foto`, `like`, `time`, `avtor`) VALUES(?i, ?i', ?i, ?i, ?i)",
+            "INSERT INTO `gallery_rating` (`id_user`, `id_foto`, `like`, `time`, `avtor`) VALUES(?i, ?i, ?i, ?i, ?i)",
                    [$user['id'], $foto['id'], $input_get['rating'], $time, $foto['id_user']]
         );
         $db->query(
@@ -325,7 +325,7 @@ if (!isset($block_foto)) {
                 echo "<a href=\"?rating=1\" title=\"1\"><img src='/style/icons/1.png' alt=''/></a>";
             } else {
                 $rate =$db->query(
-                    "SELECT * FROM `gallery_rating` WHERE `id_foto` = $foto[id] AND `id_user` = '$user[id]' LIMIT 1",
+                    "SELECT * FROM `gallery_rating` WHERE `id_foto`=?i AND `id_user`=?i LIMIT ?i",
                                   [$foto['id'], $user['id'], 1]
                 )->row();
             

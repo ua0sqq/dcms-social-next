@@ -317,10 +317,12 @@ echo "<img src='/style/icons/druzya.png' alt='*'/> <a href='/user/frends/create.
 ========================================
 */
 	echo '<img src="/style/icons/fav.gif" alt="*" /> ';
-	if (!$db->query("SELECT COUNT(*) FROM `mark_people` WHERE `id_user` = '" . $user['id'] . "' AND `id_people` = '" . $ank['id'] . "' LIMIT 1")->el())
+	if (!$db->query("SELECT COUNT(*) FROM `bookmarks` WHERE `id_user`=?i AND `id_object`=?i AND `type`=?",
+					[$user['id'], $ank['id'], 'people'])->el()) {
 		echo '<a href="?id=' . $ank['id'] . '&amp;fav=1">В закладки</a><br />';
-	else
+	}	else {
 		echo '<a href="?id=' . $ank['id'] . '&amp;fav=0">Удалить из закладок</a><br />';
+	}
 echo "</div>";
 echo "<div class='nav2'>";
 /*

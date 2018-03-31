@@ -71,7 +71,7 @@ VALUES (?i, ?i, ?, ?, ?, ?i, ?i, ?i, ?i, ?, ?i)",
                 'SELECT fr.user, fr.lenta_obmen, ts.lenta_files as ts_foto FROM `frends` fr 
 JOIN tape_set ts ON ts.id_user=fr.user
 WHERE fr.`frend`=?i AND fr.`lenta_obmen`=?i AND `i`=?i',
-                            [$gallery['id_user'], 1, 1]);
+                            [$user['id'], 1, 1]);
                 while ($frend = $q->row()) {
                     // Фильтр рассылки
                     if ($frend['lenta_obmen']==1 && $frend['lenta_files']==1) {

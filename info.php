@@ -226,16 +226,23 @@ if (isset($_GET['like']) && $user['id']!=$ank['id'] &&
 =================================
 */
 if (isset($_GET['fav']) && isset($user)) {
-    if (!$db->query("SELECT COUNT(*) FROM `bookmarks` WHERE `id_user` = '".$user['id']."' AND `id_object` = '".$ank['id']."' AND `type`='people' LIMIT 1")->el() && $_GET['fav'] == 1) {
-        $db->query("INSERT INTO `bookmarks` (`id_object`, `id_user`, `time`,`type`) VALUES ('$ank[id]', '$user[id]', '$time','notes')");
+    if ($_GET['fav'] == 1 && !$db->query(
+            'SELECT COUNT(*) FROM `bookmarks` WHERE `id_user`=?i AND `id_object`=?i AND `type`=?',
+                    [$user['id'], $ank['id'], 'people'])->el()) {
+        $db->query("INSERT INTO `bookmarks` (`id_object`, `id_user`, `time`,`type`) VALUES (?i, ?i, ?i, ?)",
+                   [$ank['id'], $user['id'], $time, 'people']);
         $_SESSION['message'] = $ank['nick'] . ' добавлен в закладки';
     }
-    if ($db->query("SELECT COUNT(*) FROM `bookmarks` WHERE `id_user` = '".$user['id']."' AND `id_object` = '".$ank['id']."' AND `type`='people' LIMIT 1")->el() && $_GET['fav'] == 0) {
-        $db->query("DELETE FROM `mark_people` WHERE `id_user` = '$user[id]' AND  `id_object` = '$ank[id]' AND `type`='people'");
+    if ($_GET['fav'] == 0 && $db->query(
+            'SELECT COUNT(*) FROM `bookmarks` WHERE `id_user`=?i AND `id_object`=?i AND `type`=?',
+                    [$user['id'], $ank['id'], 'people'])->el()) {
+        $db->query(
+            'DELETE FROM `bookmarks` WHERE `id_user`=?i AND  `id_object`=?i AND `type`=?',
+                   [$user['id'], $ank['id'], 'people']);
         $_SESSION['message'] = $ank['nick'] . ' удален из закладок';
     }
     
-    header("Location: /info.php?id=$ank[id]");
+    header('Location: /info.php?id=' . $ank['id']);
     exit;
 }
 /*------------------------статус like-----------------------*/

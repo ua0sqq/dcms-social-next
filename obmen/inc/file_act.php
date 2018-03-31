@@ -32,6 +32,7 @@ if ((user_access('obmen_file_delete') || $user['id'] == $file_id['id_user']) && 
 	if (is_file(H . 'sys/obmen/files/' . $file_id['id'] . '.dat')) {
 		unlink(H . 'sys/obmen/files/' . $file_id['id'] . '.dat');
 	}
+	$db->query('DELETE FROM `bookmarks` WHERE `type`="file" AND `id_object`=?i', [$file_id['id']]);
     $_SESSION['message'] = 'Файл успешно удален';
     header('Location: /obmen' . $dir_id['dir'] . '?' . SID);
     exit;

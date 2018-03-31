@@ -35,9 +35,12 @@ if (user_access('obmen_dir_delete') && isset($_GET['act']) && $_GET['act']=='del
                    SELECT `id` FROM `obmennik_files`)');
     $db->query('DELETE FROM `user_music` WHERE `id_file` NOT IN (
                    SELECT `id` FROM `obmennik_files`) AND `dir`="obmen"');
-    $db->query('OPTIMIZE TABLE `obmennik_dir` ,`obmennik_files` ,`obmennik_komm`, `user_music`;');
+    $db->query('DELETE FROM `bookmarks` WHERE `id_object` NOT IN (
+                   SELECT `id` FROM `obmennik_files`) AND `type`="file"');
+    $db->query('OPTIMIZE TABLE `obmennik_dir` ,`obmennik_files` ,`obmennik_komm`, `user_music`, `bookmarks`;');
 
     $l = $dir_id['dir_osn'];
+    unset($_SESSION['obmen_dir']);
     msg('Папка успешно удалена');
     admin_log('Обменник', 'Удаление папки', 'Папка [b]' . $dir_id['name'] . '[/b] удалена');
 
