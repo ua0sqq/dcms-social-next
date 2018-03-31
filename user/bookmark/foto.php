@@ -8,68 +8,86 @@ include_once '../../sys/inc/db_connect.php';
 include_once '../../sys/inc/ipua.php';
 include_once '../../sys/inc/fnc.php';
 include_once '../../sys/inc/user.php';
-if (isset($user))$ank['id'] = $user['id'];
-if (isset($_GET['id']))$ank['id'] = intval($_GET['id']);
-$ank = get_user($ank['id']);
-if ($ank['id'] == 0)
-{
-	header("Location: /index.php?" . SID);exit;
-	exit;
+
+if (isset($user)) {
+    $ank['id'] = $user['id'];
 }
-if (isset($user) && isset($_GET['delete']) && $user['id'] == $ank['id'])
-{
-$db->query("DELETE FROM `bookmarks` WHERE `id` = '" . intval($_GET['delete']) . "' AND `id_user` = '$user[id]' AND `type`='foto' LIMIT 1");
-	
-	$_SESSION['message'] = 'Закладка удалена';
-	header("Location: ?page=" . intval($_GET['page']) . "" . SID);exit;
-	exit;
+if (isset($_GET['id'])) {
+    $ank['id'] = intval($_GET['id']);
 }
-if( !$ank ){ header("Location: /index.php?".SID); exit; }
+
+$ank = $db->query(
+    'SELECT `id`, `nick` FROM `user` WHERE `id`=?i',
+                        [$ank['id']])->row();
+if (!$ank) {
+    header("Location: /index.php?" . SID);
+    exit;
+}
+
+if (isset($user) && isset($_GET['delete']) && $user['id'] == $ank['id']) {
+    $db->query(
+		'DELETE FROM `bookmarks` WHERE `id`=?i AND `id_user`=?i AND `type`=? LIMIT ?i',
+				[$_GET['delete'], $user['id'], 'foto',  1]);
+    
+    $_SESSION['message'] = 'Закладка удалена';
+    header("Location: ?page=" . intval($_GET['page']) . "" . SID);
+    exit;
+}
+
 $set['title']='Закладки - Фото - ' . $ank['nick']; // заголовок страницы
 include_once '../../sys/inc/thead.php';
 title();
 err();
-aut(); // форма авторизации
-echo '<div class="foot">';
-echo '<img src="/style/icons/str2.gif" alt="*" /> <a href="/user/bookmark/index.php?id=' . $ank['id'] . '">Закладки</a> | <b>Фото</b>';
-echo '</div>';
-$k_post=$db->query("SELECT COUNT(*) FROM `bookmarks` WHERE `id_user` = '$ank[id]' AND `type`='foto' ")->el();
-$k_page=k_page($k_post,$set['p_str']);
-$page=page($k_page);
-$start=$set['p_str']*$page-$set['p_str'];
-echo '<table class="post">';
-if ($k_post == 0)
-{
-	echo '<div class="mess">';
-	echo 'Нет Фотографий в закладках';
-	echo '</div>';
+aut();
+
+echo '<div class="foot">'."\n";
+echo '<img src="/style/icons/str2.gif" alt="*" /> <a href="/user/bookmark/index.php?id=' . $ank['id'] . '">Закладки</a> | <b>Фото</b>'."\n";
+echo '</div>'."\n";
+
+$k_post=$db->query(
+                    'SELECT COUNT(*) FROM `bookmarks` WHERE `id_user`=?i AND `type`=?',
+                            [$ank['id'], 'foto'])->el();
+
+if (!$k_post) {
+    echo '<div class="mess">'."\n";
+    echo 'Нет Фотографий в закладках'."\n";
+    echo '</div>'."\n";
+} else {
+    $k_page=k_page($k_post, $set['p_str']);
+    $page=page($k_page);
+    $start=$set['p_str']*$page-$set['p_str'];
+
+    $q=$db->query(
+				'SELECT bkm.id, gf.id AS id_foto, gf.id_gallery, gf.name, gf.ras, gf.id_user, gf.`time`
+FROM `bookmarks` bkm
+JOIN `gallery_foto` gf ON gf.id=bkm.id_object
+WHERE bkm.`id_user`=?i AND bkm.`type`=? ORDER BY id DESC LIMIT ?i OFFSET ?i',
+						[$ank['id'], 'foto', $set['p_str'], $start]);
+    while ($post = $q->row()) {
+        if ($num==0) {
+            echo '<div class="nav1">'."\n";
+            $num=1;
+        } elseif ($num==1) {
+            echo '<div class="nav2">'."\n";
+            $num=0;
+        }
+
+        echo '<a href="/foto/' . $post['id_user'] . '/' . $post['id_gallery'] . '/' . $post['id_foto'] . '/" title="Перейти к фото"><img style=" padding: 2px; height: 45px; width: 45px;" src="/foto/foto48/' . $post['id_foto'] . '.' . $post['ras'] . '" alt="*" /> ' .
+htmlspecialchars($post['name']) . '</a>  (' . vremja($post['time']) . ')';
+        if ($ank['id'] == $user['id']) {
+            echo '<div style="text-align:right;">'."\n".
+			'<a href="?delete=' . $post['id'] . '&amp;page=' . $page . '"><img src="/style/icons/delete.gif" alt="*" /></a>'."\n".
+			'</div>'."\n";
+        }
+        echo '</div>'."\n";
+    }
+
+    if ($k_page>1) {
+        str('?', $k_page, $page);
+    }
 }
-$q=$db->query("SELECT * FROM `bookmarks`  WHERE `id_user` = '$ank[id]' AND `type`='foto' ORDER BY id DESC LIMIT $start, $set[p_str]");
-while ($post = $q->row())
-{
-/*-----------зебра-----------*/ 
-if ($num==0){
-	echo '<div class="nav1">';
-	$num=1;
-}
-elseif ($num==1){
-	echo '<div class="nav2">';
-	$num=0;
-}
-/*---------------------------*/
-$f=$post['id_object'];
-$foto = $db->query("SELECT * FROM `gallery_foto` WHERE `id` = '" . $f . "'  LIMIT 1")->row();
-$gallery = $db->query("SELECT * FROM `gallery` WHERE `id`='" . $foto['id_gallery'] . "'  LIMIT 1")->row();
-$ank_p=get_user($gallery['id_user']);
-echo '<a href="/foto/' . $ank_p['id'] . '/' . $gallery['id'] . '/' . $foto['id'] . '/" title="Перейти к фото"><img style=" padding: 2px; height: 45px; width: 45px;" src="/foto/foto48/' . $foto['id'] . '.' . $foto['ras'] . '" alt="*" /> ' . htmlspecialchars($foto['name']) . '</a>  (' . vremja($post['time']) . ')';
-if ($ank['id'] == $user['id'])
-echo '<div style="text-align:right;"><a href="?delete=' . $post['id'] . '&amp;page=' . $page . '"><img src="/style/icons/delete.gif" alt="*" /></a></div>';
-echo '</div>';
-}
-echo '</table>';
-if ($k_page>1)str('?',$k_page,$page); // Вывод страниц
-echo '<div class="foot">';
-echo '<img src="/style/icons/str2.gif" alt="*" /> <a href="/user/bookmark/index.php?id=' . $ank['id'] . '">Закладки</a> | <b>Фото</b>';
-echo '</div>';
+echo '<div class="foot">'."\n";
+echo '<img src="/style/icons/str2.gif" alt="*" /> <a href="/user/bookmark/index.php?id=' . $ank['id'] . '">Закладки</a> | <b>Фото</b>'."\n";
+echo '</div>'."\n";
+
 include_once '../../sys/inc/tfoot.php';
-?>
