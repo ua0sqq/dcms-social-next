@@ -9,7 +9,8 @@ if (isset($_POST['msg']) && isset($user)) {
         $err[]='Сообщение слишком длинное';
     } elseif (strlen2($msg)<2) {
         $err[]='Короткое сообщение';
-    } elseif ($db->query("SELECT COUNT(*) FROM `chat_post` WHERE `id_user` = '$user[id]' AND `msg` = '".my_esc($msg)."' AND `time` > '".($time-300)."' LIMIT 1")->el()) {
+    } elseif ($db->query("SELECT COUNT(*) FROM `chat_post` WHERE `id_user`=?i AND `msg`=? AND `time`>?i",
+                         [$user['id'], $msg, ($time-300)])->el()) {
         $err='Ваше сообщение повторяет предыдущее';
     } elseif (!isset($err)) {
         if (isset($_POST['privat'])) {
@@ -17,7 +18,8 @@ if (isset($_POST['msg']) && isset($user)) {
         } else {
             $priv=0;
         }
-        $db->query("INSERT INTO `chat_post` (`id_user`, `time`, `msg`, `room`, `privat`) values('$user[id]', '$time', '".my_esc($msg)."', '$room[id]', '$priv')");
+        $db->query("INSERT INTO `chat_post` (`id_user`, `time`, `msg`, `room`, `privat`) VALUES(?i, ?i, ?, ?i, ?i)",
+                   [$user['id'], $time, $msg, $room['id'], $priv]);
         $_SESSION['message'] = 'Сообщение успешно добавлено';
         header("Location: /chat/room/$room[id]/".rand(1000, 9999)."/");
         exit;
@@ -29,8 +31,10 @@ if ($room['umnik'] == 1) {
 if ($room['shutnik'] == 1) {
     include 'inc/shutnik.php';
 }
+
 err();
-aut(); // форма авторизации
+aut();
+
 if (isset($user)) {
     echo "<form method=\"post\" name='message' action=\"/chat/room/$room[id]/".rand(1000, 9999)."/\">\n";
     if ($set['web'] && is_file(H.'style/themes/'.$set['set_them'].'/altername_post_form.php')) {
@@ -42,7 +46,12 @@ if (isset($user)) {
     echo " <a href='/chat/room/$room[id]/".rand(1000, 9999)."/'>Обновить</a><br />\n";
     echo "</form>\n";
 }
-$k_post=$db->query("SELECT COUNT(*) FROM `chat_post` WHERE `room` = '$room[id]' AND (`privat`='0'".(isset($user)?" OR `privat` = '$user[id]'":null).")")->el();
+$sql = null;
+if (isset($user)) {
+    $sql = 'OR `privat` = ' . $user['id'];
+}
+$k_post=$db->query("SELECT COUNT(*) FROM `chat_post` WHERE `room`=?i AND (`privat`=0 ?q)",
+                   [$room['id'], $sql])->el();
 $k_page=k_page($k_post, $set['p_str']);
 $page=page($k_page);
 $start=$set['p_str']*$page-$set['p_str'];
@@ -53,7 +62,10 @@ echo "<table class='post'>\n";
         echo "</div>\n";
     }
     
-$q=$db->query("SELECT * FROM `chat_post` WHERE `room` = '$room[id]' AND (`privat`='0'".(isset($user)?" OR `privat` = '$user[id]'":null).") ORDER BY id DESC LIMIT $start, $set[p_str]");
+$q=$db->query("SELECT pst.*, u.id AS id_user FROM `chat_post` pst
+LEFT JOIN `user` u ON u.id=pst.id_user
+WHERE `room`=?i AND (`privat`=0 ?q) ORDER BY pst.id DESC LIMIT ?i OFFSET ?i",
+              [$room['id'], $sql, $set['p_str'], $start]);
 while ($post = $q->row()) {
     /*-----------зебра-----------*/
     if ($num==0) {
@@ -65,10 +77,10 @@ while ($post = $q->row()) {
     }
     /*---------------------------*/
     if ($post['umnik_st']==0 && $post['shutnik']==0) {
-        $ank=$db->query("SELECT * FROM `user` WHERE `id` = $post[id_user] LIMIT 1")->row();
+       // $ank=$db->query("SELECT * FROM `user` WHERE `id` = $post[id_user] LIMIT 1")->row();
     }
     if ($post['umnik_st']==0 && $post['shutnik']==0) {
-        echo group($ank['id']);
+        echo group($post['id_user']);
     } elseif ($post['shutnik']==1) {
         echo "<img src='/style/themes/$set[set_them]/chat/14/shutnik.png' alt='' />\n";
     } elseif ($post['umnik_st']!=0) {
@@ -80,8 +92,8 @@ while ($post = $q->row()) {
         $sPrivat=null;
     }
     if ($post['umnik_st']==0 && $post['shutnik']==0) {
-        echo "<a href='/chat/room/$room[id]/".rand(1000, 9999)."/$ank[id]/'>$ank[nick]</a>\n";
-        echo "".medal($ank['id'])." $sPrivat ".online($ank['id'])." (".vremja($post['time']).")<br />";
+        echo "<a href='/chat/room/$room[id]/".rand(1000, 9999)."/$post[id_user]/'>".user::nick($post['id_user'], 0)."</a>\n";
+        echo "".medal($post['id_user'])." $sPrivat ".online($post['id_user'])." (".vremja($post['time']).")<br />";
     } elseif ($post['umnik_st']!=0) {
         echo "$set[chat_umnik] (".vremja($post['time']).")\n";
     } elseif ($post['shutnik']==1) {

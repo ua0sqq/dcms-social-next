@@ -1,7 +1,9 @@
 <?php
 if (user_access('chat_room') && isset($_GET['set']) && is_numeric($_GET['set'])
-    && $db->query("SELECT COUNT(*) FROM `chat_rooms` WHERE `id` = '".intval($_GET['set'])."'")->el()) {
-    $room=$db->query("SELECT * FROM `chat_rooms` WHERE `id` = '".intval($_GET['set'])."' LIMIT 1")->row();
+    && $db->query("SELECT COUNT(*) FROM `chat_rooms` WHERE `id`=?i",
+                  [$_GET['set']])->el()) {
+    $room = $db->query("SELECT * FROM `chat_rooms` WHERE `id`=?i",
+                     [$_GET['set']])->row();
     echo "<form action='?set=$room[id]&amp;ok' method='post'>";
     echo "Название комнаты:<br />\n<input type='text' name='name' value='$room[name]' /><br />\n";
     echo "Позиция:<br />\n<input type='text' name='pos' value='$room[pos]' /><br />\n";
@@ -24,8 +26,11 @@ if (user_access('chat_clear') && isset($_GET['act']) && $_GET['act']=='clear') {
     echo "<a href=\"?\">Нет</a><br />\n";
     echo "</div>";
 }
+if (isset($user) && $user['group_access'] > 0 && user_access('chat_room')) {
+    $cnt_chat_rooms = $db->query('SELECT COUNT(*) FROM `chat_rooms`')->el();
+}
 if (user_access('chat_room') && (isset($_GET['act']) && $_GET['act']=='add_room'
-                                 || !$db->query("SELECT COUNT(*) FROM `chat_rooms`")->el())) {
+                                 || !$cnt_chat_rooms)) {
     echo "<form class=\"foot\" action=\"?act=add_room&amp;ok\" method=\"post\">";
     echo "Название комнаты:<br />\n";
     echo "<input type='text' name='name' value='' /><br />\n";
@@ -48,7 +53,7 @@ echo "<div class=\"foot\">\n";
 if (user_access('chat_clear')) {
     echo "<img src='/style/icons/str.gif' alt='*'> <a href=\"?act=clear\">Очистить чат от сообщений</a><br />\n";
 }
-if (user_access('chat_room') && $db->query("SELECT COUNT(*) FROM `chat_rooms`")->el()) {
+if (user_access('chat_room') && $cnt_chat_rooms) {
     echo "<img src='/style/icons/str.gif' alt='*'> <a href=\"?act=add_room\">Создать комнату</a><br />\n";
 }
 echo "</div>\n";
