@@ -19,17 +19,21 @@ if (!isset($user)) {
     header("Location: /index.php?".SID);
     exit;
 }
-if (!$db->query("SELECT COUNT(*) FROM `ban` WHERE `id_user` = '$user[id]' AND (`time` > '$time' OR `view` = '0')")->el()) {
+if (!$db->query("SELECT COUNT(*) FROM `ban` WHERE `id_user`=?i AND (`time`>?i OR `view`=?)",
+                [$user['id'], $time, '0'])->el()) {
     header('Location: /index.php?'.SID);
     exit;
 }
-$db->query("UPDATE `ban` SET `view` = '1' WHERE `id_user` = '$user[id]'"); // увидел причину бана
-$k_post=$db->query("SELECT COUNT(*) FROM `ban` WHERE `id_user` = '$user[id]'")->el();
+$db->query("UPDATE `ban` SET `view`=? WHERE `id_user`=?i",
+           ['1', $user['id']]); // увидел причину бана
+$k_post=$db->query("SELECT COUNT(*) FROM `ban` WHERE `id_user`=?i",
+                   [$user['id']])->el();
 $k_page=k_page($k_post, $set['p_str']);
 $page=page($k_page);
 $start=$set['p_str']*$page-$set['p_str'];
-echo "<table class='post'>\n";
-$q=$db->query("SELECT * FROM `ban` WHERE `id_user` = '$user[id]' ORDER BY `time` DESC LIMIT $start, $set[p_str]");
+
+$q=$db->query("SELECT * FROM `ban` WHERE `id_user`=?i ORDER BY `time` DESC LIMIT ?i, ?i",
+              [$user['id'], $start, $set['p_str']]);
 while ($post = $q->row()) {
     $ank=get_user($post['id_ban']);
     /*-----------зебра-----------*/
@@ -55,7 +59,7 @@ while ($post = $q->row()) {
     }
     echo "   </div>\n";
 }
-echo "</table>\n";
+
 if ($k_page>1) {
     str('?', $k_page, $page);
 } // Вывод страниц

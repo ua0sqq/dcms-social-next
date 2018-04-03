@@ -17,9 +17,17 @@ title();
 aut();
 
 if (isset($_GET['send']) && isset($_POST['send'])) {
-    if (!$db->query("SELECT COUNT(`id`)FROM `user` WHERE `nick`='".my_esc($_POST['komu'])."' LIMIT 1")->el()) {
-        /* Проверка наличия пол-ля с таким ником */ ?><div class="nav2">Пользователя с ником <?=text($_POST['komu']); ?> на сайте нет. Возможно, вы допустили ошибку.</div>
-<div class="foot"> <a href="/mails.php">Назад</a></div><?php
+    if (!$db->query(
+        "SELECT COUNT( * ) FROM `user` WHERE `nick`=? LIMIT ?i",
+                    [$_POST['komu'], 1]
+    )->el()) {
+        /* Проверка наличия пол-ля с таким ником */ ?>
+<div class="nav2">
+	Пользователя с ником <?=text($_POST['komu']); ?> на сайте нет. Возможно, вы допустили ошибку.
+</div>
+<div class="foot">
+	<a href="/mails.php">Назад</a>
+</div><?php
 include_once 'sys/inc/tfoot.php';
         exit;
     } elseif ((strlen2($_POST['msg'])<3) || (strlen2($_POST['msg'])>1024)) {
@@ -27,22 +35,29 @@ include_once 'sys/inc/tfoot.php';
 <div class="foot"><a href="/mails.php">Назад</a></div><?php
 include_once 'sys/inc/tfoot.php';
     } else {
-        $ank=$db->query("SELECT `id` FROM `user` WHERE `nick`='".my_esc($_POST['komu'])."' LIMIT 1")->row();
+        $ank=$db->query(
+            "SELECT `id` FROM `user` WHERE `nick`=? LIMIT ?i",
+                    [$_POST['komu'], 1]
+        )->row();
         /* Если выше всё норм, то проверяем на приватнось почты */
         $block = true;
-        $uSet = $db->query("SELECT `privat_mail` FROM `user_set` WHERE `id_user` = '$ank[id]'  LIMIT 1")->row();
-        $frend=$db->query("SELECT COUNT(*) FROM `frends` WHERE (`user` = '$user[id]' AND `frend` = '$ank[id]') OR (`user` = '$ank[id]' AND `frend` = '$user[id]') LIMIT 1")->el();
-        $frend_new=$db->query("SELECT COUNT(*) FROM `frends_new` WHERE (`user` = '$user[id]' AND `to` = '$ank[id]') OR (`user` = '$ank[id]' AND `to` = '$user[id]') LIMIT 1")->el();
+        $pattern = 'SELECT ust.privat_mail, (
+SELECT COUNT( * ) FROM `frends` WHERE (`user`=?i AND `frend`=ust.`id_user`) OR (`user`=ust.`id_user` AND `frend`=?i)) frend, (
+SELECT COUNT( * ) FROM `frends_new` WHERE (`user`=?i AND `to`=ust.`id_user`) OR (`user`=ust.`id_user` AND `to`=?i)) new_frend
+FROM `user_set` ust WHERE ust.`id_user`=?i';
+        $data = [$user['id'], $user['id'], $user['id'], $user['id'], $ank['id']];
+
+        $uSet = $db->query($pattern, $data)->row();
         if ($user['group_access'] == 0) {
             // Если только для друзей
-            if ($uSet['privat_mail'] == 2 && $frend != 2) {
+            if ($uSet['privat_mail'] == 2 && $uSet['frend'] != 2) {
                 ?><div class="mess">Писать сообщения пользователю, могут только его друзья!</div>
 	<div class="nav1"><?php
-    if ($frend_new == 0 && $frend==0) {
+    if ($uSet['new_frend'] == 0 && $uSet['frend']==0) {
         ?><img src="/style/icons/druzya.png" alt="*"/> <a href="/user/frends/create.php?add=<?=$ank['id']; ?>">Добавить в друзья</a><br /><?php
-    } elseif ($frend_new == 1) {
+    } elseif ($uSet['new_frend'] == 1) {
         ?><img src="/style/icons/druzya.png" alt="*"/> <a href="/user/frends/create.php?otm=<?=$ank['id']; ?>">Отклонить заявку</a><br /><?php
-    } elseif ($frend == 2) {
+    } elseif ($uSet['frend'] == 2) {
         ?><img src="/style/icons/druzya.png" alt="*"/> <a href="/user/frends/create.php?del=<?=$ank['id']; ?>">Удалить из друзей</a><br /><?php
     } ?></div><?php
         $block = false;
@@ -54,9 +69,13 @@ include_once 'sys/inc/tfoot.php';
         }
         if ($block==true and $ank['id']!=0) {
             /* если вообще всё норм, то отправляем */
-            $db->query("INSERT INTO `mail`(`id_user`,`id_kont`,`time`,`msg`) values('$user[id]','$ank[id]','$time','".my_esc($_POST['msg'])."')");
-            header("Location: /mail.php?id=$ank[id]");
+            $db->query(
+                "INSERT INTO `mail`(`id_user`,`id_kont`,`time`,`msg`) VALUES( ?i, ?i, ?i, ?)",
+                       [$user['id'], $ank['id'], $time, $_POST['msg']]
+            );
+            
             $_SESSION['message']='Сообщение успешно отправлено';
+            header('Location: /mail.php?id=' . $ank['id']);
         }
     }
 }

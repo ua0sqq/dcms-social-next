@@ -682,7 +682,7 @@ $vote_c = $db->query(
     'SELECT COUNT(*) FROM `votes_forum` WHERE `them`=?i',
                      [$them['id']]
 )->el();
- if ($vote_c != 0) {
+ if ($vote_c != 0 && !isset($input_get['act'])) {
      ?>
 <div class="round_corners poll_block stnd_padd">
     <div style="font-size:14px;">

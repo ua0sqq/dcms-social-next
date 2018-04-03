@@ -15,15 +15,20 @@ err();
 
 if (!$set['web'])
 {
+	$cnt = $db->query(
+					'SELECT * FROM (
+		SELECT COUNT(*) online_user FROM `user` WHERE `date_last` > ?i)q, (
+		SELECT COUNT(*) online_guest FROM `guests` WHERE `date_last` > ?i AND `pereh` >0)q2',
+							[(time()-600),(time()-600)])->row();
 	?>
 	<div class="title">
 	<center>
 	<a href="/online.php" title="онлайн" style="color:#cdcecf; text-decoration: none">
 	<font color="#fee300" size="2">Онлайн </font>
-	<font color="#ffffff"><?= $db->query("SELECT COUNT(*) FROM `user` WHERE `date_last` > ".(time()-600)."")->el()?></font>
+	<font color="#ffffff"><?= $cnt['online_user'];?></font>
 	</a>
 	<font color="#fee300" size="2"> (</font>
-	<font color="#ffffff">+<?= $db->query("SELECT COUNT(*) FROM `guests` WHERE `date_last` > ".(time()-600)." AND `pereh` > '0'")->el()?></font>
+	<font color="#ffffff">+<?= $cnt['online_guest'];?></font>
 	<font color="#fee300" size="2"> гостей )</font>
 	</center>
 	</div>

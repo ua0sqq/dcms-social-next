@@ -17,12 +17,18 @@ include_once 'sys/inc/thead.php';
 title();
 
 if (isset($_POST['nick']) && isset($_POST['mail']) && $_POST['nick']!=null && $_POST['mail']!=null) {
-    if (!$db->query("SELECT COUNT(*) FROM `user` WHERE `nick` = '".my_esc($_POST['nick'])."'")->el()) {
+    if (!$db->query(
+        "SELECT COUNT(*) FROM `user` WHERE `nick`=?",
+                    [$_POST['nick']])->el()) {
         $err = "Пользователь с таким логином не зарегистрирован";
-    } elseif (!$db->query("SELECT COUNT(*) FROM `user` WHERE `nick` = '".my_esc($_POST['nick'])."' AND `ank_mail` = '".my_esc($_POST['mail'])."'")->el()) {
+    } elseif (!$db->query(
+        "SELECT COUNT(*) FROM `user` WHERE `nick`=? AND `ank_mail`=?",
+                          [$_POST['nick'], $_POST['mail']])->el()) {
         $err ='Неверный адрес E-mail или информация о E-mail отсутствует';
     } else {
-        $q = $db->query("SELECT * FROM `user` WHERE `nick` = '".my_esc($_POST['nick'])."' LIMIT 1");
+        $q = $db->query(
+            "SELECT * FROM `user` WHERE `nick`=? LIMIT ?i",
+                        [$_POST['nick'], 1]);
         $user2 = $q->row();
         $new_sess=substr(md5(passgen()), 0, 20);
         $subject = "Восстановление пароля";
@@ -31,8 +37,7 @@ if (isset($_POST['nick']) && isset($_POST['mail']) && $_POST['nick']!=null && $_
 Для установки нового пароля перейдите по ссылке:<br />
 <a href='http://$_SERVER[HTTP_HOST]/pass.php?id=$user2[id]&amp;set_new=$new_sess'>http://$_SERVER[HTTP_HOST]/pass.php?id=$user2[id]&amp;set_new=$new_sess</a><br />
 Данная ссылка действительна до первой авторизации под своим логином ($user2[nick])<br />
-С уважением, администрация сайта<br />
-";
+С уважением, администрация сайта<br />";
         $adds="From: \"password@$_SERVER[HTTP_HOST]\" <password@$_SERVER[HTTP_HOST]>\n";
         //$adds = "From: <$set[reg_mail]>\n";
         //$adds .= "X-sender: <$set[reg_mail]>\n";
@@ -42,9 +47,13 @@ if (isset($_POST['nick']) && isset($_POST['mail']) && $_POST['nick']!=null && $_
         msg("Ссылка для установки нового пароля отправлена на e-mail \"$user2[ank_mail]\"");
     }
 }
-if (isset($_GET['id']) && isset($_GET['set_new']) && strlen($_GET['set_new'])==20 &&
-$db->query("SELECT COUNT(*) FROM `user` WHERE `id` = '".intval($_GET['id'])."' AND `sess` = '".my_esc($_GET['set_new'])."'")->el()) {
-    $q = $db->query("SELECT * FROM `user` WHERE `id` = '".intval($_GET['id'])."' LIMIT 1");
+if (isset($_GET['id']) && isset($_GET['set_new']) && strlen($_GET['set_new'])==20
+    && $db->query(
+        "SELECT COUNT(*) FROM `user` WHERE `id`=?i AND `sess`=?",
+           [$_GET['id'], $_GET['set_new']])->el()) {
+    $q = $db->query(
+        "SELECT * FROM `user` WHERE `id`=?i",
+                    [$_GET['id']]);
     $user2 = $q->row();
     if (isset($_POST['pass1']) && isset($_POST['pass2'])) {
         if ($_POST['pass1']==$_POST['pass2']) {
@@ -59,7 +68,9 @@ $db->query("SELECT COUNT(*) FROM `user` WHERE `id` = '".intval($_GET['id'])."' A
         }
         if (!isset($err)) {
             setcookie('id_user', $user2['id'], time()+60*60*24*365);
-            $db->query("UPDATE `user` SET `pass` = '".shif($_POST['pass1'])."' WHERE `id` = '$user2[id]' LIMIT 1");
+            $db->query(
+                "UPDATE `user` SET `pass`=? WHERE `id`=?i",
+                       [shif($_POST['pass1']), $user2['id']]);
             setcookie('pass', cookie_encrypt($_POST['pass1'], $user2['id']), time()+60*60*24*365);
             msg('Пароль успешно изменен');
         }
@@ -88,11 +99,11 @@ $db->query("SELECT COUNT(*) FROM `user` WHERE `id` = '".intval($_GET['id'])."' A
 }
 ?>
 	<div class='foot'>
-	Еще не заригистрированы? <br />
+	Еще не зарегистрированы? <br />
 	<a href='/reg.php'>Регистрация</a><br />
 	</div>
 	<div class='foot'>
-	Уже заригистрированы? <br />
+	Уже зарегистрированы? <br />
 	<a href='/aut.php'>Авторизация</a><br />
 	</div>
 <?php

@@ -26,7 +26,9 @@ echo "</div>";
 // фотоальбомы
 echo "<div class='main'>";echo "<img src='/style/icons/foto.png' alt='*' /> ";
 echo "<a href='/foto/$user[id]/'>Фотографии</a> ";
-echo "(" . $db->query("SELECT COUNT(*) FROM `gallery_foto` WHERE `id_user` = '$user[id]'")->el() . ")";
+echo "(" . $db->query(
+                    'SELECT COUNT(*) FROM `gallery_foto` WHERE `id_user`=?i',
+                            [$user['id']])->el() . ")";
 echo "</div>";
 
 include_once 'sys/inc/tfoot.php';

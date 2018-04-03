@@ -21,35 +21,42 @@ $set['title'] = 'Сейчас на сайте'; // заголовок стран
 include_once 'sys/inc/thead.php';
 title();
 aut();
+
+$k_post = $db->query(
+                    'SELECT (
+SELECT COUNT( * ) FROM `user` WHERE `date_last` > ?i) k_post, (
+SELECT COUNT( * ) FROM `liders` WHERE `time` > ?i) k_lider',
+                            [(time()-600), $time])->row();
 /*
 ==============================================
 Этот скрипт выводит 1 случайного "Лидера" и
 ссылку на весь их список.(с) DCMS-Social
 ==============================================
 */
-if ($db->query("SELECT COUNT(*) FROM `liders` WHERE `time` > '$time'")->el()) {
-    $liders = $db->query("SELECT * FROM `liders` WHERE `time` > '$time' ORDER BY rand() LIMIT 1")->row();
+if ($k_post['k_lider']) {
+    $liders = $db->query("SELECT * FROM `liders` WHERE `time` > ?i ORDER BY RAND() LIMIT ?i",
+                         [$time, 1])->row();
     echo '<div class="main">';
-    $lider = get_user($liders['id_user']);
-    echo user::avatar($lider['id'], 0) . user::nick($lider['id'], 1, 1, 1) . '<br />';
+    echo user::avatar($liders['id_user'], 0) . user::nick($liders['id_user'], 1, 1, 1) . '<br />';
     if ($liders['msg']) {
         echo output_text($liders['msg']) . '<br />';
     }
-    echo '<img src="/style/icons/lider.gif" alt="S"/> <a href="/user/liders/">Все лидеры</a> (' . $k_lider . ')';
+    echo '<img src="/style/icons/lider.gif" alt="S"/> <a href="/user/liders/">Все лидеры</a> (' . $k_post['k_lider'] . ')';
     echo '</div>';
 }
-    
-$k_post = $db->query("SELECT COUNT(*) FROM `user` WHERE `date_last` > '".(time()-600)."'")->el();
-$k_page = k_page($k_post, $set['p_str']);
-$page = page($k_page);
-$start = $set['p_str']*$page-$set['p_str'];
-$q = $db->query("SELECT id, ank_city, pol, ank_d_r, ank_m_r, ank_g_r, ank_o_sebe, url, level, ip, ip_xff, ip_cl, ua, date_last FROM `user` WHERE `date_last` > '".(time()-600)."' ORDER BY `date_last` DESC LIMIT $start, $set[p_str]");
-echo '<table class="post">';
-if ($k_post == 0) {
+
+if (!$k_post['k_post']) {
     echo '<div class="mess">';
     echo 'Сейчас на сайте никого нет';
     echo '</div>';
-}
+} else {
+
+$k_page = k_page($k_post['k_post'], $set['p_str']);
+$page = page($k_page);
+$start = $set['p_str']*$page-$set['p_str'];
+$q = $db->query(
+            'SELECT id, ank_city, pol, ank_d_r, ank_m_r, ank_g_r, ank_o_sebe, url, level, ip, ip_xff, ip_cl, ua, date_last FROM `user` WHERE `date_last` > ?i ORDER BY `date_last` DESC LIMIT ?i OFFSET ?i',
+                    [(time()-600), $set['p_str'], $start]);
 while ($ank = $q->row()) {
     $ank['ank_age'] = null;
         
@@ -66,7 +73,7 @@ while ($ank = $q->row()) {
     echo '<div class="' . ($num % 2 ? "nav1" : "nav2") . '">';
     $num++;
     echo user::avatar($ank['id'], 0) . user::nick($ank['id'], 1, 1, 1) . otkuda($ank['url']) . ' <br />';
-    
+// TODO: слишком много запросов!    
     // Расширенный режим
     if (isset($user) && isset($_SESSION['admin'])) {
         // Возможные ники
@@ -119,16 +126,16 @@ while ($ank = $q->row()) {
             echo '<span class="ank_n">Браузер:</span> <span class="ank_d">' . $ank['ua'] . '</span><br />';
         }
         
-        if (user_access('user_show_ip') && opsos($ank['ip'])) {
-            echo '<span class="ank_n">Пров:</span> <span class="ank_d">' . opsos($ank['ip']) . '</span><br />';
+        if (user_access('user_show_ip') && $opsos = opsos($ank['ip'])) {
+            echo '<span class="ank_n">Пров:</span> <span class="ank_d">' . $opsos . '</span><br />';
         }
         
-        if (user_access('user_show_ip') && opsos($ank['ip_cl'])) {
-            echo '<span class="ank_n">Пров (CL):</span> <span class="ank_d">' . opsos($ank['ip_cl']) . '</span><br />';
+        if (user_access('user_show_ip') && $opsos = opsos($ank['ip_cl'])) {
+            echo '<span class="ank_n">Пров (CL):</span> <span class="ank_d">' . $opsos . '</span><br />';
         }
         
-        if (user_access('user_show_ip') && opsos($ank['ip_xff'])) {
-            echo '<span class="ank_n">Пров (XFF):</span> <span class="ank_d">' . opsos($ank['ip_xff']) . '</span><br />';
+        if (user_access('user_show_ip') && $opsos = opsos($ank['ip_xff'])) {
+            echo '<span class="ank_n">Пров (XFF):</span> <span class="ank_d">' . $opsos . '</span><br />';
         }
         
         if ($user['level'] > $ank['level'] && $user['id'] != $ank['id']) {
@@ -160,10 +167,11 @@ while ($ank = $q->row()) {
     
     echo '</div>';
 }
-echo '</table>';
+
 if ($k_page>1) {
     str("?", $k_page, $page);
-} // Вывод страниц
+}
+}
 if (user_access('user_collisions')) {
     ?>
 	<div class="foot">
@@ -171,5 +179,7 @@ if (user_access('user_collisions')) {
 	</div>
 	<?php
 }
+
 include_once 'sys/inc/tfoot.php';
+
 ?>

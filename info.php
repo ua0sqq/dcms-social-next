@@ -9,14 +9,16 @@ include_once 'sys/inc/ipua.php';
 include_once 'sys/inc/fnc.php';
 include_once 'sys/inc/user.php';
 
+$get_id = filter_input_array(INPUT_GET, FILTER_VALIDATE_INT);
+
 if (isset($user)) {
     $ank['id'] = $user['id'];
 }
-if (isset($_GET['id'])) {
-    $ank['id']=intval($_GET['id']);
+if (isset($get_id['id'])) {
+    $ank['id'] = $get_id['id'];
 }
 if (!isset($ank['id'])) {
-    header("Location: /index.php?".SID);
+    header('Location: /index.php?' . SID);
     exit;
 }
 $ank = get_user($ank['id']);
@@ -39,51 +41,58 @@ if ($ank['id']==0) {
 }
 /* Бан пользователя */
 if ((!isset($user) || $user['group_access'] == 0) &&
-    $db->query("SELECT COUNT(*) FROM `ban` WHERE `razdel` = 'all' AND `id_user` = '$ank[id]' AND (`time` > '$time' OR `navsegda` = '1')")->el()) {
+    $db->query(
+        'SELECT COUNT(*) FROM `ban` WHERE `razdel`=? AND `id_user`=?i AND (`time`>?i OR `navsegda`=?i)',
+                ['all', $ank['id'], $time, 1])->el()) {
     $set['title'] = $ank['nick'].' - страничка '; // заголовок страницы
     include_once 'sys/inc/thead.php';
     title();
     aut();
     
-    echo '<div class="mess">';
-    echo '<b><font color=red>Этот пользователь заблокирован!</font></b><br /> ';
-    echo '</div>';
+    echo '<div class="mess">'."\n";
+    echo '<p style="text-align:center;color:red;"><b>Этот пользователь заблокирован!</b></p>'."\n";
+    echo '</div>'."\n";
     
     include_once 'sys/inc/tfoot.php';
     exit;
 }
 // Удаление комментариев
-if (isset($_GET['delete_post']) && $db->query("SELECT COUNT(*) FROM `stena` WHERE `id` = '".intval($_GET['delete_post'])."'")->el()) {
-    $post = $db->query("SELECT * FROM `stena` WHERE `id` = '".intval($_GET['delete_post'])."' LIMIT 1")->row();
-    
+if (isset($get_id['delete_post']) && $post_id = $db->query("SELECT `id` FROM `stena` WHERE `id`=?i",
+                                                [$get_id['delete_post']])->el()) {
     if (user_access('guest_delete') || $ank['id'] == $user['id']) {
-        $db->query("DELETE FROM `stena` WHERE `id` = '$post[id]'");
-        $db->query("DELETE FROM `stena_like` WHERE `id_stena` = '$post[id]'");
+        $db->query("DELETE FROM `stena` WHERE `id`=?i", [$post_id]);
+        $db->query("DELETE FROM `stena_like` WHERE `id_stena`=?i", [$post_id]);
+        
         $_SESSION['message'] = 'Сообщение успешно удалено';
     }
 }
-/*-------------------------гости----------------------*/
+
+// гости
 if (isset($user) && $user['id'] != $ank['id'] && !isset($_SESSION['guest_' . $ank['id']])) {
-    if (!$db->query("SELECT COUNT(*) FROM `my_guests` WHERE `id_ank` = '$ank[id]' AND `id_user` = '$user[id]' LIMIT 1")->el()) {
-        $db->query("INSERT INTO `my_guests` (`id_ank`, `id_user`, `time`) VALUES ('$ank[id]', '$user[id]', '$time')");
-        $db->query("UPDATE `user` SET `balls` = '".($ank['balls']+1)."' ,`rating_tmp` = '".($ank['rating_tmp']+1)."' WHERE `id` = '$ank[id]' LIMIT 1");
+    if (!$db->query("SELECT COUNT(*) FROM `my_guests` WHERE `id_ank`=?i AND `id_user`=?i",
+                    [$ank['id'], $user['id']])->el()) {
+        $db->query("INSERT INTO `my_guests` (`id_ank`, `id_user`, `time`) VALUES (?i, ?i, ?i)",
+                   [$ank['id'], $user['id'], $time]);
+        $db->query("UPDATE `user` SET `balls`=`balls`+1, `rating_tmp`=`rating_tmp`+1 WHERE `id`=?i",
+                   [$ank['id']]);
         $_SESSION['guest_' . $ank['id']] = 1;
     } elseif (!isset($_SESSION['guest_' . $ank['id']])) {
-        $guest = $db->query("SELECT * FROM `my_guests` WHERE `id_ank` = '$ank[id]' AND `id_user` = '$user[id]' LIMIT 1")->row();
-        $db->query("UPDATE `my_guests` SET  `time` = '$time', `read` = '1' WHERE `id` = '$guest[id]' LIMIT 1");
-        $db->query("UPDATE `user` SET `rating_tmp` = '".($ank['rating_tmp']+1)."' WHERE `id` = '$ank[id]' LIMIT 1");
+        $guest_id = $db->query("SELECT `id` FROM `my_guests` WHERE `id_ank`=?i AND `id_user`=?i LIMIT ?i",
+                            [$ank['id'], $user['id'], 1])->el();
+        $db->query("UPDATE `my_guests` SET  `time`=?i, `read`=? WHERE `id`=?i",
+                   [$time, '1', $guest_id]);
+        $db->query("UPDATE `user` SET `rating_tmp`=`rating_tmp`+1 WHERE `id`=?i",
+                   [$ank['id']]);
         $_SESSION['guest_' . $ank['id']] = 1;
     }
 }
 
-
-/*----------------------------------------------------*/
-/*------------------------стена-----------------------*/
-if (isset($user) && isset($_GET['wall']) && $_GET['wall']==1) {
-    $db->query("UPDATE `user` SET `wall` = '1' WHERE `id` = '$user[id]'");
+// стена
+if (isset($user) && isset($get_id['wall']) && $get_id['wall']==1) {
+    $db->query("UPDATE `user` SET `wall`=?i WHERE `id`=?i", [1, $user['id']]);
     header("Location: /info.php?id=$ank[id]");
-} elseif (isset($user) && isset($_GET['wall']) && $_GET['wall']==0) {
-    $db->query("UPDATE `user` SET `wall` = '0' WHERE `id` = '$user[id]'");
+} elseif (isset($user) && isset($get_id['wall']) && $get_id['wall']==0) {
+    $db->query("UPDATE `user` SET `wall`=?i WHERE `id`=?i", [0, $user['id']]);
     header("Location: /info.php?id=$ank[id]");
 }
 
@@ -108,16 +117,13 @@ if (isset($_POST['msg']) && isset($user)) {
     } elseif ($db->query("SELECT COUNT(*) FROM `stena` WHERE `id_user` = ?i AND  `id_stena` = ?i AND `msg` = ?",
                          [$user['id'], $ank['id'], $msg])->el()) {
         $err='Ваше сообщение повторяет предыдущее';
-    } elseif (!isset($err)) {		/*
-        ==========================
-        Уведомления об ответах
-        ==========================
-        */
+    } elseif (!isset($err)) {
+        // Уведомления об ответах
         if (isset($user) && $respons==true) {
-            $notifiacation=$db->query("SELECT * FROM `notification_set` WHERE `id_user` = '".$ank_reply['id']."' LIMIT 1")->row();
-            
-            if ($notifiacation['komm'] == 1 && $ank_reply['id'] != $user['id']) {
-                $db->query("INSERT INTO `notification` (`avtor`, `id_user`, `id_object`, `type`, `time`) VALUES ('$user[id]', '$ank_reply[id]', '$ank[id]', 'stena_komm', '$time')");
+            if ($ank_reply['id'] != $user['id'] && $db->query("SELECT `komm` FROM `notification_set` WHERE `id_user`=?i LIMIT ?i",
+                           [$ank_reply['id'], 1])->el()) {
+                $db->query("INSERT INTO `notification` (`avtor`, `id_user`, `id_object`, `type`, `time`) VALUES (?i, ?i, ?i, ?, ?i)",
+                           [$user['id'], $ank_reply['id'], $ank['id'], 'stena_komm', $time]);
             }
         }
         $db->query("INSERT INTO `stena` (id_user, time, msg, id_stena) VALUES(?i, ?i, ?, ?i)",
@@ -126,39 +132,47 @@ if (isset($_POST['msg']) && isset($user)) {
                    [1, 1, $user['id']]);
         $_SESSION['message'] = 'Сообщение успешно добавлено';
         if (isset($user)) {
-            $notifiacation=$db->query("SELECT * FROM `notification_set` WHERE `id_user` = '".$user['id']."' LIMIT 1")->row();
-            
-            if ($notifiacation['komm'] == 1 && $user['id'] != $ank['id']) {
-                $db->query("INSERT INTO `notification` (`avtor`, `id_user`, `type`, `time`) VALUES ('$user[id]', '$ank[id]', 'stena', '$time')");
+            if ($user['id'] != $ank['id'] && $db->query("SELECT `komm` FROM `notification_set` WHERE `id_user`=?i LIMIT ?i",
+                           [$ank['id'], 1])->el()) {
+                $db->query("INSERT INTO `notification` (`avtor`, `id_user`, `type`, `time`) VALUES (?i, ?i, ?, ?i)",
+                           [$user['id'], $ank['id'], 'stena', $time]);
             }
         }
     }
 }
 
-/*---------------------------------------------------*/
+// rating
 if ((!isset($_SESSION['refer']) || $_SESSION['refer']==null) && isset($_SERVER['HTTP_REFERER'])
     && $_SERVER['HTTP_REFERER']!=null && !preg_match('#info\.php#', $_SERVER['HTTP_REFERER'])) {
     $_SESSION['refer']=str_replace('&', '&amp;', preg_replace('#^http://[^/]*/#', '/', $_SERVER['HTTP_REFERER']));
 }
-if (isset($_POST['rating']) && isset($user)  && $user['id']!=$ank['id'] && $user['balls']>=50 && $db->query("SELECT SUM(`rating`) FROM `user_voice2` WHERE `id_kont` = '$user[id]'")>=0) {
+if (isset($_POST['rating']) && isset($user)  && $user['id']!=$ank['id'] && $user['balls']>=50
+    && $db->query("SELECT SUM(`rating`) FROM `user_voice2` WHERE `id_kont`=?i", [$user['id']])->el() >= 0) {
     $new_r=min(max(@intval($_POST['rating']), -2), 2);
-    $db->query("DELETE FROM `user_voice2` WHERE `id_user` = '$user[id]' AND `id_kont` = '$ank[id]' LIMIT 1");
+    $db->query("DELETE FROM `user_voice2` WHERE `id_user`=?i AND `id_kont`=?i LIMIT ?i",
+               [$user['id'], $ank['id'], 1]);
     if ($new_r) {
-        $db->query("INSERT INTO `user_voice2` (`rating`, `id_user`, `id_kont`) VALUES ('$new_r','$user[id]','$ank[id]')");
+        $db->query("INSERT INTO `user_voice2` (`rating`, `id_user`, `id_kont`) VALUES ( ?i, ?i, ?i)",
+                   [$new_r, $user['id'], $ank['id']]);
     }
-    $ank['rating']=intval($db->query("SELECT SUM(`rating`) FROM `user_voice2` WHERE `id_kont` = '$ank[id]'"));
-    $db->query("UPDATE `user` SET `rating` = '$ank[rating]' WHERE `id` = '$ank[id]' LIMIT 1");
-    if ($new_r>0) {
-        $db->query("INSERT INTO `mail` (`id_user`, `id_kont`, `msg`, `time`) values('0', '$ank[id]', '$user[nick] оставил положительный отзыв в [url=/who_rating.php]Вашей анкете[/url]', '$time')");
+    $ank['rating']=intval($db->query("SELECT SUM(`rating`) FROM `user_voice2` WHERE `id_kont`=?i", [$ank['id']])->el());
+    $db->query("UPDATE `user` SET `rating`=?i WHERE `id`=?i",
+               [$ank['rating'], $ank['id']]);
+    if ($new_r > 0) {
+        $send = ' оставил положительный отзыв в [url=/who_rating.php]Вашей анкете[/url]';
     }
-    if ($new_r<0) {
-        $db->query("INSERT INTO `mail` (`id_user`, `id_kont`, `msg`, `time`) values('0', '$ank[id]', '$user[nick] оставил негативный отзыв в [url=/who_rating.php]Вашей анкете[/url]', '$time')");
+    if ($new_r < 0) {
+        $send = ' оставил негативный отзыв в [url=/who_rating.php]Вашей анкете[/url]';
     }
-    if ($new_r==0) {
-        $db->query("INSERT INTO `mail` (`id_user`, `id_kont`, `msg`, `time`) values('0', '$ank[id]', '$user[nick] оставил нейтральный отзыв в [url=/who_rating.php]Вашей анкете[/url]', '$time')");
+    if ($new_r == 0) {
+        $send = ' оставил нейтральный отзыв в [url=/who_rating.php]Вашей анкете[/url]';
     }
+    $db->query("INSERT INTO `mail` (`id_user`, `id_kont`, `msg`, `time`) VALUES(?i, ?i, ?, ?i)",
+                   [0, $ank['id'], $user['nick'] . $send, $time]);
     msg('Ваше мнение о пользователе успешно изменено');
-}//-------------статус запись-----------//
+}
+
+// статус запись
 if (isset($_POST['status']) && isset($user) && $user['id'] == $ank['id']) {
     $msg=$_POST['status'];
     if (isset($_POST['translit']) && $_POST['translit']==1) {
@@ -172,68 +186,72 @@ if (isset($_POST['status']) && isset($user) && $user['id'] == $ank['id']) {
         $err='Сообщение слишком длинное';
     } elseif (strlen2($msg)<2) {
         $err='Короткое сообщение';
-    } elseif ($db->query("SELECT COUNT(*) FROM `status` WHERE `id_user` = '$user[id]' AND `msg` = '".my_esc($msg)."' LIMIT 1")->el()) {
+    } elseif ($db->query("SELECT COUNT(*) FROM `status` WHERE `id_user`=?i AND `msg`=?",
+                         [$user['id'], $msg])->el()) {
         $err='Ваше сообщение повторяет предыдущее';
     } elseif (!isset($err)) {
-        $db->query("UPDATE `status` SET `pokaz` = '0' WHERE `id_user` = '$user[id]'");
-        $db->query("INSERT INTO `status` (`id_user`, `time`, `msg`, `pokaz`) values('$user[id]', '$time', '".my_esc($msg)."', '1')");
-        $status=$db->query("SELECT * FROM `status` WHERE `id_user` = '$ank[id]' AND `pokaz` = '1' LIMIT 1")->row();
-        ######################Лента
-        $q = $db->query("SELECT * FROM `frends` WHERE `user` = '".$user['id']."' AND `i` = '1'");
-        while ($f = $q->row()) {
-            $a=get_user($f['frend']);
-            $lentaSet = $db->query("SELECT * FROM `tape_set` WHERE `id_user` = '".$a['id']."' LIMIT 1")->row(); // Общая настройка ленты
-            if ($f['lenta_status'] == 1 && $lentaSet['lenta_status'] == 1) {
-                $db->query("INSERT INTO `tape` (`id_user`,`ot_kogo`,  `avtor`, `type`, `time`, `id_file`) values('$a[id]', '$user[id]', '$status[id_user]', 'status', '$time', '$status[id]')");
-            }
+        $db->query("UPDATE `status` SET `pokaz`=?i WHERE `id_user`=?i",
+                   [0, $user['id']]);
+        $db->query("INSERT INTO `status` (`id_user`, `time`, `msg`, `pokaz`) VALUES(?i, ?i, ?, ?i)",
+                   [$user['id'], $time, $msg, 1]);
+        $status=$db->query("SELECT * FROM `status` WHERE `id_user`=?i AND `pokaz`=?i LIMIT ?i",
+                           [$ank['id'], 1, 1])->row();
+        // Лента
+        $q = $db->query("SELECT fr.user, fr.lenta_status, ts.lenta_status as ts_status FROM `frends` fr 
+JOIN tape_set ts ON ts.id_user=fr.user
+WHERE fr.`frend`=?i AND fr.`lenta_status`=?i AND ts.`lenta_status`=?i AND `i`=?i",
+                        [$user['id'], 1, 1, 1]);
+        while ($frend = $q->row()) {
+            $db->query("INSERT INTO `tape` (`id_user`,`ot_kogo`,  `avtor`, `type`, `time`, `id_file`) VALUES(?i, ?i, ?i, ?, ?i, ?i)",
+                           [$frend['user'], $user['id'], $status['id_user'], 'status', $time, $status['id']]);
         }
-        #######################Конец
+
         $_SESSION['message'] = 'Статус добавлен';
         header("Location: ?id=$ank[id]");
         exit;
     }
 }
-if (isset($_GET['off'])) {
-    if ($ank['id']==$user['id']) {
-        $db->query("UPDATE `status` SET `pokaz` = '0' WHERE `id_user` = '$user[id]'");
+if (isset($get_id['off']) && $ank['id'] == $user['id']) {
+        $db->query("UPDATE `status` SET `pokaz`=?i WHERE `id_user`=?i",
+                   [0, $user['id']]);
         $_SESSION['message'] = 'Статус отключен';
         header("Location: ?id=$ank[id]");
         exit;
-    }
 }
 //-------------------------------------//
 // Статус пользователя
-$status=$db->query("SELECT * FROM `status` WHERE `id_user` = '$ank[id]' AND `pokaz` = '1' LIMIT 1")->row();
+$status=$db->query("SELECT * FROM `status` WHERE `id_user`=?i AND `pokaz`=?i LIMIT ?i",
+                   [$ank['id'], 1, 1])->row();
 /* Класс к статусу */
-if (isset($_GET['like']) && $user['id']!=$ank['id'] &&
-    !$db->query("SELECT COUNT(*) FROM `status_like` WHERE `id_status` = '$status[id]' AND `id_user` = '$user[id]' LIMIT 1")->el()) {
-    $db->query("INSERT INTO `status_like` (`id_user`, `time`, `id_status`) values('$user[id]', '$time', '$status[id]')");######################Лента
-    $q = $db->query("SELECT * FROM `frends` WHERE `user` = '".$user['id']."' AND `i` = '1'");
-    while ($f = $q->row()) {
-        $a=get_user($f['frend']);
-        $lentaSet = $db->query("SELECT * FROM `tape_set` WHERE `id_user` = '".$a['id']."' LIMIT 1")->row(); // Общая настройка ленты
-        if ($a['id'] != $ank['id'] && $f['lenta_status_like']==1 && $lentaSet['lenta_status_like']==1) {
-            $db->query("INSERT INTO `tape` (`id_user`,`ot_kogo`,  `avtor`, `type`, `time`, `id_file`) values('$a[id]', '$user[id]', '$status[id_user]', 'status_like', '$time', '$status[id]')");
-        }
+if (isset($get_id['like']) && $user['id']!=$ank['id'] &&
+    !$db->query("SELECT COUNT(*) FROM `status_like` WHERE `id_status`=?i AND `id_user`=?i",
+                [$status['id'], $user['id']])->el()) {
+    $db->query("INSERT INTO `status_like` (`id_user`, `time`, `id_status`) values(?i, ?i, ?i)",
+               [$user['id'], $time, $status['id']]);
+    // Лента
+        $q = $db->query("SELECT fr.user, fr.lenta_status_like, ts.lenta_status_like as ts_status FROM `frends` fr 
+JOIN tape_set ts ON ts.id_user=fr.user
+WHERE fr.`frend`=?i AND fr.`lenta_status_like`=?i AND ts.`lenta_status_like`=?i AND `i`=?i",
+                        [$user['id'], 1, 1, 1]);
+    while ($frend = $q->row()) {
+            $db->query("INSERT INTO `tape` (`id_user`,`ot_kogo`,  `avtor`, `type`, `time`, `id_file`) VALUES(?i, ?i, ?i, ?, ?i, ?i)",
+                       [$frend['user'], $user['id'], $status['id_user'], 'status_like', $time, $status['id']]);
     }
-    #######################Конец
+    // Конец
     header("Location: ?id=$ank[id]");
     exit;
 }
-/*
-=================================
-добавляем в закладки
-=================================
-*/
-if (isset($_GET['fav']) && isset($user)) {
-    if ($_GET['fav'] == 1 && !$db->query(
+
+// добавляем в закладки
+if (isset($get_id['fav']) && isset($user)) {
+    if ($get_id['fav'] == 1 && !$db->query(
             'SELECT COUNT(*) FROM `bookmarks` WHERE `id_user`=?i AND `id_object`=?i AND `type`=?',
                     [$user['id'], $ank['id'], 'people'])->el()) {
         $db->query("INSERT INTO `bookmarks` (`id_object`, `id_user`, `time`,`type`) VALUES (?i, ?i, ?i, ?)",
                    [$ank['id'], $user['id'], $time, 'people']);
         $_SESSION['message'] = $ank['nick'] . ' добавлен в закладки';
     }
-    if ($_GET['fav'] == 0 && $db->query(
+    if ($get_id['fav'] == 0 && $db->query(
             'SELECT COUNT(*) FROM `bookmarks` WHERE `id_user`=?i AND `id_object`=?i AND `type`=?',
                     [$user['id'], $ank['id'], 'people'])->el()) {
         $db->query(
@@ -245,13 +263,17 @@ if (isset($_GET['fav']) && isset($user)) {
     header('Location: /info.php?id=' . $ank['id']);
     exit;
 }
-/*------------------------статус like-----------------------*/
-if (isset($user) && isset($_GET['like']) && ($_GET['like']==0 || $_GET['like']==1) &&
-    !$db->query("SELECT COUNT(*) FROM `status_like` WHERE `id_user` = '$user[id]' AND `id_status`='$status[id]' LIMIT 1")->el() && $user['id']!=$ank['id']) {
-    $db->query("INSERT INTO `status_like` (`id_user`, `id_status`, `like`) VALUES ('$user[id]', '$status[id]', '".intval($_GET['like'])."')");
-    $db->query("UPDATE `user` SET `balls` = '".($ank['balls']+3)."' ,`rating_tmp` = '".($ank['rating_tmp']+3)."' WHERE `id` = '$ank[id]' LIMIT 1");
+
+// статус like
+if (isset($user) && isset($get_id['like']) && ($get_id['like']==0 || $get_id['like']==1) && $user['id']!=$ank['id']
+    && !$db->query("SELECT COUNT(*) FROM `status_like` WHERE `id_user`=?i AND `id_status`=?i",
+                [$user['id'], $status['id']])->el()) {
+    $db->query("INSERT INTO `status_like` (`id_user`, `id_status`, `like`) VALUES (?i, ?i, ?i)",
+               [$user['id'], $status['id'], $get_id['like']]);
+    $db->query("UPDATE `user` SET `balls`=`balls`+3, `rating_tmp`=`rating_tmp`+3 WHERE `id`=?i",
+               [$ank['id']]);
 }
-/*----------------------------------------------------------*/
+
 /*
 ================================
 Модуль жалобы на пользователя
@@ -259,13 +281,16 @@ if (isset($user) && isset($_GET['like']) && ($_GET['like']==0 || $_GET['like']==
 в зависимости от раздела
 ================================
 */
-if (isset($_GET['spam'])  && $ank['id']!=0 && isset($user)) {
-    $mess = $db->query("SELECT * FROM `stena` WHERE `id` = '".intval($_GET['spam'])."' limit 1")->row();
-    $spamer = get_user($mess['id_user']);
-    if (!$db->query("SELECT COUNT(*) FROM `spamus` WHERE `id_user` = '$user[id]' AND `id_spam` = '$spamer[id]' AND `razdel` = 'stena'")->el()) {
+if (isset($get_id['spam'])  && $ank['id']!=0 && isset($user)) {
+    $mess = $db->query("SELECT stn.*, u.id AS id_user, u.nick FROM `stena` stn
+JOIN `user` u ON u.id=stn.id_user WHERE stn.`id`=?i",
+                       [$get_id['spam']])->row();
+    
+    if (!$db->query("SELECT COUNT( * ) FROM `spamus` WHERE `id_user`=?i AND `id_spam`=?i AND `razdel`=?",
+                    [$user['id'], $mess['id_user'], 'stena'])->el()) {
         if (isset($_POST['spamus'])) {
             if ($mess['id_user']!=$user['id']) {
-                $msg=my_esc($_POST['spamus']);
+                $msg=trim($_POST['spamus']);
                 if (strlen2($msg)<3) {
                     $err='Укажите подробнее причину жалобы';
                 }
@@ -273,32 +298,41 @@ if (isset($_GET['spam'])  && $ank['id']!=0 && isset($user)) {
                     $err='Длина текста превышает предел в 512 символов';
                 }
                 if (isset($_POST['types'])) {
-                    $types=intval($_POST['types']);
+                    $types = intval($_POST['types']);
                 } else {
-                    $types='0';
+                    $types = 0;
                 }
                 if (!isset($err)) {
-                    $db->query("INSERT INTO `spamus` (`id_object`, `id_user`, `msg`, `id_spam`, `time`, `types`, `razdel`, `spam`) values('$ank[id]', '$user[id]', '$msg', '$spamer[id]', '$time', '$types', 'stena', '".my_esc($mess['msg'])."')");
+                    $db->query(
+                        'INSERT INTO `spamus` (`id_object`, `id_user`, `msg`, `id_spam`, `time`, `types`, `razdel`, `spam`) VALUES(?i, ?i, ?, ?i, ?i, ?i, ?, ?)',
+                                [$ank['id'], $user['id'], $msg, $mess['id_user'], $time, $types, 'stena', $mess['msg']]);
+                    
                     $_SESSION['message'] = 'Заявка на рассмотрение отправлена';
-                    header("Location: ?id=$ank[id]&spam=$mess[id]&page=".intval($_GET['page'])."");
+                    header("Location: ?id=$ank[id]&spam=$mess[id]&page=".intval($get_id['page'])."");
                     exit;
                 }
             }
         }
     }
-    $set['title']=$ank['nick'].' - жалоба '; // заголовок страницы
+    // заголовок страницы
+    $set['title']=$ank['nick'].' - жалоба '; 
     include_once 'sys/inc/thead.php';
     title();
     aut();
     err();
-    if (!$db->query("SELECT COUNT(*) FROM `spamus` WHERE `id_user` = '$user[id]' AND `id_spam` = '$spamer[id]' AND `razdel` = 'stena'")->el()) {
-        echo "<div class='mess'>Ложная информация может привести к блокировке ника.
-Если вас постоянно достает один человек - пишет всякие гадости, вы можете добавить его в черный список.</div>";
-        echo "<form class='nav1' method='post' action='/info.php?id=$ank[id]&amp;spam=$mess[id]&amp;page=".intval($_GET['page'])."'>\n";
-        echo "<b>Пользователь:</b> ";
-        echo " ".avatar($spamer['id'])." <a href=\"/info.php?id=$spamer[id]\">$spamer[nick]</a>\n";
-        echo "".medal($spamer['id'])." ".online($spamer['id'])." (".vremja($mess['time']).")<br />";
-        echo "<b>Нарушение:</b> <font color='green'>".output_text($mess['msg'])."</font><br />";
+    
+    if (!$db->query(
+            'SELECT COUNT(*) FROM `spamus` WHERE `id_user`=?i AND `id_spam`=?i AND `razdel`=?',
+                    [$user['id'], $mess['id_user'], 'stena'])->el()) {
+        echo "<div class='mess'>\n Ложная информация может привести к блокировке ника.
+Если вас постоянно достает один человек - пишет всякие гадости, вы можете добавить его в черный список.\n</div>\n";
+        echo "<form class='nav1' method='post' action='/info.php?id=$ank[id]&amp;spam=$mess[id]&amp;page=".intval($get_id['page'])."'>\n";
+        echo "<b>Пользователь:</b><br />";
+        echo " ".avatar($mess['id_user'])." <a href=\"/info.php?id=" . $mess['id_user'] . "\">$mess[nick]</a>\n";
+        echo "".medal($mess['id_user'])." ".online($mess['id_user'])." (".vremja($mess['time']).")<br />";
+        if ($mess['msg']) { // TODO: что за хрень?
+            echo "<b>Нарушение:</b> <font color='green'>".output_text($mess['msg'])."</font><br />";
+        }
         echo "Причина:<br />\n<select name='types'>\n";
         echo "<option value='1' selected='selected'>Спам/Реклама</option>\n";
         echo "<option value='2' selected='selected'>Мошенничество</option>\n";
@@ -310,75 +344,87 @@ if (isset($_GET['spam'])  && $ank['id']!=0 && isset($user)) {
         echo "<input value=\"Отправить\" type=\"submit\" />\n";
         echo "</form>\n";
     } else {
-        echo "<div class='mess'>Жалоба на <font color='green'>$spamer[nick]</font> будет рассмотрена в ближайшее время.</div>";
+        echo "<div class='mess'>Жалоба на <font color='green'>$mess[nick]</font> будет рассмотрена в ближайшее время.</div>";
     }
     echo "<div class='foot'>\n";
     echo "<img src='/style/icons/str2.gif' alt='*'> <a href='/info.php?id=$ank[id]'>Назад</a><br />\n";
     echo "</div>\n";
+    
     include_once 'sys/inc/tfoot.php';
 }
 /*
 ==================================
 The End
 ==================================
-*/$set['title']=$ank['nick'].' - страничка '; // заголовок страницы
+*/
+$set['title']=$ank['nick'].' - страничка '; // заголовок страницы
 include_once 'sys/inc/thead.php';
 title();
 aut();
 /*
 ==================================
-Приватность станички пользователя
+Приватность станички пользователя 
 ==================================
 */
-$uSet = $db->query("SELECT * FROM `user_set` WHERE `id_user` = '$ank[id]'  LIMIT 1")->row();
-$frend = $db->query("SELECT COUNT(*) FROM `frends` WHERE (`user` = '$user[id]' AND `frend` = '$ank[id]') OR (`user` = '$ank[id]' AND `frend` = '$user[id]') LIMIT 1")->el();
-$frend_new = $db->query("SELECT COUNT(*) FROM `frends_new` WHERE (`user` = '$user[id]' AND `to` = '$ank[id]') OR (`user` = '$ank[id]' AND `to` = '$user[id]') LIMIT 1")->el();
-if ($ank['id'] != $user['id'] && $user['group_access'] == 0) {
-    if (($uSet['privat_str'] == 2 && $frend != 2) || $uSet['privat_str'] == 0) { // Начинаем вывод если стр имеет приват настройки
+$pattern = 'SELECT ust.privat_str FROM `user_set` ust WHERE ust.`id_user`=?i';
+$data = [$ank['id']];
+if (isset($user)) {
+    $pattern = 'SELECT ust.privat_str, (
+SELECT COUNT(*) FROM `frends` WHERE (`user`=?i AND `frend`=ust.`id_user`) OR (`user`=ust.`id_user` AND `frend`=?i)) frend, (
+SELECT COUNT(*) FROM `frends_new` WHERE (`user`=?i AND `to`=ust.`id_user`) OR (`user`=ust.`id_user` AND `to`=?i)) new_frend
+FROM `user_set` ust WHERE ust.`id_user`=?i';
+    $data = [$user['id'], $user['id'], $user['id'], $user['id'], $ank['id']];
+}
+
+$uSet = $db->query($pattern, $data)->row();
+
+if (!isset($user) || ($ank['id'] != $user['id'] && $user['group_access'] == 0)) {
+    if (($uSet['privat_str'] == 2 && (isset($user) && $uSet['frend'] != 2)) || $uSet['privat_str'] == 0) { // Начинаем вывод если стр имеет приват настройки
         if ($ank['group_access']>1) {
             echo "<div class='err'>$ank[group_name]</div>\n";
         }
-        echo "<div class='nav1'>";
+        echo "<div class='nav1'>\n";
         echo group($ank['id'])." $ank[nick] ";
         echo medal($ank['id'])." ".online($ank['id'])." ";
-        echo "</div>";
+        echo "</div>\n";
         
-        echo "<div class='nav2'>";
+        echo "<div class='nav2'>\n";
         echo avatar($ank['id'], true, 128, false);
-        echo "<br />";
+        //echo "<br />";
     }
     
-    
-    if ($uSet['privat_str'] == 2 && $frend != 2) { // Если только для друзей
-        echo '<div class="mess">';
-        echo 'Просматривать страничку пользователя могут только его друзья!';
-        echo '</div>';
+    // Если только для друзей
+    if ((!isset($user) && $uSet['privat_str'] == 2)  || (isset($user) && $uSet['privat_str'] == 2 && $uSet['frend'] != 2)) { 
+        echo '<div class="mess">'."\n";
+        echo 'Просматривать страничку пользователя могут только его друзья!'."\n";
+        echo '</div>'."\n";
         
         // В друзья
         if (isset($user)) {
-            echo '<div class="nav1">';
-            if ($frend_new == 0 && $frend==0) {
+            echo '<div class="nav1">'."\n";
+            if ($uSet['frend_new'] == 0 && $uSet['frend']==0) {
                 echo "<img src='/style/icons/druzya.png' alt='*'/> <a href='/user/frends/create.php?add=".$ank['id']."'>Добавить в друзья</a><br />\n";
-            } elseif ($frend_new == 1) {
+            } elseif ($uSet['frend_new'] == 1) {
                 echo "<img src='/style/icons/druzya.png' alt='*'/> <a href='/user/frends/create.php?otm=$ank[id]'>Отклонить заявку</a><br />\n";
-            } elseif ($frend == 2) {
+            } elseif ($uSet['frend'] == 2) {
                 echo "<img src='/style/icons/druzya.png' alt='*'/> <a href='/user/frends/create.php?del=$ank[id]'>Удалить из друзей</a><br />\n";
             }
-            echo "</div>";
+            echo "</div>\n";
         }
         include_once 'sys/inc/tfoot.php';
         exit;
     }
     
     if ($uSet['privat_str'] == 0) { // Если закрыта
-        echo '<div class="mess">';
-        echo 'Пользователь запретил просматривать его страничку!';
-        echo '</div>';
+        echo '<div class="mess">'."\n";
+        echo 'Пользователь запретил просматривать его страничку!'."\n";
+        echo '</div>'."\n";
         
         include_once 'sys/inc/tfoot.php';
         exit;
     }
 }
+
 if ($set['web']==true) {
     include_once H."user/info/web.php";
 } else {
