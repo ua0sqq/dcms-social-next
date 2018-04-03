@@ -35,6 +35,6 @@ function mydebug($query, $duration, $info)
 {
     $trace = debug_backtrace();
     echo '<pre style="font-style: oblique; font-size: 11px;"><p style="color:#B3460B;">' .
-    $trace[4]['object']->query_number . '-'.$query.' ' . round($duration, 5) .
+    $trace[4]['object']->query_number . '-' . htmlspecialchars($query) . ' ' . round($duration, 5) .
     '<p> ' . $trace[4]['file'] . ' ' . $trace[4]['line'] . '</p></pre>';
 }

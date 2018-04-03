@@ -1,24 +1,24 @@
 <?php
     $cel = "(
-	`ank_lov_1` = '1' OR 
-	`ank_lov_2` = '1' OR 
-	`ank_lov_3` = '1' OR 
-	`ank_lov_4` = '1' OR 
-	`ank_lov_5` = '1' OR 
-	`ank_lov_6` = '1' OR 
-	`ank_lov_7` = '1' OR 
-	`ank_lov_8` = '1' OR 
-	`ank_lov_9` = '1' OR 
-	`ank_lov_10` = '1' OR 
-	`ank_lov_11` = '1' OR 
-	`ank_lov_12` = '1' OR 
-	`ank_lov_13` = '1' OR 
-	`ank_lov_14` = '1'
+	`ank_lov_1` = 1 OR 
+	`ank_lov_2` = 1 OR 
+	`ank_lov_3` = 1 OR 
+	`ank_lov_4` = 1 OR 
+	`ank_lov_5` = 1 OR 
+	`ank_lov_6` = 1 OR 
+	`ank_lov_7` = 1 OR 
+	`ank_lov_8` = 1 OR 
+	`ank_lov_9` = 1 OR 
+	`ank_lov_10` = 1 OR 
+	`ank_lov_11` = 1 OR 
+	`ank_lov_12` = 1 OR 
+	`ank_lov_13` = 1 OR 
+	`ank_lov_14` = 1
 	)";
     $orien = "(
-	`ank_orien` = '1' OR 
-	`ank_orien` = '2' OR 
-	`ank_orien` = '3'
+	`ank_orien` = 1 OR 
+	`ank_orien` = 2 OR 
+	`ank_orien` = 3
 	)";
     $opar = "(
 	`ank_o_par` IS NOT NULL 

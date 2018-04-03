@@ -45,14 +45,14 @@ $parent = 'SELECT of.*, (
     SELECT COUNT( * ) FROM `obmennik_files` WHERE `id_dir` =  of.id) AS cnt3, (
     SELECT COUNT( * ) FROM `obmennik_files` WHERE `id_dir` =  of.id AND `time` >?i) AS cnt4
 FROM `obmennik_dir` of
-WHERE `dir_osn`=? OR `dir_osn`=? OR `dir_osn`=?  ORDER BY `name`,`num` ASC';
+WHERE `dir_osn`=? OR `dir_osn`=? OR `dir_osn`=? AND `my` ="0"  ORDER BY `name`,`num` ASC';
 $data = [$ftime, '/' . $l, $l . '/', $l];
 if (user_access('obmen_dir_edit')) {
     $parent = 'SELECT of.*, (
     SELECT COUNT( * ) FROM `obmennik_files` WHERE `id_dir` =  of.id) AS cnt3, (
     SELECT COUNT( * ) FROM `obmennik_files` WHERE `id_dir` =  of.id AND `time` >?i) AS cnt4
 FROM `obmennik_dir` of
-WHERE `dir_osn`=? OR `dir_osn`=? OR `dir_osn`=? AND `my` ="0"  ORDER BY `name`, `num` ASC';
+WHERE `dir_osn`=? OR `dir_osn`=? OR `dir_osn`=? ORDER BY `name`, `num` ASC';
 }
 $q=$db->query($parent, $data);
 $list = [];

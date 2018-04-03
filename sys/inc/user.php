@@ -245,7 +245,7 @@ SELECT COUNT(*) AS notificationset FROM `notification_set` WHERE `id_user` = ?i)
     if (filter_input(INPUT_GET, 'response', FILTER_VALIDATE_INT) &&
         $ank_reply = $db->query("SELECT id, nick FROM `user` WHERE `id` = ?i", [$_GET['response']])->row()) {
         $insert = $ank_reply['nick'] . ', ';
-        $go_link = '?' . $passgen . '&amp;response=' . $ank_reply['id'];
+        $go_link = '&amp;response=' . $ank_reply['id'] . '&amp;' . $passgen; // TODO: ???
         $respons = true;
     }
 

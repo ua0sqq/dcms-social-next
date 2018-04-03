@@ -53,13 +53,14 @@ if ($type == 'status_like' || $type == 'status')
 		echo output_text($status['msg']) . '<br />';
 		echo '</div>';
 		
-		echo '<a href="/user/status/komm.php?id=' . $status['id'] . '"><img src="/style/icons/bbl4.png" alt=""/> ' . $db->query("SELECT COUNT(*) FROM `status_komm` WHERE `id_status` = '$status[id]'") . '</a>';
+		echo '<a href="/user/status/komm.php?id=' . $status['id'] . '"><img src="/style/icons/bbl4.png" alt=""/> ' .
+		$db->query("SELECT COUNT(*) FROM `status_komm` WHERE `id_status` = '$status[id]'")->el() . '</a>';
 		
-		$l = $db->query("SELECT COUNT(*) FROM `status_like` WHERE `id_status` = '$status[id]'");
+		$l = $db->query("SELECT COUNT(*) FROM `status_like` WHERE `id_status` = '$status[id]'")->el();
 			
 		if (isset($user) && $user['id'] != $avtor['id'])
 		{
-			if ($user['id']!=$avtor['id'] && $db->query("SELECT COUNT(*) FROM `status_like` WHERE `id_status` = '$status[id]' AND `id_user` = '$user[id]' LIMIT 1")==0){
+			if ($user['id']!=$avtor['id'] && !$db->query("SELECT COUNT(*) FROM `status_like` WHERE `id_status` = '$status[id]' AND `id_user` = '$user[id]' LIMIT 1")->el()){
 				echo ' <a href="?likestatus=' . $status['id'] . '&amp;page=$page"><img src="/style/icons/like.gif" alt=""/>Класс!</a> &bull; ';
 				$like = $l;
 			}else{

@@ -56,12 +56,12 @@ if (isset($_POST['delete'])) {
     $db->query("DELETE FROM `user_set` WHERE `id_user` = '$ank[id]'");
     $db->query("DELETE FROM `notification` WHERE `id_user` = '$ank[id]'");
     $db->query("DELETE FROM `notification_set` WHERE `id_user` = '$ank[id]'");
-    $db->query("DELETE FROM `discussions` WHERE `id_user` = '$ank[id]' OR `id_user` = '$ank[id]' OR `ot_kogo` = '$ank[id]'");
+    $db->query("DELETE FROM `discussions` WHERE `id_user` = '$ank[id]' OR `id_user` = '$ank[id]'");
     $db->query("DELETE FROM `discussions_set` WHERE `id_user` = '$ank[id]'");
     $db->query("DELETE FROM `forum_p` WHERE `id_user` = '$ank[id]'");
     $db->query("DELETE FROM `forum_zakl` WHERE `id_user` = '$ank[id]'");
     $db->query("DELETE FROM `guest` WHERE `id_user` = '$ank[id]'");
-    $db->query("DELETE FROM `loads_komm` WHERE `id_user` = '$ank[id]'");
+    //$db->query("DELETE FROM `loads_komm` WHERE `id_user` = '$ank[id]'");
     $db->query("DELETE FROM `news_komm` WHERE `id_user` = '$ank[id]'");
     $db->query("DELETE FROM `user_files` WHERE `id_user` = '$ank[id]'");
     $db->query("DELETE FROM `user_music` WHERE `id_user` = '$ank[id]'");
@@ -69,7 +69,7 @@ if (isset($_POST['delete'])) {
     $db->query("DELETE FROM `status` WHERE `id_user` = '$ank[id]'");
     $db->query("DELETE FROM `status_like` WHERE `id_user` = '$ank[id]'");
     $db->query("DELETE FROM `status_komm` WHERE `id_user` = '$ank[id]'");
-    $db->query("DELETE FROM `status_count` WHERE `id_user` = '$ank[id]'");
+    //$db->query("DELETE FROM `status_count` WHERE `id_user` = '$ank[id]'");
     $db->query("DELETE FROM `mark_notes` WHERE `id_user` = '$ank[id]'");
     $db->query("DELETE FROM `mark_people` WHERE `id_user` = '$ank[id]'");
     $db->query("DELETE FROM `tape_set` WHERE `id_user` = '$ank[id]'");
@@ -89,9 +89,9 @@ if (isset($_POST['delete'])) {
     $db->query("DELETE FROM `obmennik_files` WHERE `id_user` = '$ank[id]'");
     $db->query("DELETE FROM `users_konts` WHERE `id_user` = '$ank[id]' OR `id_kont` = '$ank[id]'");
     $db->query("DELETE FROM `mail` WHERE `id_user` = '$ank[id]' OR `id_kont` = '$ank[id]'");
-    $db->query("DELETE FROM `user_voice` WHERE `id_user` = '$ank[id]' OR `id_kont` = '$ank[id]'");
+    $db->query("DELETE FROM `user_voice2` WHERE `id_user` = '$ank[id]' OR `id_kont` = '$ank[id]'");
     $db->query("DELETE FROM `user_collision` WHERE `id_user` = '$ank[id]' OR `id_user2` = '$ank[id]'");
-    $db->query("DELETE FROM `votes_user` WHERE `u_id` = '$ank[id]'");
+    $db->query("DELETE FROM `votes_user` WHERE `id_user` = '$ank[id]'");
     if (count($collisions)>1 && isset($_GET['all'])) {
         for ($i=1;$i<count($collisions);$i++) {
             $db->query("DELETE FROM `user` WHERE `id` = '$collisions[$i]' LIMIT 1");
@@ -104,7 +104,7 @@ if (isset($_POST['delete'])) {
             $db->query("DELETE FROM `forum_p` WHERE `id_user` = '$collisions[$i]'");
             $db->query("DELETE FROM `forum_zakl` WHERE `id_user` = '$collisions[$i]'");
             $db->query("DELETE FROM `guest` WHERE `id_user` = '$collisions[$i]'");
-            $db->query("DELETE FROM `loads_komm` WHERE `id_user` = '$collisions[$i]'");
+            //$db->query("DELETE FROM `loads_komm` WHERE `id_user` = '$collisions[$i]'");
             $db->query("DELETE FROM `news_komm` WHERE `id_user` = '$collisions[$i]'");
             $q5=$db->query("SELECT * FROM `obmennik_files` WHERE `id_user` = '$collisions[$i]'");
             while ($post5 = $q5->row()) {
@@ -113,7 +113,7 @@ if (isset($_POST['delete'])) {
             $db->query("DELETE FROM `obmennik_files` WHERE `id_user` = '$collisions[$i]'");
             $db->query("DELETE FROM `users_konts` WHERE `id_user` = '$collisions[$i]' OR `id_kont` = '$collisions[$i]'");
             $db->query("DELETE FROM `mail` WHERE `id_user` = '$collisions[$i]' OR `id_kont` = '$collisions[$i]'");
-            $db->query("DELETE FROM `user_voice` WHERE `id_user` = '$collisions[$i]' OR `id_kont` = '$collisions[$i]'");
+            $db->query("DELETE FROM `user_voice2` WHERE `id_user` = '$collisions[$i]' OR `id_kont` = '$collisions[$i]'");
             $db->query("DELETE FROM `user_collision` WHERE `id_user` = '$collisions[$i]' OR `id_user2` = '$collisions[$i]'");
             $db->query("DELETE FROM `votes_user` WHERE `u_id` = '$collisions[$i]'");
         }
@@ -130,7 +130,7 @@ if (isset($_POST['delete'])) {
         }
     }
     echo "<div class='foot'>\n";
-    echo "&laquo;<a href='/users.php'>Пользователи</a><br />\n";
+    echo "&laquo;<a href='/user/users.php'>Пользователи</a><br />\n";
     echo "</div>\n";
     include_once '../sys/inc/tfoot.php';
 }

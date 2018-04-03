@@ -1,9 +1,13 @@
 <?php
-$k_p = $db->query("SELECT COUNT(*) FROM `liders` WHERE `time` > '$time'")->el();
-$k_n = $db->query("SELECT COUNT(*) FROM `liders` WHERE `time` > '$time' AND `time_p` > '$ftime'")->el();
-if ($k_n == 0) {
-    $k_n = null;
+$cnt = $db->query(
+                'SELECT * FROM (
+SELECT COUNT( * ) k_p FROM `liders` WHERE `time` > ?i)q, (
+SELECT COUNT( * ) k_n FROM `liders` WHERE `time` > ?i AND `time_p` > ?i)q2',
+                        [$time, $time, $ftime])->row();
+
+if ($cnt['k_n'] == 0) {
+    $cnt['k_n'] = null;
 } else {
-    $k_n = '+' . $k_n;
+    $cnt['k_n'] = '+' . $cnt['k_n'];
 }
-echo '(' . $k_p . ') <font color="red">' . $k_n . '</font>';
+echo '(' . $cnt['k_p'] . ') <span style="color:red;">' . $cnt['k_n'] . '</span>';

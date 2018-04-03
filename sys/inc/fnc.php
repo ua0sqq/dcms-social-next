@@ -212,32 +212,34 @@ function esc($text, $br=null)
 // получаем данные пользователя и уровень прав (+ кеширование)
 function get_user($user_id=0)
 {
-    if ($user_id==0) {
+    if ($user_id == 0) {
         // бот
         $ank2['id']=0;
         $ank2['nick']='Система';
         $ank2['level']=999;
         $ank2['pol']=1;
+        $ank2['date_last']=time();
         $ank2['group_name']='Системный робот';
         $ank2['ank_o_sebe']='Создан для уведомлений';
         return $ank2;
     } else {
-        static $users; // переменная не удаляется после вызова функции
-        $user_id=intval($user_id);
+        // переменная не удаляется после вызова функции
+        static $users; 
+        //$user_id=intval($user_id);
         $users[0]=false;
         if (!isset($users[$user_id])) {
-            if (go\DB\query("SELECT COUNT(*) FROM `user` WHERE `id` = '$user_id'")->el()) {
-                $users[$user_id]=go\DB\query("SELECT * FROM `user` WHERE `id` = '$user_id' LIMIT 1")->row();
-                $tmp_us=go\DB\query("SELECT `level`,`name` AS `group_name` FROM `user_group` WHERE `id` = '".$users[$user_id]['group_access']."' LIMIT 1")->row();
-                if ($tmp_us['group_name']==null) {
-                    $users[$user_id]['level']=0;
+            if (go\DB\query('SELECT COUNT(*) FROM `user` WHERE `id`=?i', [$user_id])->el()) {
+                $users[$user_id] = go\DB\query('SELECT `u` . *, `gr`.`name` AS `group_name`, `gr`.`level` AS `level` FROM `user` u
+LEFT JOIN `user_group` gr ON `gr`.`id`=`u`.`group_access` WHERE `u`.`id`=?i', [$user_id])->row();
+
+                if ($users[$user_id]['group_name'] == null) {
+                    $users[$user_id]['level'] = '0';
                     $users[$user_id]['group_name']='Пользователь';
-                } else {
-                    $users[$user_id]['level']=$tmp_us['level'];
-                    $users[$user_id]['group_name']=$tmp_us['group_name'];
                 }
+                
             } else {
-                $users[$user_id]=false;
+                $users[$user_id] = false;
+                header('Location: /err.php?err=404');
             }
         }
         return $users[$user_id];
