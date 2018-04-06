@@ -25,19 +25,13 @@ include_once '../../sys/inc/fnc.php';
 include_once '../../sys/inc/adm_check.php';
 include_once '../../sys/inc/user.php';
 
-/* Бан пользователя */
-if (isset($user) && $db->query("SELECT COUNT(*) FROM `ban` WHERE `razdel` = 'notes' AND `id_user` = '$user[id]' AND (`time` > '$time' OR `view` = '0' OR `navsegda` = '1')")->el()) {
-    header('Location: /ban.php?'.SID);
-    exit;
-}
-
 $set['title']='Категории';
 include_once '../../sys/inc/thead.php';
 title();
 
 if (isset($_POST['title']) && user_access('notes_edit')) {
-    $title=my_esc($_POST['title'], 1);
-    $msg=my_esc($_POST['msg']);
+    $title=trim($_POST['title'], 1);
+    $msg=trim($_POST['msg']);
     if (strlen2($title)>32) {
         $err='Название не может превышать больше 32 символов';
     }
@@ -51,8 +45,11 @@ if (isset($_POST['title']) && user_access('notes_edit')) {
         $err='Содержание слишком короткое';
     }
     if (!isset($err)) {
-        $db->query("INSERT INTO `notes_dir` (`msg`, `name`) values('$msg', '$title')");
-        $db->query("OPTIMIZE TABLE `notes_dir`");
+        $db->query(
+            "INSERT INTO `notes_dir` (`msg`, `name`) VALUES(?, ?)",
+                   [$msg, $title]
+        );
+        
         $_SESSION['message']='Категория успешно создана';
         header("Location: dir.php?".SID);
         exit;
@@ -80,15 +77,18 @@ echo "</div>";
 */
 if (isset($_GET['id'])) {
     $id_dir=intval($_GET['id']);
-    $kount=$db->query("SELECT COUNT(*) FROM `notes_dir` WHERE `id` = '$id_dir' ")->el();
+    $kount=$db->query(
+        "SELECT COUNT(*) FROM `notes_dir` WHERE `id`=?i",
+                      [$id_dir]
+    )->el();
 }
 if (isset($_GET['id']) && $kount==1) {
     if (isset($_GET['sort']) && $_GET['sort'] =='t') {
-        $order='order by `time` desc';
+        $order = ['time' => false];
     } elseif (isset($_GET['sort']) && $_GET['sort'] =='c') {
-        $order='order by `count` desc';
+        $order = ['count' => false];
     } else {
-        $order='order by `time` desc';
+        $order = ['time' => false];
     }
     if (isset($user)) {
         echo'<div class="foot">';
@@ -109,44 +109,54 @@ if (isset($_GET['id']) && $kount==1) {
         echo"<b>Новые</b> | <a href='?id=$id_dir&amp;sort=c'>Популярные</a>\n";
         echo '</div>';
     }
-    $k_post=$db->query("SELECT COUNT(*) FROM `notes`  WHERE `id_dir` = '$id_dir'")->el();
-    $k_page=k_page($k_post, $set['p_str']);
-    $page=page($k_page);
-    $start=$set['p_str']*$page-$set['p_str'];
-    $q=$db->query("SELECT * FROM `notes` WHERE `id_dir` = '$id_dir' $order LIMIT $start, $set[p_str]");
-    if ($k_post==0) {
+    $k_post = $db->query(
+        "SELECT COUNT(*) FROM `notes`  WHERE `id_dir`=?i",
+                       [$id_dir]
+    )->el();
+
+    if (!$k_post) {
         echo "  <div class='mess'>\n";
         echo "Нет записей\n";
         echo "  </div>\n";
-    }
-    $num=0;
-    while ($post = $q->row()) {
-        /*-----------зебра-----------*/
-        if ($num==0) {
-            echo "  <div class='nav1'>\n";
-            $num=1;
-        } elseif ($num==1) {
-            echo "  <div class='nav2'>\n";
-            $num=0;
-        }
-        /*---------------------------*/
-        echo "<img src='/style/icons/dnev.png' alt='*'> ";
-        echo "<a href='list.php?id=$post[id]&amp;dir=$post[id_dir]'>" . htmlspecialchars($post['name']) . "</a> \n";
-        echo " <span style='time'>(".vremja($post['time']).")</span>\n";
-        $k_n= $db->query("SELECT COUNT(*) FROM `notes` WHERE `id` = $post[id] AND `time` > '".$ftime."'")->el();
-        if ($k_n!=0) {
-            echo " <img src='/style/icons/new.gif' alt='*'>";
-        }
-        echo "   </div>\n";
-    }
-    if (isset($_GET['sort'])) {
-        $dop="sort=" . my_esc($_GET['sort']) . "&amp;";
     } else {
-        $dop='';
+        $k_page=k_page($k_post, $set['p_str']);
+        $page=page($k_page);
+        $start=$set['p_str']*$page-$set['p_str'];
+        $q=$db->query(
+        "SELECT n.*, (
+SELECT COUNT(*) FROM `notes` WHERE `id` =n.id AND `time`>?i) new_notes
+FROM `notes` n WHERE n.`id_dir`=?i ORDER BY ?o LIMIT ?i OFFSET ?i",
+                  [$ftime, $id_dir, $order, $set['p_str'], $start]
+    );
+        $num=0;
+        while ($post = $q->row()) {
+            /*-----------зебра-----------*/
+            if ($num==0) {
+                echo "  <div class='nav1'>\n";
+                $num=1;
+            } elseif ($num==1) {
+                echo "  <div class='nav2'>\n";
+                $num=0;
+            }
+            /*---------------------------*/
+            echo "<img src='/style/icons/dnev.png' alt='*'> ";
+            echo "<a href='list.php?id=$post[id]&amp;dir=$post[id_dir]'>" . htmlspecialchars($post['name']) . "</a> \n";
+            echo " <span style='time'>(".vremja($post['time']).")</span>\n";
+        
+            if ($post['new_notes']) {
+                echo " <img src='/style/icons/new.gif' alt='*'>";
+            }
+            echo "   </div>\n";
+        }
+        if (isset($_GET['sort'])) {
+            $dop="sort=" . htmlspecialchars($_GET['sort']) . "&amp;";
+        } else {
+            $dop='';
+        }
+        if ($k_page>1) {
+            str('?id='.$id_dir.'&amp;'.$dop.'', $k_page, $page);
+        }
     }
-    if ($k_page>1) {
-        str('?id='.$id_dir.'&'.$dop.'', $k_page, $page);
-    } // Вывод страниц
     include_once '../../sys/inc/tfoot.php';
     exit;
 }
@@ -155,9 +165,14 @@ if (isset($_GET['id']) && $kount==1) {
 Категории
 ==================================
 */
-$k_post=$db->query("SELECT COUNT(*) FROM `notes_dir` ")->el();
-$q=$db->query("SELECT * FROM `notes_dir` ORDER BY `id` DESC");
-echo "<table class='post'>\n";
+$k_post=$db->query("SELECT COUNT( * ) FROM `notes_dir`")->el();
+$q=$db->query(
+              'SELECT dr.*, (
+SELECT COUNT( * ) FROM `notes`  WHERE `id_dir`=dr.id) all_notes, (
+SELECT COUNT( * ) FROM `notes`  WHERE `id_dir`=dr.id AND `time` >?i) new_notes
+FROM `notes_dir` dr ORDER BY dr.`id` DESC',
+                    [$ftime]);
+
 if ($k_post==0) {
     echo "  <div class='mess'>\n";
     echo "Нет категорий\n";
@@ -165,7 +180,6 @@ if ($k_post==0) {
 }
 $num=0;
 while ($post = $q->row()) {
-    /*-----------зебра-----------*/
     if ($num==0) {
         echo "  <div class='nav1'>\n";
         $num=1;
@@ -173,24 +187,21 @@ while ($post = $q->row()) {
         echo "  <div class='nav2'>\n";
         $num=0;
     }
-    /*---------------------------*/
+
     echo "<img src='/style/themes/$set[set_them]/loads/14/dir.png' alt='*'> ";
-    $k_pp=$db->query("SELECT COUNT(*) FROM `notes`  WHERE `id_dir` = '$post[id]'")->el();
-    $k_nn=$db->query("SELECT COUNT(*) FROM `notes`  WHERE `id_dir` = '$post[id]' AND `time` > '$ftime'")->el();
-    if ($k_nn>0) {
-        $k_nn="<font color='red'>+$k_nn</font>";
+    if ($post['new_notes']) {
+        $post['new_notes'] = '<font color="red">+' . $post['new_notes'] . '</font>';
     } else {
-        $k_nn=null;
+        $post['new_notes'] = null;
     }
-    echo "<a href='dir.php?id=$post[id]'>" . output_text($post['name']) . "</a> ($k_pp) $k_nn\n";
+    echo "<a href='dir.php?id=$post[id]'>" . output_text($post['name']) . "</a> (" . $post['all_notes'] . ") " . $post['new_notes'] . "\n";
     if (isset($user) && ($user['level']>3)) {
         echo "<a href='delete.php?dir=$post[id]'><img src='/style/icons/delete.gif' alt='*'></a><br />\n";
     }
-    //$k_n= $db->query("SELECT COUNT(*) FROM `notes` WHERE `id_dir` = $post[id] AND `time` > '".$ftime."'",$db);
     echo output_text($post['msg'])."<br />\n";
     echo "   </div>\n";
 }
-echo "</table>\n";
+
 if (isset($user) && user_access('notes_edit')) {
     if (isset($_GET['create'])) {
         echo "<form method=\"post\" action=\"dir.php\">\n";

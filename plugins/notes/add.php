@@ -10,11 +10,6 @@ include_once '../../sys/inc/fnc.php';
 include_once '../../sys/inc/adm_check.php';
 include_once '../../sys/inc/user.php';
 
-/* Бан пользователя */
-if ($db->query("SELECT COUNT(*) FROM `ban` WHERE `razdel` = 'notes' AND `id_user` = '$user[id]' AND (`time` > '$time' OR `view` = '0' OR `navsegda` = '1')")->el()) {
-    header('Location: /ban.php?'.SID);
-    exit;
-}
 $set['title']='Новый дневник';
 include_once '../../sys/inc/thead.php';
 title();
@@ -23,7 +18,7 @@ if (!isset($user)) {
     header("location: index.php?");
 }
 if (isset($_POST['title']) && isset($_POST['msg'])) {
-    if (($user['rating'] < 2 || $user['group_access'] < 6)) {
+    if ($user['rating'] < 1 && $user['group_access'] < 6) {
         if (!isset($_SESSION['captcha'])) {
             $err[]='Ошибка проверочного числа';
         }
@@ -36,14 +31,15 @@ if (isset($_POST['title']) && isset($_POST['msg'])) {
         }
     }
     if (!isset($err)) {
+        $msg = trim($_POST['msg']);
         if (empty($_POST['title'])) {
-            $title=esc(stripslashes(htmlspecialchars(substr($_POST['msg'], 0, 24)))).' ...';
-            $title=my_esc($title);
+            $title=esc(mb_substr($_POST['msg'], 0, 24)).' ...';
         } else {
-            $title=my_esc($_POST['title']);
+            $title=trim($_POST['title']);
         }
-        $msg = my_esc($_POST['msg']);
-        $id_dir = intval($_POST['id_dir']);
+        
+        $id_dir = !empty($_POST['id_dir']) ? intval($_POST['id_dir']) : null;
+        
         if (isset($_POST['private'])) {
             $privat=intval($_POST['private']);
         } else {
@@ -65,27 +61,27 @@ if (isset($_POST['title']) && isset($_POST['msg'])) {
             $err='Содержание слишком короткое';
         }
         if (!isset($err)) {
-            $st = $db->query("INSERT INTO `notes` (`time`, `msg`, `name`, `id_user`, `private`, `private_komm`, `id_dir`, `type`) values('$time', '$msg', '$title', '$user[id]', '$privat', '$privat_komm', '$id_dir', '$type')")->id();
+            $st = $db->query(
+                "INSERT INTO `notes` (`time`, `msg`, `name`, `id_user`, `private`, `private_komm`, `id_dir`, `type`) VALUES(?i, ?, ?, ?i, ?i, ?i, ?in, ?i)",
+                             [$time, $msg, $title, $user['id'], $privat, $privat_komm, $id_dir, $type])->id();
 
             if ($privat!=2) {
-                $db->query("insert into `stena`(`id_stena`,`id_user`,`time`,`info`,`info_1`,`type`) values('".$user['id']."','".$user['id']."','".$time."','новый дневник','".$st."','note')");
+                $db->query(
+                    "INSERT INTO `stena`(`id_stena`,`id_user`,`time`,`info`,`info_1`,`type`) VALUES( ?i, ?i, ?i, ?, ?, ?)",
+                           [$user['id'], $user['id'], $time, 'новый дневник', $st ,'note']);
             }
-            /*
-            ===================================
-            Лента
-            ===================================
-            */
-            $q = $db->query("SELECT * FROM `frends` WHERE `user` = '".$user['id']."' AND `i` = '1'");
-            while ($f = $q->row()) {
-                $a=get_user($f['frend']);
-                $lentaSet = $db->query("SELECT * FROM `tape_set` WHERE `id_user` = '".$a['id']."' LIMIT 1")->row(); // Общая настройка ленты
- 
-                if ($f['lenta_notes'] == 1 && $lentaSet['lenta_notes'] == 1) { // фильтр рассылки
-                    $db->query("INSERT INTO `tape` (`id_user`,`avtor`, `type`, `time`, `id_file`) values('$a[id]', '$user[id]', 'notes', '$time', '$st')");
-                }
+            // Лента
+            $q = $db->query(
+                "SELECT fr.user FROM `frends` fr 
+JOIN tape_set ts ON ts.id_user=fr.user
+WHERE fr.`frend`=?i AND fr.`lenta_notes`=?i AND ts.`lenta_notes`=?i AND `i`=?i",
+                            [$user['id'], 1, 1, 1]);
+            while ($frend = $q->row()) {
+                $db->query(
+                    "INSERT INTO `tape` (`id_user`,`avtor`, `type`, `time`, `id_file`) VALUES(?i, ?i, ?, ?i, ?i)",
+                               [$frend['user'], $user['id'], 'notes', $time, $st]);
             }
            
-            $db->query("OPTIMIZE TABLE `notes`");
             $_SESSION['message'] = 'Дневник успешно создан';
             header("Location: list.php?id=$st");
             $_SESSION['captcha']=null;
@@ -124,7 +120,7 @@ echo "<input name='private' type='radio'  value='2' />Только я</div>";
 echo "<div class='main'>Могут комментировать:<br /><input name='private_komm' type='radio' value='0'  selected='selected'/>Все ";
 echo "<input name='private_komm' type='radio'  value='1' />Друзья ";
 echo "<input name='private_komm' type='radio'  value='2' />Только я</div>";
-if ($user['rating'] < 6 || $user['group_access'] < 6) {
+if ($user['rating'] < 1 && $user['group_access'] < 6) {print $user['rating'];
     echo "<img src='/captcha.php?SESS=$sess' width='100' height='30' alt='Проверочное число' /><br />\n<input name='chislo' size='5' maxlength='5' value='' type='text' /><br/>\n";
 }
      

@@ -1,10 +1,10 @@
 <?php
-
-$k_p=$db->query("SELECT COUNT(*) FROM `notes`")->el();
-$k_n= $db->query("SELECT COUNT(*) FROM `notes` WHERE `time` > '".$ftime."'")->el();
-if ($k_n==0) {
-    $k_n=null;
+$cnt = $db->query('SELECT (
+SELECT COUNT(*) FROM `notes`) all_notes, (
+SELECT COUNT(*) FROM `notes` WHERE `time`>?i) new_notes', [$ftime])->row();
+if ($cnt['new_notes']==0) {
+    $cnt['new_notes']=null;
 } else {
-    $k_n='+'.$k_n;
+    $cnt['new_notes']='+'.$cnt['new_notes'];
 }
-echo "($k_p) <font color='red'>$k_n</font>";
+echo '(' . $cnt['all_notes'] . ') <span style="color:red;">' . $cnt['new_notes'] . '</span>'."\n";

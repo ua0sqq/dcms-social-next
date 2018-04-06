@@ -1,18 +1,18 @@
 <?php
 if ($user['group_access']==2) {
-    $types = " where `types` = 'chat' ";
+    $types = " WHERE `types` = 'chat' ";
 } elseif ($user['group_access']==3) {
-    $types =" where `types` = 'forum' ";
+    $types =" WHERE `types` = 'forum' ";
 } elseif ($user['group_access']==4) {
-    $types = " where (`types` = 'obmen_komm' OR `types` = 'files_komm') ";
+    $types = " WHERE (`types` = 'obmen_komm' OR `types` = 'files_komm') ";
 } elseif ($user['group_access']==5) {
-    $types = " where `types` = 'lib_komm' ";
+    $types = " WHERE `types` = 'lib_komm' ";
 } elseif ($user['group_access']==6) {
-    $types = " where `types` = 'foto_komm' ";
+    $types = " WHERE `types` = 'foto_komm' ";
 } elseif ($user['group_access']==11) {
-    $types = " where `types` = 'notes_komm' ";
+    $types = " WHERE `types` = 'notes_komm' ";
 } elseif ($user['group_access']==12) {
-    $types = " where `types` = 'guest' ";
+    $types = " WHERE `types` = 'guest' ";
 } elseif (($user['group_access']>6 && $user['group_access']<10) || $user['group_access']==15) {
     $types = null;
 }

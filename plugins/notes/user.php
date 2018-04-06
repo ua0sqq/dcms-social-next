@@ -24,17 +24,16 @@ include_once '../../sys/inc/ipua.php';
 include_once '../../sys/inc/fnc.php';
 include_once '../../sys/inc/user.php';
 
-/* Бан пользователя */
-// ЗАЕБАЛ ЭТОТ ГОВНОКОД
-if (isset($user) && $db->query("SELECT COUNT(*) FROM `ban` WHERE `razdel` = 'notes' AND `id_user` = '$user[id]' AND (`time` > '$time' OR `view` = '0' OR `navsegda` = '1')")->el()) {
-    header('Location: /ban.php?'.SID);
-    exit;
-}
-
 $ank['id'] = isset($user) ? $user['id'] : 0;
-
-if (isset($_GET['id'])) {
-    $ank['id'] = intval($_GET['id']);
+$input_get = filter_input_array(
+    INPUT_GET,
+                                [
+                                'id' => FILTER_VALIDATE_INT,
+                                'sort' => FILTER_DEFAULT
+                                ]
+);
+if (isset($input_get['id'])) {
+    $ank['id'] = abs($input_get['id']);
 }
 
 if ($ank['id'] < 1) {
@@ -51,23 +50,23 @@ include_once '../../sys/inc/thead.php';
 title();
 aut(); // форма авторизации
 
-if (isset($_GET['sort']) && $_GET['sort'] =='t') {
-    $order='order by `time` desc';
-} elseif (isset($_GET['sort']) && $_GET['sort'] =='c') {
-    $order='order by `count` desc';
+if (isset($input_get['sort']) && $input_get['sort'] =='t') {
+    $order=['time' => false];
+} elseif (isset($input_get['sort']) && $input_get['sort'] =='c') {
+    $order=['count' => false];
 } else {
-    $order='order by `time` desc';
+    $order=['time' => false];
 }
 if (isset($user) && $user['id']==$ank['id']) {
     echo'<div class="foot">';
     echo "<a href=\"add.php\">Создать дневник</a>";
     echo '</div>';
 }
-if (isset($_GET['sort']) && $_GET['sort'] =='t') {
+if (isset($input_get['sort']) && $input_get['sort'] =='t') {
     echo'<div class="foot">';
     echo"<b>Новые</b> | <a href='?id=$ank[id]&amp;sort=c'>Популярные</a>\n";
     echo '</div>';
-} elseif (isset($_GET['sort']) && $_GET['sort'] =='c') {
+} elseif (isset($input_get['sort']) && $input_get['sort'] =='c') {
     echo'<div class="foot">';
     echo"<a href='?id=$ank[id]&amp;sort=t'>Новые</a> | <b>Популярные</b>\n";
     echo '</div>';
@@ -76,17 +75,25 @@ if (isset($_GET['sort']) && $_GET['sort'] =='t') {
     echo"<b>Новые</b> | <a href='?id=$ank[id]&amp;sort=c'>Популярные</a>\n";
     echo '</div>';
 }
-$k_post=$db->query("SELECT COUNT(*) FROM `notes` WHERE `id_user` = '$ank[id]' ")->el();
+$k_post=$db->query(
+    "SELECT COUNT( * ) FROM `notes` WHERE `id_user`=?i",
+                   [$ank['id']])->el();
+
+if (!$k_post) {
+    echo "<div class='mess'>\n";
+    echo "Нет записей\n";
+    echo "</div>\n";
+} else {
+    
 $k_page=k_page($k_post, $set['p_str']);
 $page=page($k_page);
 $start=$set['p_str']*$page-$set['p_str'];
-$q=$db->query("SELECT * FROM `notes` WHERE `id_user` = '$ank[id]' $order LIMIT $start, $set[p_str]");
-echo "<table class='post'>\n";
-if ($k_post==0) {
-    echo "  <div class='mess'>\n";
-    echo "Нет записей\n";
-    echo "  </div>\n";
-}
+$q=$db->query(
+    "SELECT n.*, (
+SELECT COUNT( * ) FROM `notes` WHERE `id`=n.id AND `time`>?i) new_note
+FROM `notes` n WHERE n.`id_user`=?i ORDER BY ?o LIMIT ?i OFFSET ?i",
+              [$ftime, $ank['id'], $order, $set['p_str'], $start]);
+
 $num=0;
 while ($post = $q->row()) {
     /*-----------зебра-----------*/
@@ -100,17 +107,21 @@ while ($post = $q->row()) {
     /*---------------------------*/
     echo "<img src='/style/icons/dnev.png' alt='*'> ";
     echo "<a href='list.php?id=$post[id]'>" . text($post['name']) . "</a>\n";
-    echo " <span style='time'>(".vremja($post['time']).")</span> <br />\n";
-    $k_n= $db->query("SELECT COUNT(*) FROM `notes` WHERE `id` = '$post[id]' AND `time` > '".$ftime."'")->el();
+    echo " <span style='time'>(".vremja($post['time']).")</span>\n";
+    if ($post['new_note']) {
+        echo " <img src='/style/icons/new.gif' alt='*'>";
+    }
     echo "   </div>\n";
 }
-echo "</table>\n";
-if (isset($_GET['sort'])) {
-    $dop="sort=$_GET[sort]&amp;";
+
+if (isset($input_get['sort'])) {
+    $dop="sort=$input_get[sort]&amp;";
 } else {
     $dop='';
 }
+
 if ($k_page>1) {
     str('?id=' . $ank['id'] . '&amp;'.$dop.'', $k_page, $page);
-} // Вывод страниц
+}
+}
 include_once '../../sys/inc/tfoot.php';

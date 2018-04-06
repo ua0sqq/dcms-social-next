@@ -21,21 +21,22 @@ if (!$ank) {
     header("Location: /index.php?".SID);
     exit;
 }
-
+// TODO: херня какая то а не рейтинг!
 $user_id=$ank['id'];
 if ((!isset($_SESSION['refer']) || $_SESSION['refer']==null)
 && isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!=null &&
 !preg_match('#info\.php#', $_SERVER['HTTP_REFERER'])) {
     $_SESSION['refer']=str_replace('&', '&amp;', preg_replace('#^http://[^/]*/#', '/', $_SERVER['HTTP_REFERER']));
 }
-if (isset($_POST['rating']) && isset($user) && isset($_POST['msg']) && $user['id']!=$ank['id'] && $user['rating']>=2 && $db->query("SELECT SUM(`rating`) FROM `user_voice2` WHERE `id_kont` = '$user[id]'")>=0) {
+if (isset($_POST['rating']) && isset($user) && isset($_POST['msg']) && $user['id']!=$ank['id'] && $user['rating']>=2
+    && $db->query("SELECT SUM(`rating`) FROM `user_voice2` WHERE `id_kont` = '$user[id]'")->el() > -1) {
     $msg=my_esc($_POST['msg']);
     if (strlen($msg)<3) {
         $err='Короткий Отзыв';
     }
     if (strlen($msg)>1024) {
         $err='Длиный Отзыв';
-    } elseif ($db->query("SELECT COUNT(*) FROM `user_voice2` WHERE `id_user` = '$user[id]' AND `msg` = '".my_esc($msg)."' LIMIT 1")!=0) {
+    } elseif ($db->query("SELECT COUNT(*) FROM `user_voice2` WHERE `id_user` = '$user[id]' AND `msg` = '".my_esc($msg)."' LIMIT 1")->el()) {
         $err='Ваш отзыв повторяется';
     }
     if (!isset($err)) {
@@ -43,7 +44,7 @@ if (isset($_POST['rating']) && isset($user) && isset($_POST['msg']) && $user['id
         $db->query("DELETE FROM `user_voice2` WHERE `id_user` = '$user[id]' AND `id_kont` = '$ank[id]' LIMIT 1");
         echo $new_r;
         if ($new_r) {
-            if ($db->query("SELECT COUNT(*) FROM `user_voice2` WHERE `id_user` = '$user[id]' AND `id_kont` = '$ank[id]' LIMIT 1") == 0) {
+            if (!$db->query("SELECT COUNT(*) FROM `user_voice2` WHERE `id_user` = '$user[id]' AND `id_kont` = '$ank[id]' LIMIT 1")->el()) {
                 $db->query("INSERT INTO `user_voice2` (`rating`, `id_user`, `id_kont`, `msg`, `time`) VALUES ('$new_r','$user[id]','$ank[id]', '$msg', '$time')");
                 $db->query("UPDATE `user` SET `rating` = '".($ank['rating'] + $new_r)."' WHERE `id` = '$ank[id]' LIMIT 1");
             } else {
@@ -74,10 +75,11 @@ if (isset($user)) {
 if (isset($_GET['id'])) {
     $ank['id']=intval($_GET['id']);
 }
-if (isset($user) && $user['id']!=$ank['id'] && $user['rating']>=2 && $db->query("SELECT SUM(`rating`) FROM `user_voice2` WHERE `id_kont` = '$user[id]'")>=0) {
+if (isset($user) && $user['id']!=$ank['id'] && $user['rating']>=2
+    && $db->query("SELECT SUM(`rating`) FROM `user_voice2` WHERE `id_kont` = '$user[id]'")->el() > -1) {
     echo "<b>Ваше отношение:</b><br />\n";
     // мое отношение к пользователю
-    $my_r=intval(@$db->query("SELECT `rating` FROM `user_voice2` WHERE `id_user` = '$user[id]' AND `id_kont` = '$ank[id]'")->el());
+    $my_r=intval($db->query("SELECT `rating` FROM `user_voice2` WHERE `id_user` = '$user[id]' AND `id_kont` = '$ank[id]'")->el());
     echo "<form method='post' action='?id=$ank[id]&amp;$passgen'>\n";
     echo "<select name='rating'>\n";
     echo "<option value='2' ".($my_r==2?'selected="selected"':null).">Замечательное</option>\n";
