@@ -23,7 +23,7 @@ if (isset($_POST['write']) && isset($_POST['write2'])) {
     } else {
         $err[]='Не выбран период';
     }
-    $q = $db->query("SELECT * FROM `user` WHERE `date_last` < '$timeclear1'", $db);
+    $q = $db->query("SELECT * FROM `user` WHERE `date_last` < '$timeclear1'");
     $del_th=0;
     while ($post = $q->row()) {
         $ank['id'] = $post['id'];
@@ -46,7 +46,7 @@ if (isset($_POST['write']) && isset($_POST['write2'])) {
         $db->query("DELETE FROM `forum_p` WHERE `id_user` = '$ank[id]'");
         $db->query("DELETE FROM `forum_zakl` WHERE `id_user` = '$ank[id]'");
         $db->query("DELETE FROM `guest` WHERE `id_user` = '$ank[id]'");
-        $db->query("DELETE FROM `loads_komm` WHERE `id_user` = '$ank[id]'");
+        //$db->query("DELETE FROM `loads_komm` WHERE `id_user` = '$ank[id]'");
         $db->query("DELETE FROM `news_komm` WHERE `id_user` = '$ank[id]'");
         $db->query("DELETE FROM `user_files` WHERE `id_user` = '$ank[id]'");
         $db->query("DELETE FROM `user_music` WHERE `id_user` = '$ank[id]'");
@@ -69,7 +69,7 @@ if (isset($_POST['write']) && isset($_POST['write2'])) {
         $db->query("DELETE FROM `votes_user` WHERE `u_id` = '$ank[id]'");
         $del_th++;
     }
-    $db->query("OPTIMIZE TABLE `user`", $db);
+    $db->query("OPTIMIZE TABLE `user`");
     msg("Удалено $del_th пользователей");
 }
 err();

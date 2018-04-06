@@ -61,7 +61,6 @@ if (isset($_POST['delete'])) {
     $db->query("DELETE FROM `forum_p` WHERE `id_user` = '$ank[id]'");
     $db->query("DELETE FROM `forum_zakl` WHERE `id_user` = '$ank[id]'");
     $db->query("DELETE FROM `guest` WHERE `id_user` = '$ank[id]'");
-    //$db->query("DELETE FROM `loads_komm` WHERE `id_user` = '$ank[id]'");
     $db->query("DELETE FROM `news_komm` WHERE `id_user` = '$ank[id]'");
     $db->query("DELETE FROM `user_files` WHERE `id_user` = '$ank[id]'");
     $db->query("DELETE FROM `user_music` WHERE `id_user` = '$ank[id]'");
@@ -69,8 +68,6 @@ if (isset($_POST['delete'])) {
     $db->query("DELETE FROM `status` WHERE `id_user` = '$ank[id]'");
     $db->query("DELETE FROM `status_like` WHERE `id_user` = '$ank[id]'");
     $db->query("DELETE FROM `status_komm` WHERE `id_user` = '$ank[id]'");
-    //$db->query("DELETE FROM `status_count` WHERE `id_user` = '$ank[id]'");
-    $db->query("DELETE FROM `mark_notes` WHERE `id_user` = '$ank[id]'");
     $db->query("DELETE FROM `mark_people` WHERE `id_user` = '$ank[id]'");
     $db->query("DELETE FROM `tape_set` WHERE `id_user` = '$ank[id]'");
     $db->query("DELETE FROM `tape` WHERE `id_user` = '$ank[id]'");
@@ -104,7 +101,6 @@ if (isset($_POST['delete'])) {
             $db->query("DELETE FROM `forum_p` WHERE `id_user` = '$collisions[$i]'");
             $db->query("DELETE FROM `forum_zakl` WHERE `id_user` = '$collisions[$i]'");
             $db->query("DELETE FROM `guest` WHERE `id_user` = '$collisions[$i]'");
-            //$db->query("DELETE FROM `loads_komm` WHERE `id_user` = '$collisions[$i]'");
             $db->query("DELETE FROM `news_komm` WHERE `id_user` = '$collisions[$i]'");
             $q5=$db->query("SELECT * FROM `obmennik_files` WHERE `id_user` = '$collisions[$i]'");
             while ($post5 = $q5->row()) {
