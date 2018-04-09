@@ -8,60 +8,59 @@ include_once '../../sys/inc/db_connect.php';
 include_once '../../sys/inc/ipua.php';
 include_once '../../sys/inc/fnc.php';
 include_once '../../sys/inc/user.php';
-if (isset($user))$ank['id'] = $user['id'];
-if (isset($_GET['id']))$ank['id'] = intval($_GET['id']);
-$ank = get_user($ank['id']);
-if(!$ank || $ank['id'] == 0)
-{
-	header('Location: /index.php?' . SID);
-	exit;
-}
+
 only_reg();
-$frend = $db->query("SELECT * FROM `frends` WHERE `user` = '" . $user['id'] . "' AND `frend` = '$ank[id]' AND `i` = '1'")->row();
-if (!isset($frend['user']))
-{
-	header('Location: index.php?' . SID);
-	exit;
+
+if (isset($user)) {
+    $ank['id'] = $user['id'];
 }
-if (isset($_POST['save']))
-{
-	// Обсуждения фото
-	if (isset($_POST['disc_foto']) && ($_POST['disc_foto'] == 0 || $_POST['disc_foto'] == 1))
-	{
-		$disc = (int) $_POST['disc_foto'];
-		$db->query("UPDATE `frends` SET `disc_foto` = '" . $disc . "' WHERE `user` = '$user[id]' AND `frend` = '$ank[id]'");
-	}
-	
-	// Обсуждения файлов
-	if (isset($_POST['disc_obmen']) && ($_POST['disc_obmen'] == 0 || $_POST['disc_obmen'] == 1))
-	{
-		$disc = (int) $_POST['disc_obmen'];
-		$db->query("UPDATE `frends` SET `disc_obmen` = '" . $disc . "' WHERE `user` = '$user[id]' AND `frend` = '$ank[id]'");
-	}
-	
-	 // Обсуждения статусов
-	if (isset($_POST['disc_status']) && ($_POST['disc_status'] == 0 || $_POST['disc_status'] == 1))
-	{
-		$disc = (int) $_POST['disc_status'];
-		$db->query("UPDATE `frends` SET `disc_status` = '" . $disc . "' WHERE `user` = '$user[id]' AND `frend` = '$ank[id]'");
-	}
-	
-	 // Обсуждения дневников
-	if (isset($_POST['disc_notes']) && ($_POST['disc_notes'] == 0 || $_POST['disc_notes'] == 1))
-	{
-		$disc = (int) $_POST['disc_notes'];
-		$db->query("UPDATE `frends` SET `disc_notes` = '" . $disc . "' WHERE `user` = '$user[id]' AND `frend` = '$ank[id]'");
-	}
-	
-	 // Обсуждения форум
-	if (isset($_POST['disc_forum']) && ($_POST['disc_forum'] == 0 || $_POST['disc_forum'] == 1))
-	{
-		$disc = (int) $_POST['disc_forum'];
-		$db->query("UPDATE `frends` SET `disc_forum` = '" . $disc . "' WHERE `user` = '$user[id]' AND `frend` = '$ank[id]'");
-	}
-	$_SESSION['message'] = __('Изменения успешно приняты');
-	header('Location: index.php');
-	exit;
+if (isset($_GET['id'])) {
+    $ank['id'] = intval($_GET['id']);
+}
+$ank = get_user($ank['id']);
+if (!$ank || $ank['id'] == 0) {
+    header('Location: /index.php?' . SID);
+    exit;
+}
+
+$frend = $db->query(
+                    'SELECT * FROM `frends` WHERE `user`=?i AND `frend`=?i AND `i`=?i',
+                            [$user['id'], $ank['id'], 1])->row();
+
+if (!isset($frend['user'])) {
+    header('Location: index.php?' . SID);
+    exit;
+}
+
+if (isset($_POST['save'])) {
+    $disc = [];
+    // Обсуждения фото
+    if (isset($_POST['disc_foto']) && ($_POST['disc_foto'] == 0 || $_POST['disc_foto'] == 1)) {
+        $disc += ['disc_foto' => (int) $_POST['disc_foto']];
+    }
+    // Обсуждения файлов
+    if (isset($_POST['disc_obmen']) && ($_POST['disc_obmen'] == 0 || $_POST['disc_obmen'] == 1)) {
+        $disc += ['disc_obmen' => (int) $_POST['disc_obmen']];
+    }
+    // Обсуждения статусов
+    if (isset($_POST['disc_status']) && ($_POST['disc_status'] == 0 || $_POST['disc_status'] == 1)) {
+        $disc += ['disc_status' => (int) $_POST['disc_status']];
+    }
+    // Обсуждения дневников
+    if (isset($_POST['disc_notes']) && ($_POST['disc_notes'] == 0 || $_POST['disc_notes'] == 1)) {
+        $disc += ['disc_notes' => (int) $_POST['disc_notes']];
+    }
+    // Обсуждения форум
+    if (isset($_POST['disc_forum']) && ($_POST['disc_forum'] == 0 || $_POST['disc_forum'] == 1)) {
+        $disc += ['disc_forum' => (int) $_POST['disc_forum']];
+    }
+    
+    $table = $db->getTable('frends');
+    $table->update($disc, ['user' => (int) $user['id'], 'frend' => (int) $ank['id']]);
+    
+    $_SESSION['message'] = __('Изменения успешно приняты');
+    header('Location: user.settings.php?id=' . $ank['id']);
+    exit;
 }
 $set['title'] = __('Настройка ленты для ') . $ank['nick'];
 include_once '../../sys/inc/thead.php';
@@ -118,5 +117,5 @@ aut();
 	</div>
 </form>
 <?php
+
 include_once '../../sys/inc/tfoot.php';
-?>

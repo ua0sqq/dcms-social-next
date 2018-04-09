@@ -12,7 +12,9 @@ if ($type == 'obmen' && $post['avtor'] != $user['id']) { // обмен
 * Выводим на экран
 */
 if ($type == 'obmen') {
-    $file = $db->query("SELECT * FROM `obmennik_files` WHERE `id` = '".$post['id_sim']."' LIMIT 1")->row();
+    $file = $db->query(
+					'SELECT * FROM `obmennik_files` WHERE `id`=?i',
+							[$post['id_sim']])->row();
     
     if ($file['id']) {
         ?>

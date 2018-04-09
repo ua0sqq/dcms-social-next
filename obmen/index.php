@@ -285,12 +285,12 @@ VALUES(?i, ?i, ?, ?i, ?i, ?i, ?, ?)",
 JOIN discussions_set dsc ON dsc.id_user=fr.user
 WHERE fr.`frend`=?i AND fr.`disc_foto`=?i AND `i`=?i",
                         [$file_id['id_user'], 1, 1]);             
-                //$q = $db->query("SELECT * FROM `frends` WHERE `user` = '".$file_id['id_user']."' AND `i` = '1' AND `frend` != '$user[id]'");
+                
                 while ($frend = $q->row()) {
 
                     if ($frend['disc_obmen'] == 1 && $frend['disc_files'] == 1) {
                         if (!$db->query("
-                            SELECT COUNT(*) FROM `discussions` WHERE `id_user`?i AND `type`=? AND `id_sim`=?i",
+                            SELECT COUNT(*) FROM `discussions` WHERE `id_user`=?i AND `type`=? AND `id_sim`=?i",
                                         [$frend['user'], 'obmen', $file_id['id']])->el()) {
                             if ($file_id['id_user']!=$frend['user'] || $frend['user'] != $user['id']) {
                                 $db->query("

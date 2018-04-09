@@ -2,33 +2,28 @@
 /*
 * Заголовок обсуждения
 */
-if ($type == 'foto' && $post['avtor'] != $user['id'])
-{
-	$name = __('Фотография друга');
-}
-else if ($type == 'foto' && $post['avtor'] == $user['id'])
-{
-	$name = __('Ваша фотография');
+if ($type == 'foto' && $post['avtor'] != $user['id']) {
+    $name = __('Фотография друга');
+} elseif ($type == 'foto' && $post['avtor'] == $user['id']) {
+    $name = __('Ваша фотография');
 }
  
 /*
 * Выводим на экран
 */
-if ($type == 'foto')
-{
-	$foto = $db->query("SELECT * FROM `gallery_foto` WHERE `id` = '" . $post['id_sim'] . "' LIMIT 1")->row();
-	
-	if ($foto['id'])
-	{
-		?>
+if ($type == 'foto') {
+    $foto = $db->query(
+        "SELECT * FROM `gallery_foto` WHERE `id`=?i",
+                       [$post['id_sim']])->row();
+    
+    if ($foto['id']) {
+        ?>
 		<div class="nav1">
 		<img src="/style/icons/camera.png" alt="*"/> <a href="/foto/<?= $avtor['id']?>/<?= $foto['id_gallery']?>/<?= $foto['id']?>/?page=<?= $pageEnd?>"><?= $name?></a> 
 		<?php
-		if ($post['count'] > 0)
-		{
-			?><b><font color='red'>+<?= $post['count']?></font></b><?php
-		}
-		?>
+        if ($post['count'] > 0) {
+            ?><b><font color='red'>+<?= $post['count']?></font></b><?php
+        } ?>
 		<span class="time"><?= $s1 . vremja($post['time']) . $s2?></span>
 		</div>
 		
@@ -39,15 +34,13 @@ if ($type == 'foto')
 		<img src="/foto/foto50/<?= $foto['id']?>.<?= $foto['ras']?>" alt="Image" />
 		</div>
 		<?php
-	}
-	else
-	{
-		?>
+    } else {
+        ?>
 		<div class="mess">
 		<?= __('Фотография уже удалена =(')?>
 		<span class="time"><?= $s1 . vremja($post['time']) . $s2?></span>
 		</div>
 		<?php
-	}
+    }
 }
 ?>
