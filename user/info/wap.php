@@ -80,7 +80,7 @@ SELECT COUNT( * ) FROM `status_like` WHERE `id_status`=?i) all_like ?q;',
         echo "<a href='/user/status/like.php?id=$status[id]'> $like чел. </a>";
     }
     // Общее колличество статусов
-    if ($cnt['all_user_status']) {
+    if ($status['id'] && $cnt['all_user_status']) {
         echo "<br /> &rarr; <a href='/user/status/index.php?id=$ank[id]'>Все статусы</a> (" . $cnt['all_user_status'] . ")";
     }
 }
