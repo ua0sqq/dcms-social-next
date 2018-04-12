@@ -247,6 +247,8 @@ SELECT COUNT(*) AS notificationset FROM `notification_set` WHERE `id_user` = ?i)
         $insert = $ank_reply['nick'] . ', ';
         $go_link = '&amp;response=' . $ank_reply['id'] . '&amp;' . $passgen; // TODO: ???
         $respons = true;
+    } else {
+        $ank_reply['id'] = $user['id']; // TODO: без костылей никак
     }
 
 } else {

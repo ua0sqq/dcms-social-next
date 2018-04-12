@@ -77,7 +77,7 @@ if (isset($user) && isset($input_get['act']) && $input_get['act'] == 'new' && is
 }
 
 if (isset($user) && ($them['close'] == 0 || $them['close'] == 1 && user_access('forum_post_close')) && isset($input_get['act']) && $input_get['act'] == 'new' && isset($_POST['msg']) && !isset($_POST['file_s'])) {
-    $msg = trim($_POST['msg']);
+    $msg = trim($_POST['msg']);           
     if (strlen2($msg) < 2) {
         $err = 'Короткое сообщение';
     }
@@ -141,7 +141,7 @@ if (isset($user) && ($them['close'] == 0 || $them['close'] == 1 && user_access('
             "SELECT `frn`.`disc_forum`, `u`.`id`, `dsc`.`disc_forum` AS `dscforum`
 FROM `frends` `frn` JOIN `user` `u` ON `u`.`id`=`frn`.`frend`
 JOIN `discussions_set` `dsc` ON `dsc`.`id_user`=`u`.`id` WHERE `frn`.`user`=?i AND `frn`.`i`=?i AND `frn`.`frend`<>?i",
-                        [1, $them['id_user'], $user['id']]
+                        [$them['id_user'], 1, $user['id']]
         );
         while ($frend = $q->row()) {
             // Фильтр рассылкi
@@ -189,17 +189,14 @@ JOIN `discussions_set` `dsc` ON `dsc`.`id_user`=`u`.`id` WHERE `frn`.`user`=?i A
         if (isset($user) && ($respons == true || isset($_POST['cit']))) {
             // 	Уведомление при цитате
             if (isset($_POST['cit'])) {
-                $cit2=$db->query("SELECT * FROM `forum_p` WHERE `id` = '$cit' LIMIT 1")->row();
+                $cit2=$db->query("SELECT * FROM `forum_p` WHERE `id`=?i",
+                                 [$cit])->row();
                 $ank_reply['id'] = $cit2['id_user'];
             }
         
-            $notifiacation = $db->query("SELECT * FROM `notification_set` WHERE `id_user` = '" . $ank_reply['id'] . "' LIMIT 1")->row();
-    
             if ($db->query(
-    
                 "SELECT COUNT(*) FROM `notification_set` WHERE `komm`=1 AND `id_user`=?i",
                            [$ank_reply['id']]
-    
             )->el()) {
                 $db->query(
                     "INSERT INTO `notification` (`avtor`, `id_user`, `id_object`, `type`, `time`) VALUES (?i, ?i, ?i, ?, ?i)",
@@ -242,7 +239,7 @@ JOIN `user` u ON u.id=pst.id_user WHERE `pst`.`id`=?i",
                 if (isset($_POST['types'])) {
                     $types = intval($_POST['types']);
                 } else {
-                    $types='0';
+                    $types = 0;
                 }
                 if (!isset($err)) {
                     $db->query(
@@ -813,15 +810,14 @@ if ((user_access('forum_post_ed') || isset($user) && $ank2['id']==$user['id']) &
 }
 
 $q=$db->query(
-    'SELECT pst.*, u.id AS id_user, u.nick, u.`level`, sts.msg AS status, (
+    'SELECT pst.*, u.id AS id_user, u.nick, u.`level`, (
+SELECT msg FROM `status` WHERE id_user=pst.id_user ORDER BY id DESC LIMIT 1) as "status", (
 SELECT COUNT( * ) FROM `ban` WHERE (`razdel`="all" OR `razdel`="forum") AND `post`=1 AND `id_user`=`pst`.`id_user` AND (`time`>?i OR `navsegda`=1)) ban, (
 SELECT COUNT( * ) FROM forum_files WHERE id_post=pst.id) file
 FROM `forum_p` pst 
 LEFT JOIN `user` u ON u.id=pst.id_user
-LEFT JOIN `status` sts ON sts.id_user=pst.id_user
-WHERE pst.`id_them`=?i AND pst.`id_forum`=?i AND pst.`id_razdel`=?i ORDER BY pst.`time`?q;?q',
-[$time, $them['id'], $forum['id'], $razdel['id'], $sort, $lim]
-)->assoc();
+WHERE pst.`id_them`=?i ORDER BY pst.`time`?q;?q',
+[$time, $them['id'], $sort, $lim])->assoc();
 
 if (!count($q)) {
     echo "<div class='mess'>";
@@ -856,8 +852,10 @@ foreach ($q as $post) {
         }
         
         // Цитирование поста
-        if ($post['cit']!=null && $db->query("SELECT COUNT(*) FROM `forum_p` WHERE `id` = '$post[cit]'")->el()) {
-            $cit=$db->query("SELECT * FROM `forum_p` WHERE `id` = '$post[cit]' LIMIT 1")->row();
+        if ($post['cit']!=null && $db->query("SELECT COUNT(*) FROM `forum_p` WHERE `id`=?i",
+                                             [$post['cit']])->el()) {
+            $cit=$db->query("SELECT * FROM `forum_p` WHERE `id`=?i",
+                            [$post['cit']])->row();
             $ank_c=get_user($cit['id_user']);
             echo '<div class="cit">
 		  <b>'.$ank_c['nick'].' ('.vremja($cit['time']).'):</b><br />
