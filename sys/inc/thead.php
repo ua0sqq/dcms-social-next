@@ -50,7 +50,7 @@ if (isset($_SESSION['message']))
 // Вывод ошибок
 if (isset($_SESSION['err']))
 {
-	echo '<div class="msg">' . $_SESSION['err'] . '</div>';
+	echo '<div class="err">' . $_SESSION['err'] . '</div>';
 	$_SESSION['err'] = NULL;
 }
 ?>

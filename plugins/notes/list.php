@@ -24,7 +24,7 @@ SELECT COUNT( * ) FROM `notification` WHERE `type`="notes_komm" AND `id_user`=' 
 SELECT COUNT( * ) FROM `discussions` WHERE `id_user`=' . $user['id'] . ' AND `type`="notes" AND `id_sim`=n.id AND `count`>0) discut_not_read';
 }
 $notes = $db->query(
-                    'SELECT n.*, u.id AS id_user, (
+                    'SELECT n.*, u.id AS id_user, u.nick, (
 SELECT COUNT( * ) FROM `bookmarks` WHERE `id_object`=n.id AND `type`="notes") mark?q;
 FROM `notes` n JOIN `user` u ON u.id=n.id_user WHERE n.`id`=?i',
                     [$sql, $input_get['id']])->row();
@@ -34,7 +34,7 @@ if (!$notes['id']) {
     exit;
 }
 
-$avtor = ['id' => $notes['id_user'], 'nick' => user::nick($notes['id_user'], 0)];
+$avtor = ['id' => $notes['id_user'], 'nick' => $notes['nick']];
 
  // Закладки
 $markinfo = $notes['mark'];

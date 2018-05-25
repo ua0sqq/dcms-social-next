@@ -9,6 +9,7 @@ header("Content-type: text/html");
 <title>
 <?=$set['title']?>
 </title>
+<meta name="viewport" content="initial-scale = 1.0,maximum-scale = 1.0" />
 <link rel="stylesheet" href="/style/themes/<?=$set['set_them']?>/style.css" type="text/css" />
 </head>
 <body>

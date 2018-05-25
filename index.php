@@ -13,55 +13,47 @@ include_once 'sys/inc/thead.php';
 title();
 err();
 
-if (!$set['web'])
-{
-	$cnt = $db->query(
-					'SELECT * FROM (
+if (!$set['web']) {
+    $cnt = $db->query(
+                    'SELECT * FROM (
 		SELECT COUNT(*) online_user FROM `user` WHERE `date_last` > ?i)q, (
 		SELECT COUNT(*) online_guest FROM `guests` WHERE `date_last` > ?i AND `pereh` >0)q2',
-							[(time()-600),(time()-600)])->row();
-	?>
+                            [(time()-600),(time()-600)])->row(); ?>
 	<div class="title">
 	<center>
 	<a href="/online.php" title="онлайн" style="color:#cdcecf; text-decoration: none">
 	<font color="#fee300" size="2">Онлайн </font>
-	<font color="#ffffff"><?= $cnt['online_user'];?></font>
+	<font color="#ffffff"><?= $cnt['online_user']; ?></font>
 	</a>
 	<font color="#fee300" size="2"> (</font>
-	<font color="#ffffff">+<?= $cnt['online_guest'];?></font>
+	<font color="#ffffff">+<?= $cnt['online_guest']; ?></font>
 	<font color="#fee300" size="2"> гостей )</font>
 	</center>
 	</div>
 	<div class='main_menu'>
 	<?php
-	if (isset($user))
-	{
-		?>
+    if (isset($user)) {
+        ?>
 		<div align="right">
 		<img src="/style/icons/icon_stranica.gif" alt="DS" />
 		<?=user::nick($user['id'])?> | <a href="exit.php"><font color="#ff0000">Выход</font></a>
 		</div>
 		<?php
-	}
-	else
-	{
-		?>
+    } else {
+        ?>
 		<div align="right">
 		<a href="/aut.php">Вход</a> | <a href="/reg.php">Регистрация</a>
 		</div>
 		<?php
-	}
-	?></div><?php
-	// новости 
-	include_once 'sys/inc/news_main.php'; 
-	// главное меню
-	include_once 'sys/inc/main_menu.php'; 
-	include_once H.'sys/inc/main_notes.php';
-}
-else
-{
-	// главная web темы
-	include_once 'style/themes/' . $set['set_them'] . '/index.php'; 
+    } ?></div><?php
+    // новости
+    include_once 'sys/inc/news_main.php';
+    // главное меню
+    include_once 'sys/inc/main_menu.php';
+    include_once H.'sys/inc/main_notes.php';
+} else {
+    // главная web темы
+    include_once 'style/themes/' . $set['set_them'] . '/index.php';
 }
 include_once 'sys/inc/tfoot.php';
 ?>

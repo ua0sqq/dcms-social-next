@@ -85,6 +85,17 @@ WHERE fls.`id_dir`=?i AND fls.`id`=?i',
         $file_id['name'] = str_replace('_', ' _', $file_id['name']);
         
         if (!isset($_GET['showinfo']) && !isset($_GET['komm']) && is_file(H.'sys/obmen/files/'.$file_id['id'].'.dat')) {
+            // вычисляем доступность папки
+            $is_pass = $db->query('SELECT `pass` FROM `user_files` WHERE `id`=?i AND (`pass` IS NOT NULL AND `pass`<>"")', [$file_id['my_dir']])->el();
+            if (user_access('obmen_dir_edit') && $user['id'] == $file_id['id_user']) {
+                $is_pass = false;
+            }
+            if ($is_pass && !isset($_SESSION['pass']) || ($_SESSION['pass'] != $is_pass)) {
+                $_SESSION['err'] = 'Введите пароль';
+                header('Location: /user/personalfiles/'.$file_id['id_dir'].'/'.$file_id['my_dir'].'/');
+                exit;
+            }            
+            
             if ($ras == 'jar' && strtolower(preg_replace('#^.*.#', null, $f)) == 'jad') {
                 require H.'sys/inc/zip.php';
                 $zip=new PclZip(H.'sys/obmen/files/'.$file_id['id'].'.dat');
@@ -100,7 +111,7 @@ WHERE fls.`id_dir`=?i AND fls.`id`=?i',
                 echo $jad;
                 exit;
             }
-            //$avtor = get_user($file_id['id_user']);
+            
             if (isset($user) && $_SESSION['file_'.$file['id'].''] == 0) {
                 $db->query("
                     UPDATE `user` SET `rating_tmp`=`rating_tmp`+1 WHERE `id`=?i",
@@ -110,7 +121,7 @@ WHERE fls.`id_dir`=?i AND fls.`id`=?i',
             $db->query("
                 UPDATE `obmennik_files` SET `k_loads`=`k_loads`+1 WHERE `id`=?i",
                             [$file_id['id']]);
-            require '../sys/inc/downloadfile.php';
+            require '../sys/inc/downloadfile.php'; 
             downloadfile(H.'sys/obmen/files/'.$file_id['id'].'.dat', retranslit($file_id['name']).'_'.$_SERVER['HTTP_HOST'].'.'.$ras, ras_to_mime($ras));
             exit;
         }
