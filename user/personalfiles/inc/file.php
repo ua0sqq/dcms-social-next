@@ -278,10 +278,10 @@ echo "</div>";
 // Папка под паролем
 if ($dir['pass']!=null) {
     if (isset($_POST['password'])) {
-        $_SESSION['pass']=my_esc($_POST['password']);
-        if ($_SESSION['pass']!=$dir['pass']) {
+        $_SESSION['pass'] = trim($_POST['password']);
+        if ($_SESSION['pass'] != $dir['pass']) {
             $_SESSION['message'] = 'Неверный пароль';
-            $_SESSION['pass']=null;
+            $_SESSION['pass'] = null;
         }
         header("Location: ?");
     }

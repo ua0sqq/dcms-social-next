@@ -18,107 +18,115 @@ if (isset($_GET['id'])) {
 }
 
 $ank = get_user($sid);
+$set['title'] = 'Друзья ' . $ank['nick'] . ' онлайн'; // заголовок страницы
+include_once '../../sys/inc/thead.php';
+title();
+aut();
 /*
 ==================================
 Приватность станички пользователя
 Запрещаем просмотр друзей
 ==================================
 */
-    $uSet = $db->query("SELECT * FROM `user_set` WHERE `id_user` = '$ank[id]'  LIMIT 1")->row();
-    $frend=$db->query("SELECT COUNT(*) FROM `frends` WHERE (`user` = '$user[id]' AND `frend` = '$ank[id]') OR (`user` = '$ank[id]' AND `frend` = '$user[id]') LIMIT 1")->el();
-    $frend_new=$db->query("SELECT COUNT(*) FROM `frends_new` WHERE (`user` = '$user[id]' AND `to` = '$ank[id]') OR (`user` = '$ank[id]' AND `to` = '$user[id]') LIMIT 1")->el();
+$pattern = 'SELECT ust.privat_str FROM `user_set` ust WHERE ust.`id_user`=?i';
+$data = [$ank['id']];
+if (isset($user)) {
+    $pattern = 'SELECT ust.privat_str, (
+SELECT COUNT(*) FROM `frends` WHERE (`user`=?i AND `frend`=ust.`id_user`) OR (`user`=ust.`id_user` AND `frend`=?i)) frend, (
+SELECT COUNT(*) FROM `frends_new` WHERE (`user`=?i AND `to`=ust.`id_user`) OR (`user`=ust.`id_user` AND `to`=?i)) new_frend
+FROM `user_set` ust WHERE ust.`id_user`=?i';
+    $data = [$user['id'], $user['id'], $user['id'], $user['id'], $ank['id']];
+}
+
+$uSet = $db->query($pattern, $data)->row();
+
 if ($ank['id'] != $user['id'] && $user['group_access'] == 0) {
-    if (($uSet['privat_str'] == 2 && $frend != 2) || $uSet['privat_str'] == 0) { // Начинаем вывод если стр имеет приват настройки
+    // Начинаем вывод если стр имеет приват настройки
+    if (($uSet['privat_str'] == 2 && $uSet['frend'] != 2) || $uSet['privat_str'] == 0) {
         if ($ank['group_access']>1) {
-            echo "<div class='err'>$ank[group_name]</div>\n";
+            echo "<div class='err'>".$ank['group_name']."</div>\n";
         }
         echo "<div class='nav1'>";
         echo group($ank['id'])." ";
         echo user::nick($ank['id'], 1, 1, 1);
         echo "</div>";
         echo "<div class='nav2'>";
-        avatar_ank($ank['id']);
+        user::avatar($ank['id']);
         echo "</div>";
     }
-    if ($uSet['privat_str'] == 2 && $frend != 2) { // Если только для друзей
+    if ($uSet['privat_str'] == 2 && $uSet['frend'] != 2) { // Если только для друзей
         echo '<div class="mess">';
         echo 'Просматривать друзей пользователя могут только его друзья!';
         echo '</div>';
         // В друзья
         if (isset($user)) {
             echo '<div class="nav1">';
-            if ($frend_new == 0 && $frend==0) {
+            if ($uSet['frend_new'] == 0 && $uSet['frend']==0) {
                 echo "<img src='/style/icons/druzya.png' alt='*'/> <a href='/user/frends/create.php?add=".$ank['id']."'>Добавить в друзья</a><br />\n";
-            } elseif ($frend_new == 1) {
+            } elseif ($uSet['frend_new'] == 1) {
                 echo "<img src='/style/icons/druzya.png' alt='*'/> <a href='/user/frends/create.php?otm=$ank[id]'>Отклонить заявку</a><br />\n";
-            } elseif ($frend == 2) {
+            } elseif ($uSet['frend'] == 2) {
                 echo "<img src='/style/icons/druzya.png' alt='*'/> <a href='/user/frends/create.php?del=$ank[id]'>Удалить из друзей</a><br />\n";
             }
             echo "</div>";
         }
-        include_once '../sys/inc/tfoot.php';
+        include_once '../../sys/inc/tfoot.php';
         exit;
     }
-    if ($uSet['privat_str'] == 0) { // Если закрыта
+    // Если закрыта
+    if ($uSet['privat_str'] == 0) {
         echo '<div class="mess">';
         echo 'Пользователь запретил просматривать его друзей!';
         echo '</div>';
-        include_once '../sys/inc/tfoot.php';
+        include_once '../../sys/inc/tfoot.php';
         exit;
     }
 }
-$set['title']="Друзья онлайн $ank[nick]"; // заголовок страницы
-include_once '../../sys/inc/thead.php';
-title();
-aut();
-//---------------------Panel---------------------------------//
-$on_f=$db->query("SELECT COUNT(*) FROM `frends` INNER JOIN `user` ON `frends`.`frend`=`user`.`id` WHERE `frends`.`user` = '$ank[id]' AND `frends`.`i` = '1' AND `user`.`date_last`>'".(time()-600)."'")->el();
-$f=$db->query("SELECT COUNT(*) FROM `frends` WHERE `user` = '$ank[id]' AND `i` = '1'")->el();
-$add=$db->query("SELECT COUNT(id) FROM `frends_new` WHERE `to` = '$ank[id]' LIMIT 1")->el();
-echo '<div style="background:white;"><div class="pnl2H">';
-echo '<div class="linecd"><span style="margin:9px;">';
-echo ''.($ank['id']==$user['id'] ? 'Мои друзья' : ' Друзья '.group($ank['id']).' '.user::nick($ank['id'], 1, 1, 1).'').'';
-echo '</span> </div></div>';
-if ($set['web']==true) {
-    echo '<div class="mb4">
-<nav class="acsw rnav_w"><ul class="rnav js-rnav  " style="padding-right: 45px;">';
-    echo '<li class="rnav_i"><a href="index.php?id='.$ank['id'].'" class="ai aslnk"><span class="wlnk"><span class="slnk">Все друзья</span></span> 
-<i><font color="#999">'.$f.'</font></i></a></li>';
-    echo '<li class="rnav_i"><a href="online.php?id='.$ank['id'].'" class="ai alnk"><span class="wlnk"><span class="lnk">Онлайн
-<i><font color="#999">'.$on_f.'</font></i></a></span></span></li> ';
-    if ($ank['id']==$user['id']) {
-        echo '<li class="rnav_i"><a href="new.php" class="ai alnk"><span class="wlnk"><span class="lnk">Заявки
-<i><font color="#999">'.$add.'</font></i></a></span></span> </li>';
-    }
-    echo '</ul></nav></div></div>';
-} else {
-    echo "<div id='comments' class='menus'>";
-    echo "<div class='webmenu'>";
-    echo "<a href='index.php?id=$ank[id]' >Все (".$db->query("SELECT COUNT(*) FROM `frends` WHERE `user` = '$ank[id]' AND `i` = '1'")->el().")</a>";
-    echo "</div>";
+
+err();
+// Panel
+$sql = null;
+if ($ank['id'] == $user['id']) {
+    $sql = ', (
+    SELECT COUNT( * ) new_frends FROM `frends_new` WHERE `to` =' . $ank['id'] . ')q3';
+}
+$cnt = $db->query(
+    "SELECT * FROM (
+    SELECT COUNT( * ) all_frends FROM `frends` WHERE `user`=?i AND `i`=?i)q1, (
+    SELECT COUNT( * ) onl_frends FROM `frends`
+    JOIN `user` ON `frends`.`frend`=`user`.`id` WHERE `frends`.`user`=?i AND `frends`.`i`=?i AND `user`.`date_last`>?i)q2?q",
+                  [$ank['id'], 1, $ank['id'], 1, (time()-600), $sql])->row();
+
+echo "<div id='comments' class='menus'>";
+echo "<div class='webmenu'>";
+echo "<a href='index.php?id=$ank[id]'>Все (".$cnt['all_frends'].")</a>";
+echo "</div>";
+echo "<div class='webmenu last'>";
+echo "<a href='online.php?id=$ank[id]' class='activ'>Онлайн (".$cnt['onl_frends'].")</a>";
+echo "</div>";
+if ($ank['id'] == $user['id']) {
     echo "<div class='webmenu last'>";
-    echo "<a href='online.php?id=$ank[id]' class='activ'>Онлайн (".$db->query("SELECT COUNT(*) FROM `frends` INNER JOIN `user` ON `frends`.`frend`=`user`.`id` WHERE `frends`.`user` = '$ank[id]' AND `frends`.`i` = '1' AND `user`.`date_last`>'".(time()-600)."'")->el().")</a>";
-    echo "</div>";
-    if ($ank['id'] == $user['id']) {
-        echo "<div class='webmenu last'>";
-        echo "<a href='new.php'>Заявки (".$db->query("SELECT COUNT(id) FROM `frends_new` WHERE `to` = '$ank[id]' LIMIT 1")->el().")</a>";
-        echo "</div>";
-    }
+    echo "<a href='new.php'>Заявки (".$cnt['new_frends'].")</a>";
     echo "</div>";
 }
-//--------End Panel---------------------//
-$k_post=$db->query("SELECT COUNT(*) FROM `frends` INNER JOIN `user` ON `frends`.`frend`=`user`.`id` WHERE `frends`.`user` = '$ank[id]' AND `frends`.`i` = '1' AND `user`.`date_last`>'".(time()-600)."'")->el();
+echo "</div>";
+// End Panel
+
+$k_post = $cnt['onl_frends'];
 $k_page=k_page($k_post, $set['p_str']);
 $page=page($k_page);
 $start=$set['p_str']*$page-$set['p_str'];
-$q = $db->query("SELECT * FROM `frends` INNER JOIN `user` ON `frends`.`frend`=`user`.`id` WHERE `frends`.`user` = '$ank[id]' AND `frends`.`i` = '1' AND `user`.`date_last`>'".(time()-600)."' ORDER BY `user`.`date_last` DESC LIMIT $start, $set[p_str]");
+$q = $db->query(
+    "SELECT usr.id, usr.date_last FROM `frends` frn
+    JOIN `user` usr ON `frn`.`frend`=`usr`.`id`
+    WHERE `frn`.`user`=?i AND `frn`.`i`=?i AND `usr`.`date_last`>?i ORDER BY `usr`.`date_last` DESC LIMIT ?i OFFSET ?i",
+                [$ank['id'], 1, (time()-600), $set['p_str'], $start]);
 if ($k_post==0) {
     echo '<div class="mess">';
     echo 'У вас нет друзей которые в сети';
     echo '</div>';
 }
 while ($frend = $q->row()) {
-    $frend=get_user($frend['frend']);
     /*-----------зебра-----------*/
     if ($num==0) {
         echo '<div class="nav1">';
@@ -129,17 +137,8 @@ while ($frend = $q->row()) {
     }
     /*---------------------------*/
     echo '<table><td style="width:'.($webbrowser ? '85px;' : '55px;').'">';
-    $sql=$db->query("SELECT `id`,`id_gallery`,`ras` FROM `gallery_foto` WHERE `id_user`='".$frend['id']."' AND `avatar`='1' LIMIT 1")->assoc();
-    if (count($sql)) {
-        foreach ($sql as $foto);
-        echo '<a href="/foto/'.$frend['id'].'/'.$foto['id_gallery'].'/'.$foto['id'].'/"><img class="friends" style="width:'.($webbrowser ? '110px;' : '50px;').'" src="/foto/foto0/'.$foto['id'].'.'.$foto['ras'].'"></a>';
-    } else {
-        echo '<img class="friends" style="width:'.($webbrowser ? '80px;' : '50px;').'" src="/style/icons/avatar.png">';
-    }
+    echo user::avatar($frend['id'], 1);
     echo '</td><td style="width:80%;">';
-    if (isset($user) && $user['id']==$ank['id']) {
-        echo " <input type='checkbox' name='post_$frend[id]' value='1' /> ";
-    }
     echo " ".group($frend['id'])." \n";
     echo user::nick($frend['id'], 1, 1, 1);
     echo '<br/><img src="/style/icons/alarm.png"> '.($webbrowser ? 'Посл. активность:' : null).' '.vremja($frend['date_last']).' </td><td style="width:18px;">';
@@ -152,6 +151,6 @@ while ($frend = $q->row()) {
     echo '</td></table></div>';
 }
 if ($k_page>1) {
-    str("?id=".$ank['id']."&", $k_page, $page);
+    str("?id=".$ank['id']."&amp;", $k_page, $page);
 } // Вывод страниц
 include_once '../../sys/inc/tfoot.php';
