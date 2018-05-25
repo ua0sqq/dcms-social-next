@@ -98,7 +98,7 @@ if (isset($_POST['ban_pr']) && isset($_POST['time']) && isset($_POST['vremja']) 
     if (strlen2($prich) < 10) {
         $err[]='Необходимо подробнее указать причину';
     }
-    $prich=my_esc($prich);
+
     if (!isset($err)) {
         $db->query("INSERT INTO `ban` (`id_user`, `id_ban`, `prich`, `time`, `pochemu`, `razdel`, `post`, `navsegda`)
 VALUES (?i, ?i, ?, ?i, ?i, ?, ?i, ?i)",
