@@ -7,4 +7,4 @@ if ($k_n==0) {
 } else {
     $k_n='+'.$k_n;
 }
-echo "($k_p) <font color='green'>$k_n</font>";
+echo '(' . $k_p . ') <span class="off">' . $k_n . '</span>';

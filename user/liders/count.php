@@ -10,4 +10,4 @@ if ($cnt['k_n'] == 0) {
 } else {
     $cnt['k_n'] = '+' . $cnt['k_n'];
 }
-echo '(' . $cnt['k_p'] . ') <span style="color:red;">' . $cnt['k_n'] . '</span>';
+echo '(' . $cnt['k_p'] . ') <span class="off">' . $cnt['k_n'] . '</span>';

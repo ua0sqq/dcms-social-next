@@ -49,7 +49,7 @@ WHERE ldr.`time` > ?i ORDER BY ldr.stav DESC LIMIT ?i OFFSET ?i',
         echo status($post['id_user']); // Аватарка
         echo group($post['id_user']) , ' ' . user::nick($post['id_user']) . ' ';
         echo medal($post['id_user']) , online($post['id_user']) . ' (' . vremja($post['time']) . ')<br />';
-        echo 'Ставка: <b style="color:red;">' . $post['stav'] . '</b> <b style="color:green;">' . $sMonet[0] . '</b><br />';
+        echo 'Ставка: <b class="off">' . $post['stav'] . '</b> <b class="on">' . $sMonet[0] . '</b><br />';
         echo output_text($post['msg']) . '<br />';
         if (isset($user) && $user['level'] > 2) {
             echo '<div style="text-align:right;"><a href="delete.php?id=' . $post['id_user'] . '"><img src="/style/icons/delete.gif" alt="*"/></a></div>';

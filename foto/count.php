@@ -9,4 +9,4 @@ if ($cnt['new_foto'] == 0) {
 } else {
     $cnt['new_foto'] = '+' . $cnt['new_foto'];
 }
-echo '(' . $cnt['all_foto'] . ') <span style="color:red;">' . $cnt['new_foto'] . '</span>';
+echo '(' . $cnt['all_foto'] . ') <span class="off">' . $cnt['new_foto'] . '</span>';

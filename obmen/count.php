@@ -9,4 +9,4 @@ if ($cnt['new_cnt']==0) {
 } else {
     $cnt['new_cnt']='+'.$cnt['new_cnt'];
 }
-echo '(' . $cnt['all_cnt'] . ') <span style="color:red;">' . $cnt['new_cnt'] . '</span>';
+echo '(' . $cnt['all_cnt'] . ') <span class="off">' . $cnt['new_cnt'] . '</span>';

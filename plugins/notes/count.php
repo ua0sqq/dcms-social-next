@@ -7,4 +7,4 @@ if ($cnt['new_notes']==0) {
 } else {
     $cnt['new_notes']='+'.$cnt['new_notes'];
 }
-echo '(' . $cnt['all_notes'] . ') <span style="color:red;">' . $cnt['new_notes'] . '</span>'."\n";
+echo '(' . $cnt['all_notes'] . ') <span class="off">' . $cnt['new_notes'] . '</span>'."\n";

@@ -32,7 +32,6 @@ if (!isset($hard_process)) {
                     $keys = implode('`, `', array_keys($row));
                     $values = array_values($row);
                     foreach ($values as $k=>$v) {
-                        //$values[$k] = my_esc($v);
                         $values[$k]=preg_replace('#(\n|\r){1,}#', '\n', $values[$k]);
                     }
                     $values2 = implode('", "', $values);

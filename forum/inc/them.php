@@ -470,8 +470,8 @@ if (isset($input_get['act']) && $input_get['act'] == 'vote' && (user_access('for
         }
         
         if (isset($_POST['send']) && isset($user)) {
-            $close=(isset($_POST['close'])? 1: 0);
-            $text=my_esc($_POST['text']);
+            $close=(isset($_POST['close']) ? 1 : 0);
+            $text=trim($_POST['text']);
             if (strlen2($text)<3) {
                 $err[] = 'Короткая тема опроса';
             }
@@ -489,7 +489,7 @@ if (isset($input_get['act']) && $input_get['act'] == 'vote' && (user_access('for
                 );
             }
             for ($x=1; $x<7; $x++) {
-                $add=my_esc($_POST['vote_'.$x.'']);
+                $add=trim($_POST['vote_'.$x.'']);
                 if (strlen2($add)>23) {
                     $err = 'Вариант опроса № '.$x.' слишком длинный';
                 }

@@ -26,8 +26,10 @@ include_once '../../sys/inc/user.php';
 
 only_reg();
 $width = ($webbrowser == 'web' ? '100' : '70'); // Размер подарков при выводе в браузер
-if (isset($_GET['id'])) {
-    $ank['id'] = intval($_GET['id']);
+$inp_get = filter_input_array(INPUT_GET, FILTER_VALIDATE_INT);
+
+if (isset($inp_get['id'])) {
+    $ank['id'] = intval($inp_get['id']);
 }
 $ank = get_user($ank['id']);
 if (!$ank || $ank['id'] == 0 || $ank['id'] == $user['id']) {
@@ -44,22 +46,32 @@ if (!$ank || $ank['id'] == 0 || $ank['id'] == $user['id']) {
 Дарим подарок
 ==================================
 */
-if (isset($_GET['gift']) && isset($_GET['category'])) {
+if (isset($inp_get['gift']) && isset($inp_get['category'])) {
     // Категория
-    $category = $db->query("SELECT * FROM `gift_categories` WHERE `id` = '" . intval($_GET['category']) . "' LIMIT 1")->row();
+    $category = $db->query(
+        "SELECT * FROM `gift_categories` WHERE `id`=?i",
+                           [$inp_get['category']])->row();
     // Подарок
-    $gift = $db->query("SELECT * FROM `gift_list` WHERE `id` = '" . intval($_GET['gift']) . "' LIMIT 1")->row();
+    $gift = $db->query(
+        "SELECT * FROM `gift_list` WHERE `id`=?i",
+                       [$inp_get['gift']])->row();
     if (isset($_GET['ok'])) {
         if ($user['money'] >= $gift['money']) {
-            $msg = my_esc($_POST['msg']);  // Комментарий
-            $db->query("UPDATE `user` SET `money` = '" . ($user['money'] - $gift['money']) . "' WHERE `id` = '$user[id]'");
-            $id_gift = $db->query("INSERT INTO `gifts_user` (`id_user`, `id_ank`, `id_gift`, `coment`, `time`) values('$ank[id]', '$user[id]', '$gift[id]', '$msg', '$time')")->id();
+            $msg = trim($_POST['msg']);  // Комментарий
+            $db->query(
+                "UPDATE `user` SET `money`=`money`-?i WHERE `id`=?i",
+                       [$gift['money'], $user['id']]);
+            $id_gift = $db->query(
+                "INSERT INTO `gifts_user` (`id_user`, `id_ank`, `id_gift`, `coment`, `time`) VALUES(?i, ?i, ?i, ?, ?i)",
+                                  [$ank['id'], $user['id'], $gift['id'], $msg, $time])->id();
             /*
             ==========================
             Уведомления о подарках
             ==========================
             */
-            $db->query("INSERT INTO `notification` (`avtor`, `id_user`, `id_object`, `type`, `time`) VALUES ('$user[id]', '$ank[id]', '$id_gift', 'new_gift', '$time')");
+            $db->query(
+                "INSERT INTO `notification` (`avtor`, `id_user`, `id_object`, `type`, `time`) VALUES (?i, ?i, ?i, ?, ?i)",
+                       [$user['id'], $ank['id'], $id_gift, 'new_gift', $time]);
         
             
             $_SESSION['message'] = 'Ваш подарок успешно отправлен';
@@ -94,7 +106,7 @@ if (isset($_GET['gift']) && isset($_GET['category'])) {
     echo '<div class="foot">';
     echo '<img src="/style/icons/str2.gif" alt="*" />  <a href="?id=' . $ank['id'] . '">Категории</a> |  <a href="?category=' . $category['id'] . '&amp;id=' . $ank['id'] . '">' . htmlspecialchars($category['name']) . '</a> | <b>' . htmlspecialchars($gift['name']) . '</b><br />';
     echo '</div>';
-} elseif (isset($_GET['category'])) {
+} elseif (isset($inp_get['category'])) {
     
 /*
 ==================================
@@ -103,7 +115,9 @@ if (isset($_GET['gift']) && isset($_GET['category'])) {
 */
 
     // Категория
-    $category = $db->query("SELECT * FROM `gift_categories` WHERE `id` = '" . intval($_GET['category']) . "' LIMIT 1")->row();
+    $category = $db->query(
+        "SELECT * FROM `gift_categories` WHERE `id`=?i",
+                           [$inp_get['category']])->row();
     if (!$category) {
         $_SESSION['message'] = 'Нет такой категории';
         header("Location: ?");
@@ -115,7 +129,10 @@ if (isset($_GET['gift']) && isset($_GET['category'])) {
     
     // Список подарков
     
-    $k_post = $db->query("SELECT COUNT(id) FROM `gift_list` WHERE `id_category` = '$category[id]'")->el();
+    $k_post = $db->query(
+    
+        "SELECT COUNT( * ) FROM `gift_list` WHERE `id_category`=?i",
+                         [$category['id']])->el();
     if ($k_post == 0) {
         echo '<div class="mess">';
         echo 'Нет подарков';
@@ -124,7 +141,9 @@ if (isset($_GET['gift']) && isset($_GET['category'])) {
     $k_page=k_page($k_post, $set['p_str']);
     $page=page($k_page);
     $start=$set['p_str']*$page-$set['p_str'];
-    $q = $db->query("SELECT name,id,money FROM `gift_list` WHERE `id_category` = '$category[id]' ORDER BY `id` LIMIT $start, $set[p_str]");
+    $q = $db->query(
+        "SELECT `name`, `id`, `money` FROM `gift_list` WHERE `id_category`=?i ORDER BY `id` LIMIT ?i OFFSET ?i",
+                    [$category['id'], $set['p_str'], $start]);
     while ($post = $q->row()) {
         /*-----------зебра-----------*/
         if ($num==0) {
@@ -141,7 +160,7 @@ if (isset($_GET['gift']) && isset($_GET['category'])) {
         echo '</div>';
     }
     if ($k_page>1) {
-        str('categories.php?id=' . intval($_GET['id']) . '&amp;category=' . intval($_GET['category']) . '&amp;', $k_page, $page);
+        str('categories.php?id=' . $inp_get['id'] . '&amp;category=' . $inp_get['category'] . '&amp;', $k_page, $page);
     } // Вывод страниц
     echo '<div class="foot">';
     echo '<img src="/style/icons/str2.gif" alt="*" />  <a href="?id=' . $ank['id'] . '">Категории</a> | <b>' . htmlspecialchars($category['name']) . '</b><br />';
@@ -161,7 +180,9 @@ if ($k_post == 0) {
     echo 'Нет категорий';
     echo '</div>';
 }
-$q = $db->query("SELECT name,id FROM `gift_categories` ORDER BY `id`");
+$q = $db->query("SELECT ctg.`name`, ctg.`id`, (
+                SELECT COUNT( * ) FROM `gift_list` WHERE `id_category`=ctg.id) cnt
+                FROM `gift_categories` ctg ORDER BY ctg.`id`");
 while ($post = $q->row()) {
     /*-----------зебра-----------*/
     if ($num==0) {
@@ -173,7 +194,7 @@ while ($post = $q->row()) {
     }
     /*---------------------------*/
     echo '<img src="/style/themes/default/loads/14/dir.png" alt="*" /> <a href="categories.php?category=' . $post['id'] . '&amp;id=' . $ank['id'] . '">' . htmlspecialchars($post['name']) . '</a> ';
-    echo '(' . $db->query("SELECT COUNT(id) FROM `gift_list` WHERE `id_category` = '$post[id]'")->el() . ')';
+    echo '(' . $post['cnt'] . ')';
     echo '</div>';
 }
 echo '<div class="foot">';

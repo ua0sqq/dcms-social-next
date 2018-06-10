@@ -9,14 +9,17 @@ if ($_SERVER['PHP_SELF'] != '/index.php') {
 }
 ?>
 <div class="copy">
-<center>
-&copy; <a href="http://dcms-social.ru" style="text-transform: capitalize;"><?=text($_SERVER['HTTP_HOST'])?></a> - <?=date('Y');?> г.
-</center>
+	&copy; <a href="http://dcms-social.ru"><?=text($_SERVER['HTTP_HOST'])?></a> - <?=date('Y');?> г.
 </div>
 <div class="foot">
-На сайте: 
-<a href="/online.php"><?=$db->query("SELECT COUNT(*) FROM `user` WHERE `date_last` > ".(time()-600)."")->el()?></a> &amp; 
-<a href="/online_g.php"><?=$db->query("SELECT COUNT(*) FROM `guests` WHERE `date_last` > ".(time()-600)." AND `pereh` > '0'")->el()?></a> 
+На сайте: <?php
+$cnt = $db->query("SELECT * FROM (
+				  SELECT COUNT( * ) on_user FROM `user` WHERE `date_last`>?i) q1, (
+				  SELECT COUNT( * ) on_guest FROM `guests` WHERE `date_last`>?i AND `pereh`>?i) q2",
+				  [(time()-600), (time()-600), 0])->row();
+?>
+<a href="/online.php"><?= $cnt['on_user'];?></a> &amp; 
+<a href="/online_g.php"><?= $cnt['on_guest'];?></a> 
 <?php
 if (!$set['web']) {
     echo ' | <a href="/?t=web">Версия для компьютера</a>';

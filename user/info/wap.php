@@ -158,7 +158,7 @@ echo '<a href="/user/frends/?id=' . $ank['id'] . '">Друзья</a> (' . $k_fr[
 echo '<a href="/user/frends/online.php?id='.$ank['id'].'"><span style="color:green;">'.$k_fr['online_frend'].'</span></a>)';
 
 if ($k_fr['new_frend'] > 0 && $ank['id'] == $user['id']) {
-    echo ' <a href="/user/frends/new.php"><span style="color:red;">+' . $k_fr['new_frend'] . '</span></a>';
+    echo ' <a href="/user/frends/new.php"><span class="off">+' . $k_fr['new_frend'] . '</span></a>';
 }
 echo '</div>';
 if (isset($user) && $user['id'] == $ank['id']) {
@@ -191,7 +191,7 @@ SELECT COUNT( * ) FROM `tape` WHERE `id_user`=?i  AND  `read`=?) tape',
         echo '<img src="/style/icons/chat.gif" alt="*" /> ';
         if ($new_g['discut']) {
             echo "<a href='/user/discussions/index.php'><font color='red'>Обсуждения</font></a> ";
-            echo '<span style="color:red;">+'.$new_g['discut'].'</span>';
+            echo '<span class="off">+'.$new_g['discut'].'</span>';
         } else {
             echo '<a href="/user/discussions/index.php">Обсуждения</a>';
         }
@@ -208,7 +208,7 @@ SELECT COUNT( * ) FROM `tape` WHERE `id_user`=?i  AND  `read`=?) tape',
         echo "<img src='/style/icons/lenta.gif' alt='*' /> <a href='/user/tape/'>".$color."Лента".$color2."</a> ";
 
         if ($new_g['tape']) {
-            echo '<span style="color:red;">+'.$new_g['tape'].'</span>';
+            echo '<span class="off">+'.$new_g['tape'].'</span>';
         }
 
         echo "<br />";

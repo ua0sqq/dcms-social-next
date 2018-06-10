@@ -10,4 +10,4 @@ if ($k_n==0) {
 } else {
     $k_n='+'.$k_n;
 }
-echo ' <span style="color:red;">' . $k_n . '</span>';
+echo ' <span class="off">' . $k_n . '</span>';

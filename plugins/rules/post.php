@@ -10,7 +10,7 @@ include_once '../../sys/inc/fnc.php';
 include_once '../../sys/inc/user.php';
 
 include_once '../../sys/inc/thead.php';
-$post=$db->query("SELECT * FROM `rules` WHERE `id` = '".intval($_GET['id'])."' LIMIT 1")->row();
+$post=$db->query("SELECT * FROM `rules` WHERE `id`=?i", [$_GET['id']])->row();
 $set['title'] = htmlspecialchars($post['title']);
 title();
 aut(); // форма авторизации
@@ -23,38 +23,57 @@ if ($user['level'] > 2) {
             $err='Сообщение слишком длинное';
         } elseif (strlen2($msg)<2) {
             $err='Короткое сообщение';
-        } elseif ($db->query("SELECT COUNT(*) FROM `rules_p` WHERE `id_news` = '".intval($_GET['id'])."' AND `id_user` = '$user[id]' AND `msg` = '".my_esc($msg)."' LIMIT 1")->el()) {
+        } elseif ($db->query(
+            "SELECT COUNT(*) FROM `rules_p` WHERE `id_news`=?i AND `id_user`=?i AND `msg`=?",
+                             [$_GET['id'], $user['id'], $msg]
+        )->el()) {
             $err='Ваше сообщение повторяет предыдущее';
         } elseif (!isset($err)) {
-            $pos=$db->query("SELECT MAX(`pos`) FROM `rules_p` WHERE `id_news` = '".intval($_GET['id'])."'")->el()+1;
-            $db->query("INSERT INTO `rules_p` (`pos`, `id_user`, `time`, `msg`, `id_news`) values('$pos', '$user[id]', '$time', '".my_esc($msg)."', '".intval($_GET['id'])."')");
+            $pos=$db->query("SELECT MAX(`pos`) FROM `rules_p` WHERE `id_news`=?i", [$_GET['id']])->el()+1;
+            $db->query(
+                "INSERT INTO `rules_p` (`pos`, `id_user`, `time`, `msg`, `id_news`) VALUES( ?i, ?i, ?i, ?, ?i)",
+                       [$pos, $user['id'], $time, $msg, $_GET['id']]
+            );
             $_SESSION['message'] = 'Ваш пост успешно принят';
             header("Location: ?id=$post[id]");
             exit;
         }
     }
     if (isset($_GET['ids'])) {
-        $menu=$db->query("SELECT * FROM `rules_p` WHERE `id` = '".intval($_GET['ids'])."' LIMIT 1")->row();
+        $menu=$db->query("SELECT * FROM `rules_p` WHERE `id`=?i", [$_GET['ids']])->row();
     }
     
     if (isset($_GET['ids']) && isset($_GET['act']) && $_GET['act']=='up') {
-        $db->query("UPDATE `rules_p` SET `pos` = '".($menu['pos'])."' WHERE `pos` = '".($menu['pos']-1)."' LIMIT 1");
-        $db->query("UPDATE `rules_p` SET `pos` = '".($menu['pos']-1)."' WHERE `id` = '".intval($_GET['ids'])."' LIMIT 1");
+        $db->query(
+            "UPDATE `rules_p` SET `pos`=?i WHERE `pos`=?i LIMIT ?i",
+                   [$menu['pos'], ($menu['pos']-1), 1]
+        );
+        $db->query(
+            "UPDATE `rules_p` SET `pos`=?i WHERE `id`=?i LIMIT ?i",
+                   [($menu['pos']-1), $_GET['ids'], 1]
+        );
         $_SESSION['message'] = 'Пункт меню сдвинут на позицию вверх';
         header("Location: ?id=$post[id]");
         exit;
     }
     if (isset($_GET['ids']) && isset($_GET['act']) && $_GET['act']=='down') {
-        $db->query("UPDATE `rules_p` SET `pos` = '".($menu['pos'])."' WHERE `pos` = '".($menu['pos']+1)."' LIMIT 1");
-        $db->query("UPDATE `rules_p` SET `pos` = '".($menu['pos']+1)."' WHERE `id` = '".intval($_GET['ids'])."' LIMIT 1");
+        $db->query(
+            "UPDATE `rules_p` SET `pos`=?i WHERE `pos`=?i LIMIT ?i",
+                   [($menu['pos']), ($menu['pos']+1), 1]
+        );
+        $db->query(
+            "UPDATE `rules_p` SET `pos`=?i WHERE `id`=?i LIMIT ?i",
+                   [($menu['pos']+1), $_GET['ids'], 1]
+        );
+        
         $_SESSION['message'] = 'Пункт меню сдвинут на позицию вниз';
         header("Location: ?id=$post[id]");
         exit;
     }
 }
-$k_post=$db->query("SELECT COUNT(*) FROM `rules_p` WHERE `id_news` = '".intval($_GET['id'])."'")->el();
-$q=$db->query("SELECT * FROM `rules_p` WHERE `id_news` = '".intval($_GET['id'])."' ORDER BY `pos` ASC");
-echo "<table class='post'>\n";
+$k_post=$db->query("SELECT COUNT(*) FROM `rules_p` WHERE `id_news`=?i", [$_GET['id']])->el();
+$q=$db->query("SELECT * FROM `rules_p` WHERE `id_news`=?i ORDER BY `pos` ASC", [$_GET['id']]);
+
 while ($post2 = $q->row()) {
     $ank=get_user($post2['id_user']);
     
@@ -77,7 +96,7 @@ while ($post2 = $q->row()) {
     }
     echo '</div>';
 }
-echo '</table>';
+
 if ($user['level'] > 2) {
     if (isset($_GET['new'])) {
         echo '<form method="post" name="message" action="?id='.intval($_GET['id']) . '">';

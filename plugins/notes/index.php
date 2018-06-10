@@ -85,9 +85,9 @@ if (!$k_post) {
     $start=$set['p_str']*$page-$set['p_str'];
     $q=$db->query(
             'SELECT n.*, (
-SELECT COUNT(`id`)FROM `notes_komm` WHERE `id_notes`=n.id) komm, (
-SELECT COUNT(`id`)FROM `bookmarks` WHERE `id_object`=n.id AND `type`="notes") marks, (
-SELECT COUNT(`id`)FROM `notes` WHERE `share_id`=n.id AND `share_type`="notes") share
+SELECT COUNT( * ) FROM `notes_komm` WHERE `id_notes`=n.id) komm, (
+SELECT COUNT( * ) FROM `bookmarks` WHERE `id_object`=n.id AND `type`="notes") marks, (
+SELECT COUNT( * ) FROM `notes` WHERE `share_id`=n.id AND `share_type`="notes") share
 FROM `notes` n WHERE n.`private`="0" ?q ORDER BY ?o LIMIT ?i OFFSET ?i',
                     [$new, $order, $set['p_str'], $start]);
 
@@ -113,12 +113,12 @@ FROM `notes` n WHERE n.`private`="0" ?q ORDER BY ?o LIMIT ?i OFFSET ?i',
     }
 
     if (isset($_GET['sort'])) {
-        $dop="sort=".my_esc($_GET['sort'])."&amp;";
+        $dop="sort=".htmlspecialchars($_GET['sort'])."&amp;";
     } else {
         $dop='';
     }
     if ($k_page>1) {
-        str('?'.$dop.'', $k_page, $page);
+        str('?'.$dop, $k_page, $page);
     }
 }
 if (isset($user)) {

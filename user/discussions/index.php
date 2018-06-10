@@ -123,19 +123,19 @@ SELECT COUNT( * ) FROM `tape` WHERE `id_user`=?i AND `read`="0") is_tape',
                         [$user['id'], $user['id'], $user['id'], $order, $user['id']])->row();
 // Уведомления
 if ($cnt['is_notice']) {
-    $k_notif = '<span style="color:red;">(' . $cnt['is_notice'] . ')</span>';
+    $k_notif = '<span class="off">(' . $cnt['is_notice'] . ')</span>';
 } else {
     $k_notif = null;
 }
 // Обсуждения
 if ($cnt['is_dispute']) {
-    $discuss = '<span style="color:red;">(' . $cnt['is_dispute'] . ')</span>';
+    $discuss = '<span class="off">(' . $cnt['is_dispute'] . ')</span>';
 } else {
     $discuss = null;
 }
 // Лента
 if ($cnt['is_tape']) {
-    $lenta = '<span style="color:red;">(' . $cnt['is_tape'] . ')</span>';
+    $lenta = '<span class="off">(' . $cnt['is_tape'] . ')</span>';
 } else {
     $lenta = null;
 }
@@ -177,7 +177,7 @@ while ($post = $q->row()) {
     $avtor = user::get_user($post['avtor']);
     
     if ($post['count'] > 0) {
-        $s1 = '<span style="color:red;">';
+        $s1 = '<span class="off">';
         $s2 = '</span>';
     } else {
         $s1 = null;

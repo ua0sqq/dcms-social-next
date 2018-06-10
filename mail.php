@@ -62,7 +62,7 @@ if (isset($_GET['spam'])  &&  $ank['id'] != 0) {
                     [$user['id'], $mess['id_user'], 'mail'])->el()) {
         if (isset($_POST['msg'])) {
             if ($mess['id_kont']==$user['id']) {
-                $msg=my_esc($_POST['msg']);
+                $msg=trim($_POST['msg']);
                 if (strlen2($msg)<3) {
                     $err='Укажите подробнее причину жалобы';
                 }

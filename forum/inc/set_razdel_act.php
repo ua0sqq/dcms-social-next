@@ -1,33 +1,35 @@
 <?php
 if (isset($input_get['act']) && isset($input_get['ok']) && $input_get['act']=='set' && isset($_POST['name'])) {
-    $name=$_POST['name'];
-    $opis=$_POST['opis'];
+    $name=trim($_POST['name']);
+    $opis=trim($_POST['opis']);
     if (strlen2($name)<3) {
         $err='Слишком короткое название';
     }
     if (strlen2($name)>32) {
         $err='Слишком днинное название';
     }
-    $name=my_esc($name);
-    $opis=my_esc($opis);
     if (!isset($err)) {
-        $razd=$db->query("SELECT * FROM `forum_r` WHERE `id` = '".intval($input_get['id_razdel'])."' AND `id_forum` = '".intval($input_get['id_forum'])."' LIMIT 1")->row();
+        $razd=$db->query("SELECT * FROM `forum_r` WHERE `id`=?i AND `id_forum`=?i",
+                         [$input_get['id_razdel'], $input_get['id_forum']])->row();
         admin_log('Форум', 'Разделы', "Переименование раздела '$razd[name]' в '$name'");
-        $db->query("UPDATE `forum_r` SET `name` = '$name', `opis` = '$opis' WHERE `id` = '$razdel[id]' LIMIT 1");
-        $razdel=$db->query("SELECT * FROM `forum_r` WHERE `id` = '$razdel[id]' LIMIT 1")->row();
+        $db->query("UPDATE `forum_r` SET `name`=?, `opis`=? WHERE `id`=?i",
+                   [$name, $opis, $razdel['id']]);
+        $razdel=$db->query("SELECT * FROM `forum_r` WHERE `id`=?i", [$razdel['id']])->row();
         msg('Изменения успешно приняты');
     }
 }
-$razd=$db->query("SELECT * FROM `forum_r` WHERE `id` = '".intval($input_get['id_razdel'])."' AND `id_forum` = '".intval($input_get['id_forum'])."' LIMIT 1")->row();
+$razd=$db->query("SELECT * FROM `forum_r` WHERE `id`=?i AND `id_forum`=?i",
+                 [$input_get['id_razdel'], $input_get['id_forum']])->row();
 
 if (isset($input_get['act']) && isset($input_get['ok']) && $input_get['act'] == 'mesto' && isset($_POST['forum']) && is_numeric($_POST['forum'])
-&& $db->query("SELECT COUNT(*) FROM `forum_f` WHERE `id` = '".intval($_POST['forum'])."'")->el()) {
+&& $db->query("SELECT COUNT(*) FROM `forum_f` WHERE `id`=?i", [$_POST['forum']])->el()) {
     $forum_new['id']=intval($_POST['forum']);
     $forum_old=$forum;
-    $db->query("UPDATE `forum_p` SET `id_forum` = '$forum_new[id]' WHERE `id_forum` = '$forum[id]' AND `id_razdel` = '$razdel[id]'");
-    $db->query("UPDATE `forum_t` SET `id_forum` = '$forum_new[id]' WHERE `id_forum` = '$forum[id]' AND `id_razdel` = '$razdel[id]'");
-    $db->query("UPDATE `forum_r` SET `id_forum` = '$forum_new[id]' WHERE `id_forum` = '$forum[id]' AND `id` = '$razdel[id]'");
-    $forum=$db->query("SELECT * FROM `forum_f` WHERE `id` = '$forum_new[id]' LIMIT 1")->row();
+    $data_forum = [$forum_new['id'], $forum['id'], $razdel['id']];
+    $db->query("UPDATE `forum_p` SET `id_forum`=?i WHERE `id_forum`=?i AND `id_razdel`=?i", $data_forum);
+    $db->query("UPDATE `forum_t` SET `id_forum`=?i WHERE `id_forum`=?i AND `id_razdel`=?i", $data_forum);
+    $db->query("UPDATE `forum_r` SET `id_forum`=?i WHERE `id_forum`=?i AND `id`=?i", $data_forum);
+    $forum=$db->query("SELECT * FROM `forum_f` WHERE `id`=?i", [$forum_new['id']])->row();
     admin_log('Форум', 'Разделы', "Перенос раздела '$razd[name]' из подфорума '$forum_old[name]' в '$forum[name]'");
     msg('Раздел успешно перенесен');
 }

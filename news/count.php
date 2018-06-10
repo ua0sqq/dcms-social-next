@@ -7,4 +7,4 @@ if (!$cnt['new_news']) {
 } else {
     $cnt['new_news'] = '+' . $cnt['new_news'];
 }
-echo '(' . $cnt['all_news'] . ') <span style="color:red;">' . $cnt['new_news'] . '</span>';
+echo '(' . $cnt['all_news'] . ') <span class="off">' . $cnt['new_news'] . '</span>';
