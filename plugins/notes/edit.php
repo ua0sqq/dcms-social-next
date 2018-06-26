@@ -55,14 +55,14 @@ if (user_access('notes_edit') || $user['id'] == $notes['id_user']) {
                        [$name, $type, $id_dir, $msg, $privat, $privat_komm, $notes['id']]);
             
             $_SESSION['message'] = 'Изменения успешно приняты';
-            header("Location: list.php?id=".$notes['id']."".SID);
+            header("Location: /plugins/notes/list.php?id=".$notes['id']."".SID);
             exit;
         }
     }
     err();
     echo "<div class=\"foot\">\n";
     echo "<img src='/style/icons/str2.gif' alt='*'> <a href='index.php'>Дневники</a> | <a href='/info.php?id=$avtor[id]'>$avtor[nick]</a>\n";
-    echo " | <a href='list.php?id=$notes[id]'>" . text($notes['name']) . "</a> | <b>Редактирование</b>";
+    echo " | <a href='/plugins/notes/list.php?id=$notes[id]'>" . text($notes['name']) . "</a> | <b>Редактирование</b>";
     echo "</div>\n";
     echo "<form method='post' name='message' action='?id=".$notes['id']."&amp;edit=1'>\n";
     echo "Название:<br />\n<input type=\"text\" name=\"name\" value=\""  . text($notes['name']) . "\" /><br />\n";
@@ -89,7 +89,7 @@ if (user_access('notes_edit') || $user['id'] == $notes['id_user']) {
     echo "</form>\n";
     echo "<div class=\"foot\">\n";
     echo "<img src='/style/icons/str2.gif' alt='*'> <a href='index.php'>Дневники</a> | <a href='/info.php?id=$avtor[id]'>$avtor[nick]</a>\n";
-    echo " | <a href='list.php?id=$notes[id]'>" . text($notes['name']) . "</a> | <b>Редактирование</b>";
+    echo " | <a href='/plugins/notes/list.php?id=$notes[id]'>" . text($notes['name']) . "</a> | <b>Редактирование</b>";
     echo "</div>\n";
 }
 include_once '../../sys/inc/tfoot.php';

@@ -221,7 +221,7 @@ while ($post = $q->row()) {
 echo '</table>';
 // Вывод страниц
 if ($k_page>1) {
-    str("news.php?id=" . $input_get['id'] . '&amp;', $k_page, $page);
+    str("/news/news.php?id=" . $input_get['id'] . '&amp;', $k_page, $page);
 }
 // Форма для комментариев
 if (isset($user)) {

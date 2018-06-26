@@ -18,7 +18,7 @@ include_once '../../sys/inc/thead.php';
 title();
 err();
 aut();
-$db->setDebug('mydebug');
+
 $stav = filter_input(INPUT_POST, 'stav', FILTER_VALIDATE_INT);
     if ($stav) {
         if (in_array($stav, range(1, 7))) {

@@ -106,7 +106,7 @@ while ($post = $q->row()) {
     }
     /*---------------------------*/
     echo "<img src='/style/icons/dnev.png' alt='*'> ";
-    echo "<a href='list.php?id=$post[id]'>" . text($post['name']) . "</a>\n";
+    echo "<a href='/plugins/notes/list.php?id=$post[id]'>" . text($post['name']) . "</a>\n";
     echo " <span style='time'>(".vremja($post['time']).")</span>\n";
     if ($post['new_note']) {
         echo " <img src='/style/icons/new.gif' alt='*'>";

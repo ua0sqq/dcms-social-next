@@ -268,6 +268,6 @@ if (count($collisions)>1 && isset($_GET['all'])) {
 echo "Удаленные данные невозможно будет восстановить<br />\n";
 echo "<div class='foot'>\n";
 echo "&laquo;<a href='/info.php?id=$ank[id]'>В анкету</a><br />\n";
-echo "&laquo;<a href='/users.php'>Пользователи</a><br />\n";
+echo "&laquo;<a href='/user/users.php'>Пользователи</a><br />\n";
 echo "</div>\n";
 include_once '../sys/inc/tfoot.php';

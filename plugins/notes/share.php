@@ -40,12 +40,12 @@ VALUES(?i, ?, ?, ?, ?, ?i, ?i, ?, ?i)',
                                     [$user['id'], $notes['name'], $_POST['share_text'], '1', $notes['msg'], $notes['id'], $notes['id_user'], $notes['name'], $time])->id();
 
             msg('Ок всё крч');
-            header('Location: list.php?id='.$id);
+            header('Location: /plugins/notes/list.php?id='.$id);
             exit;
         } ?>
 <div class='nav2'>
     <div class="friends_access_list attach_block mt_0 grey">
-        <?php echo group($notes['id_user'])." "; ?> <a href="/info.php?id=<?=$notes['id_user']?>"><span style="color:#79358c"><b><?php echo " ".user::nick($notes['id_user'])." "; ?> </b></span></a> : <a href="list.php?id=<?=$notes['id']?>">
+        <?php echo group($notes['id_user'])." "; ?> <a href="/info.php?id=<?=$notes['id_user']?>"><span style="color:#79358c"><b><?php echo " ".user::nick($notes['id_user'])." "; ?> </b></span></a> : <a href="/plugins/notes/list.php?id=<?=$notes['id']?>">
         <span style="color:#06F;"><?php echo $notes['name']; ?></span></a>
     </div>
 <?php

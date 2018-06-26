@@ -158,7 +158,7 @@ if ($k_page > 1) {
     str('index.php?', $k_page, $page); // Вывод страниц
 }
 echo '<div class="foot">';
-echo '<img src="/style/icons/str.gif" alt="*"> <a href="who.php">В гостевой (' .
+echo '<img src="/style/icons/str.gif" alt="*"> <a href="/chat/who.php">В гостевой (' .
 $db->query(
     'SELECT COUNT(*) FROM `user` WHERE `date_last`>?i AND `url` LIKE "?e%"',
            [(time()-100), '/guest/']

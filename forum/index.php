@@ -440,7 +440,7 @@ if (!count($q)) {
 echo "</table>\n";
 
 echo "<div class='foot'>";
-echo "<img src='/style/icons/soob114.gif'> <a href='on-forum.php'>Кто в форуме?</a> | <a href='/user/admin.user.php?forum'>Модерация</a>";
+echo "<img src='/style/icons/soob114.gif'> <a href='/forum/on-forum.php'>Кто в форуме?</a> | <a href='/user/admin.user.php?forum'>Модерация</a>";
 echo "</div>";
 
 if (user_access('forum_for_create') && (isset($input_get['act']) && $input_get['act']=='new')) {

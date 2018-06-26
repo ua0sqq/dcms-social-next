@@ -37,7 +37,7 @@ while ($post = $q->row()) {
     $num++;
     
     // Заголовок новости
-    echo '<a id="link_menu" href="news.php?id=' . $post['id'] . '"><img src="/style/icons/rss.png" alt="*" /> ' . text($post['title']) . '</a> ';
+    echo '<a id="link_menu" href="/news/news.php?id=' . $post['id'] . '"><img src="/style/icons/rss.png" alt="*" /> ' . text($post['title']) . '</a> ';
     
     // Колличество комментариев
     echo '(' . $post['cnt'] . ')<br />';
@@ -45,7 +45,7 @@ while ($post = $q->row()) {
     // Часть текста
     echo '<div class="text">' . output_text($post['msg']) . '</div>';
     
-    echo '<a href="news.php?id=' . $post['id'] . '">Читать далее &gt;&gt;&gt;</a>';
+    echo '<a href="/news/news.php?id=' . $post['id'] . '">Читать далее &gt;&gt;&gt;</a>';
     echo '</div>';
 }
 echo '</table>';

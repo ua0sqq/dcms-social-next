@@ -94,7 +94,7 @@ if (isset($input_post['title']) && isset($input_post['msg']) && isset($input_pos
         }
     
         $_SESSION['message'] = 'Новость успешно создана';
-        header("Location: news.php?id=$news[id]");
+        header("Location: /news/news.php?id=$news[id]");
         exit;
     }
 }

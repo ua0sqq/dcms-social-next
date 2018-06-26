@@ -91,7 +91,7 @@ if (isset($input_post['title']) && isset($input_post['msg']) && isset($input_pos
         $db->query("UPDATE `user` SET `news_read` = '0'");
         
         $_SESSION['message'] = 'Изменения успешно приняты';
-        header("Location: news.php?id=$news[id]");
+        header("Location: /news/news.php?id=$news[id]");
         exit;
     }
 }
@@ -137,7 +137,7 @@ echo '<input value="Просмотр" type="submit" name="view"/> ';
 echo '<input value="Готово" type="submit" name="ok"/>';
 echo '</form>';
 echo'<div class="foot">';
-echo '<img src="/style/icons/str.gif" alt="*"> <a href="index.php">Новости</a> | <a href="news.php?id=' . $news['id'] . '">' . text($news['title']) . '</a><br />';
+echo '<img src="/style/icons/str.gif" alt="*"> <a href="index.php">Новости</a> | <a href="/news/news.php?id=' . $news['id'] . '">' . text($news['title']) . '</a><br />';
 echo '</div>';
 
 include_once '../sys/inc/tfoot.php';

@@ -83,7 +83,7 @@ WHERE fr.`frend`=?i AND fr.`lenta_notes`=?i AND ts.`lenta_notes`=?i AND `i`=?i",
             }
            
             $_SESSION['message'] = 'Дневник успешно создан';
-            header("Location: list.php?id=$st");
+            header("Location: /plugins/notes/list.php?id=$st");
             $_SESSION['captcha']=null;
             exit;
         }

@@ -54,7 +54,7 @@ while ($post = $q->row()) {
 	<?php
 }
 if ($k_page>1) {
-    str('dir.php?id='.$id.'&amp;', $k_page, $page);
+    str('/plugins/smiles/dir.php?id='.$id.'&amp;', $k_page, $page);
 }
 if (isset($user) && $user['level'] > 3) {
     ?>

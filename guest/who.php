@@ -49,7 +49,7 @@ echo '<img src="/style/icons/str2.gif" /> <a href="index.php">Гостевая</
 echo '</div>';
 
 if ($k_page > 1) {
-    str('who.php?', $k_page, $page); // Вывод страниц
+    str('/chat/who.php?', $k_page, $page); // Вывод страниц
 }
 
 include_once '../sys/inc/tfoot.php';

@@ -51,7 +51,7 @@ if (isset($_POST['title']) && user_access('notes_edit')) {
         );
         
         $_SESSION['message']='Категория успешно создана';
-        header("Location: dir.php?".SID);
+        header("Location: /plugins/notes/dir.php?".SID);
         exit;
     }
 }
@@ -63,7 +63,7 @@ echo "<a href='index.php'>Дневники</a>";
 echo "</div>";
         
 echo "<div class='webmenu last'>";
-echo "<a href='dir.php' class='activ'>Категории</a>";
+echo "<a href='/plugins/notes/dir.php' class='activ'>Категории</a>";
 echo "</div>";
         
 echo "<div class='webmenu last'>";
@@ -140,7 +140,7 @@ FROM `notes` n WHERE n.`id_dir`=?i ORDER BY ?o LIMIT ?i OFFSET ?i",
             }
             /*---------------------------*/
             echo "<img src='/style/icons/dnev.png' alt='*'> ";
-            echo "<a href='list.php?id=$post[id]&amp;dir=$post[id_dir]'>" . htmlspecialchars($post['name']) . "</a> \n";
+            echo "<a href='/plugins/notes/list.php?id=$post[id]&amp;dir=$post[id_dir]'>" . htmlspecialchars($post['name']) . "</a> \n";
             echo " <span style='time'>(".vremja($post['time']).")</span>\n";
         
             if ($post['new_notes']) {
@@ -194,7 +194,7 @@ while ($post = $q->row()) {
     } else {
         $post['new_notes'] = null;
     }
-    echo "<a href='dir.php?id=$post[id]'>" . output_text($post['name']) . "</a> (" . $post['all_notes'] . ") " . $post['new_notes'] . "\n";
+    echo "<a href='/plugins/notes/dir.php?id=$post[id]'>" . output_text($post['name']) . "</a> (" . $post['all_notes'] . ") " . $post['new_notes'] . "\n";
     if (isset($user) && ($user['level']>3)) {
         echo "<a href='delete.php?dir=$post[id]'><img src='/style/icons/delete.gif' alt='*'></a><br />\n";
     }
@@ -204,14 +204,14 @@ while ($post = $q->row()) {
 
 if (isset($user) && user_access('notes_edit')) {
     if (isset($_GET['create'])) {
-        echo "<form method=\"post\" action=\"dir.php\">\n";
+        echo "<form method=\"post\" action=\"/plugins/notes/dir.php\">\n";
         echo "Название:<br />\n<input name=\"title\" size=\"16\" maxlength=\"32\" value=\"\" type=\"text\" /><br />\n";
         echo "Описание:<br />\n<textarea name=\"msg\" ></textarea><br />\n";
         echo "<input value=\"Создать\" type=\"submit\" />\n";
         echo "</form>\n";
     } else {
         echo "<div class='foot'>\n";
-        echo "<img src='/style/icons/str2.gif' alt='*'> <a href='dir.php?create'>Добавить категорию</a><br />\n";
+        echo "<img src='/style/icons/str2.gif' alt='*'> <a href='/plugins/notes/dir.php?create'>Добавить категорию</a><br />\n";
         echo "</div>\n";
     }
 }

@@ -25,7 +25,7 @@ echo "<div class='webmenu'>";
 echo "<a href='index.php' class='activ'>Дневники</a>";
 echo "</div>";
 echo "<div class='webmenu last'>";
-echo "<a href='dir.php'>Категории</a>";
+echo "<a href='/plugins/notes/dir.php'>Категории</a>";
 echo "</div>";
 if (isset($user)) {
     echo "<div class='webmenu last'>";
@@ -107,7 +107,7 @@ FROM `notes` n WHERE n.`private`="0" ?q ORDER BY ?o LIMIT ?i OFFSET ?i',
         echo rez_text($post['msg'], 80)." <br/>\n";
         notes_sh($post['id']);
         echo "<br/><img src='/style/icons/uv.png'> <font color=#666>(".$post['komm'].") &bull;";
-        echo " <a href='fav.php?id=".$post['id']."'><img src='/style/icons/add_fav.gif'> (".$post['marks'].")</a> &bull; ";
+        echo " <a href='/plugins/notes/fav.php?id=".$post['id']."'><img src='/style/icons/add_fav.gif'> (".$post['marks'].")</a> &bull; ";
         echo " <img src='/style/icons/action_share_color.gif'> (".$post['share'].") </font>";
         echo "  </div>\n";
     }

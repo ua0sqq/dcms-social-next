@@ -19,7 +19,7 @@ echo "<div class='webmenu'>";
 echo "<a href='index.php' >Дневники</a>";
 echo "</div>";
 echo "<div class='webmenu last'>";
-echo "<a href='dir.php'>Категории</a>";
+echo "<a href='/plugins/notes/dir.php'>Категории</a>";
 echo "</div>";
         
 echo "<div class='webmenu'>";
@@ -78,7 +78,7 @@ FROM `notes` n WHERE n.`name` LIKE "%?e%" ORDER BY n.`time` DESC LIMIT ?i OFFSET
             }
             /*---------------------------*/
             echo "<img src='/style/icons/dnev.png' alt='*'> ";
-            echo "<a href='list.php?id=$post[id]'>" . text($post['name']) . "</a> \n";
+            echo "<a href='/plugins/notes/list.php?id=$post[id]'>" . text($post['name']) . "</a> \n";
             echo " <span style='time'>(".vremja($post['time']).")</span>\n";
             
             if ($post['new_note']) {

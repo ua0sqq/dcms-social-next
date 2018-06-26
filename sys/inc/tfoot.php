@@ -12,7 +12,7 @@ if (file_exists(H."style/themes/$set[set_them]/foot.php")) {
                       [time()-600, time()-600]
     )->row();
     echo '<a href="/">На главную</a><br />' . "\n";
-    echo '<a href="/users.php">Регистраций: ' . $cnt['all_user'] . '</a><br />' . "\n";
+    echo '<a href="/user/users.php">Регистраций: ' . $cnt['all_user'] . '</a><br />' . "\n";
     echo '<a href="/online.php">Сейчас на сайте: ' . $cnt['online'] . '</a><br />' . "\n";
     echo '<a href="/online_g.php">Гостей на сайте: ' . $cnt['guest'] . '</a><br />' . "\n";
     $page_size = ob_get_length();

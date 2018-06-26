@@ -120,7 +120,7 @@ if (user_access('adm_panel_show')) {
         echo "</form>\n";
     }
     echo "<div class='foot'>\n";
-    echo "<img src='/style/icons/str.gif' alt='*' /> <a href='who.php'>Кто здесь?</a><br />\n";
+    echo "<img src='/style/icons/str.gif' alt='*' /> <a href='/chat/who.php'>Кто здесь?</a><br />\n";
     echo "</div>\n";
     include 'inc/admin_form.php';
     echo "<div class='foot'>\n";

@@ -391,10 +391,9 @@ if (!$k_post['post']) {
         "UPDATE `users_konts` SET `new_msg`=0 WHERE `id_kont`=?i AND `id_user`=?i LIMIT ?i",
                [$ank['id'], $user['id'], 1]);
     }
+    echo "<div class='foot'>\n";
+    echo "<img src='/style/icons/str.gif' alt='*'> <a href='mail.php?id=$ank[id]&amp;page=$page&amp;delete=add'>Очистить почту</a><br />\n";
+    echo "</div>\n";
 }
-
-echo "<div class='foot'>\n";
-echo "<img src='/style/icons/str.gif' alt='*'> <a href='mail.php?id=$ank[id]&amp;page=$page&amp;delete=add'>Очистить почту</a><br />\n";
-echo "</div>\n";
 
 include_once 'sys/inc/tfoot.php';

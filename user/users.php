@@ -109,7 +109,7 @@ LEFT JOIN `user_group` `ugr` ON `u`.`group_access` = `ugr`.`id` ORDER BY ?q ?q L
     }
     echo "</table>\n";
     if ($k_page>1) {
-        str("users.php?sort=$sort&amp;$por&amp;", $k_page, $page);
+        str("/user/users.php?sort=$sort&amp;$por&amp;", $k_page, $page);
     } // Вывод страниц
 }
 $usearch=null;
@@ -186,7 +186,7 @@ if (isset($_GET['go']) && $usearch!=null) {
     }
     echo "</table>\n";
     if ($k_page>1) {
-        str("users.php?go&amp;sort=$sort&amp;$por&amp;", $k_page, $page);
+        str("/user/users.php?go&amp;sort=$sort&amp;$por&amp;", $k_page, $page);
     } // Вывод страниц
 } else {
     echo "<div class=\"post\">\nВведите ID или НИК юзера</div>\n";

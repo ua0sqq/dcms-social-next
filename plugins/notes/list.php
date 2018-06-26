@@ -209,7 +209,7 @@ WHERE fr.`frend`=?i AND fr.`disc_notes`=?i AND ds.`disc_notes`=?i AND `i`=?i",
                    [$user['id']]);
         
         $_SESSION['message'] = 'Сообщение успешно отправлено';
-        header("Location: list.php?id=$notes[id]&page=".$input_get['page']."");
+        header("Location: /plugins/notes/list.php?id=$notes[id]&page=".$input_get['page']."");
         exit;
     }
 }
@@ -222,9 +222,9 @@ LEFT JOIN `notes` tbl3 ON tbl1.id < tbl3.id
 WHERE tbl1.`id`=?i ORDER BY tbl2.`id` DESC, tbl3.id LIMIT ?i', [$notes['id'], 1])->row();
 
 $listing_page = '<div class="c2" style="text-align: center;">'."\n".
-'<span class="page">'.($listing['end_id']?'<a href="list.php?id='.$listing['end_id'].'">&laquo; Пред.</a> ':'&laquo; Пред. ').'</span>'."\n".
+'<span class="page">'.($listing['end_id']?'<a href="/plugins/notes/list.php?id='.$listing['end_id'].'">&laquo; Пред.</a> ':'&laquo; Пред. ').'</span>'."\n".
 ' ('.$listing['cnt'].' из '.$listing['all_cnt'].') '."\n".
-'<span class="page">' . ($listing['start_id'] ? '<a href="list.php?id=' . $listing['start_id'] . '">След. &raquo;</a>' : ' След. &raquo;') . '</span>'."\n".
+'<span class="page">' . ($listing['start_id'] ? '<a href="/plugins/notes/list.php?id=' . $listing['start_id'] . '">След. &raquo;</a>' : ' След. &raquo;') . '</span>'."\n".
 '</div>';
 
 title();
@@ -258,7 +258,7 @@ if ((!isset($user) && $notes['private'] == 2)
 if (isset($input_get['delete']) && ($user['id']==$avtor['id'] || user_access('notes_delete'))) {
     echo '<div class="mess" style="text-align:center;">'."\n";
     echo '<p>Вы действительно хотите удалить дневник ' . output_text($notes['name']) . '?</p>';
-    echo "[<a href='delete.php?id=$notes[id]'><img src='/style/icons/ok.gif'> удалить</a>] [<a href='list.php?id=$notes[id]'><img src='/style/icons/delete.gif'> отмена</a>] \n";
+    echo "[<a href='delete.php?id=$notes[id]'><img src='/style/icons/ok.gif'> удалить</a>] [<a href='/plugins/notes/list.php?id=$notes[id]'><img src='/style/icons/delete.gif'> отмена</a>] \n";
     echo "</div>";
     include_once '../../sys/inc/tfoot.php';
 }
@@ -275,7 +275,7 @@ if (isset($user)) {
                        [$notes['id']]);
             
             $_SESSION['message'] = 'Ваш голос засчитан';
-            header("Location: list.php?id=$notes[id]&page=".intval($input_get['page'])."");
+            header("Location: /plugins/notes/list.php?id=$notes[id]&page=".intval($input_get['page'])."");
             exit;
         }
     }
@@ -291,7 +291,7 @@ if (isset($user)) {
                        [$notes['id']]);
             
             $_SESSION['message'] = 'Ваш голос засчитан';
-            header("Location: list.php?id=$notes[id]&page=".intval($input_get['page'])."");
+            header("Location: /plugins/notes/list.php?id=$notes[id]&page=".intval($input_get['page'])."");
             exit;
         }
     }
@@ -303,7 +303,7 @@ if (isset($user)) {
                 "INSERT INTO `bookmarks` (`type`,`id_object`, `id_user`, `time`) VALUES (?, ?i, ?i, ?i)",
                        ['notes', $notes['id'], $user['id'], $time]);
             $_SESSION['message'] = 'Дневник добавлен в закладки';
-            header("Location: list.php?id=$notes[id]&page=".intval($input_get['page'])."");
+            header("Location: /plugins/notes/list.php?id=$notes[id]&page=".intval($input_get['page'])."");
             exit;
         }
     }
@@ -315,7 +315,7 @@ if (isset($user)) {
                 "DELETE FROM `bookmarks` WHERE `id_user`=?i AND  `id_object`=?i AND `type`=?",
                        [$user['id'], $notes['id'], 'notes']);
             $_SESSION['message'] = 'Дневник удален из закладок';
-            header('Location: list.php?id='.$notes['id'].'&page='.$input_get['page']);
+            header('Location: /plugins/notes/list.php?id='.$notes['id'].'&page='.$input_get['page']);
             exit;
         }
     }
@@ -382,7 +382,7 @@ echo "</div><div class='main'>";
 
 if (isset($user) && $user['id']!=$avtor['id']) {
     if (!$cnt['is_user_like']) {
-        echo "<a href='list.php?id=$notes[id]&amp;like=1'><img src='/style/icons/thumbu.png' alt='*' /> </a> (".$cnt['like_notes'].") <a href='list.php?id=$notes[id]&amp;like=0'><img src='/style/icons/thumbd.png' alt='*' /></a>\n";
+        echo "<a href='/plugins/notes/list.php?id=$notes[id]&amp;like=1'><img src='/style/icons/thumbu.png' alt='*' /> </a> (".$cnt['like_notes'].") <a href='/plugins/notes/list.php?id=$notes[id]&amp;like=0'><img src='/style/icons/thumbd.png' alt='*' /></a>\n";
     } else {
         echo " <img src='/style/icons/thumbu.png' alt='*' /> (".$cnt['like_notes'].") <img src='/style/icons/thumbd.png' alt='*' /> \n";
     }
@@ -393,11 +393,11 @@ if (isset($user) && $user['id']!=$avtor['id']) {
 if (isset($user)) {
     echo "".($webbrowser ? "&bull;" : null)." <img src='/style/icons/add_fav.gif' alt='*' /> ";
     if (!$cnt['is_user_bookmark']) {
-        echo "<a href='list.php?id=$notes[id]&amp;fav=1'>B закладки</a><br />\n";
+        echo "<a href='/plugins/notes/list.php?id=$notes[id]&amp;fav=1'>B закладки</a><br />\n";
     } else {
-        echo "<a href='list.php?id=$notes[id]&amp;fav=0'>Из закладок</a><br />\n";
+        echo "<a href='/plugins/notes/list.php?id=$notes[id]&amp;fav=0'>Из закладок</a><br />\n";
     }
-    echo "<img src='/style/icons/add_fav.gif' alt='*' />  <a href='fav.php?id=".$notes['id']."'>Кто добавил? </a> (".$markinfo.")";
+    echo "<img src='/style/icons/add_fav.gif' alt='*' />  <a href='/plugins/notes/fav.php?id=".$notes['id']."'>Кто добавил? </a> (".$markinfo.")";
 }
 echo '</div>';
 
@@ -427,10 +427,10 @@ if (!$k_post) {
         if (isset($user)) {
             echo "<div id='comments' class='menus'>";
             echo "<div class='webmenu'>";
-            echo "<a href='list.php?id=$notes[id]&amp;page=$page&amp;sort=1' class='".($user['sort']==1?'activ':'')."'>Внизу</a>";
+            echo "<a href='/plugins/notes/list.php?id=$notes[id]&amp;page=$page&amp;sort=1' class='".($user['sort']==1?'activ':'')."'>Внизу</a>";
             echo "</div>";
             echo "<div class='webmenu'>";
-            echo "<a href='list.php?id=$notes[id]&amp;page=$page&amp;sort=0' class='".($user['sort']==0?'activ':'')."'>Вверху</a>";
+            echo "<a href='/plugins/notes/list.php?id=$notes[id]&amp;page=$page&amp;sort=0' class='".($user['sort']==0?'activ':'')."'>Вверху</a>";
             echo "</div>";
             echo "</div>";
         }
@@ -478,7 +478,7 @@ WHERE nk.`id_notes`=?i ORDER BY nk.`time` ?q LIMIT ?i OFFSET ?i',
     }
 
     if ($k_page>1) {
-        str('list.php?id=' . $input_get['id'] . '&amp;', $k_page, $page);
+        str('/plugins/notes/list.php?id=' . $input_get['id'] . '&amp;', $k_page, $page);
     }
 }
 if ($notes['private_komm']==1 && $user['id']!=$avtor['id'] && $notes['is_frend']!=2  && !user_access('notes_delete')) {
