@@ -1,4 +1,5 @@
 <?php
+
 include_once '../../sys/inc/start.php';
 include_once '../../sys/inc/compress.php';
 include_once '../../sys/inc/sess.php';
@@ -10,69 +11,68 @@ include_once '../../sys/inc/fnc.php';
 include_once '../../sys/inc/adm_check.php';
 include_once '../../sys/inc/user.php';
 
+only_reg('/aut.php');
+
 $set['title'] = 'Лидеры';
 include_once '../../sys/inc/thead.php';
 title();
-
-if (!isset($user)) {
-    header("location: /index.php?");
-}
-
 err();
 aut();
 
-if (isset($user)) {
-    if (isset($_POST['stav']) && isset($_POST['msg'])) {
-        if ($_POST['stav']==1) {
-            $st=1;
-            $tm=$time+86400;
-        } elseif ($_POST['stav']==2) {
-            $st=2;
-            $tm=$time+172800;
-        } elseif ($_POST['stav']==3) {
-            $st=3;
-            $tm=$time+259200;
-        } elseif ($_POST['stav']==4) {
-            $st=4;
-            $tm=$time+345600;
-        } elseif ($_POST['stav']==5) {
-            $st=5;
-            $tm=$time+432000;
-        } elseif ($_POST['stav']==6) {
-            $st=6;
-            $tm=$time+518400;
-        } elseif ($_POST['stav']==7) {
-            $st=7;
-            $tm=$time+604800;
-        }
-        $msg=my_esc($_POST['msg']);
-        if ($user['money']>=$st) {
-            if (!$db->query("SELECT COUNT(*) FROM `liders` WHERE `id_user` = '$user[id]'")->el()) {
-                $db->query("INSERT INTO `liders` (`id_user`, `stav`, `msg`, `time`, `time_p`) values('$user[id]', '$st', '".$msg."', '$tm', '$time')");
+$args = [
+         'stav' => FILTER_VALIDATE_INT,
+         'msg' => FILTER_DEFAULT,];
+$in_post = filter_input_array(INPUT_POST, $args);
+unset($args);
+
+if ($in_post['stav'] && !empty($in_post['msg'])) {
+    if (in_array($in_post['stav'], range(1, 7))) {
+        $plus_time = 86400*$in_post['stav'];
+        $tm = time() + $plus_time;
+    } else {
+        $err = 'Неверное значение';
+    }
+
+    if ($user['money'] >= $in_post['stav']) {
+        if (!isset($err)) {
+            if (!$db->query(
+                "SELECT COUNT( * ) FROM `liders` WHERE `id_user`=?i",
+                            [$user['id']])->el()) {
+                $db->query(
+                    "INSERT INTO `liders` (`id_user`, `stav`, `msg`, `time`, `time_p`) VALUES(?i, ?i, ?, ?i, ?i)",
+                           [$user['id'], $in_post['stav'], $in_post['msg'], $tm, time()]);
             } else {
-                $db->query("UPDATE `liders` SET `time` = '$tm', `time_p` = '$time', `msg` = '$msg', `stav` = '$st' WHERE `id_user` = '$user[id]'");
+                $db->query(
+                    "UPDATE `liders` SET `time`=?i, `time_p`=?i, `msg`=?, `stav`=?i WHERE `id_user`=?i",
+                           [$tm, time(), $in_post['msg'], $in_post['stav'], $user['id']]);
             }
-            $db->query("UPDATE `user` SET `money` = '".($user['money']-$st)."' WHERE `id` = '$user[id]' LIMIT 1");
+            $db->query(
+                "UPDATE `user` SET `money`=`money`-?i WHERE `id`=?i",
+                       [$in_post['stav'], $user['id']]);
             $_SESSION['message'] = 'Вы успешно стали лидером';
-            header("Location: /user/liders/index.php?ok");
+            header('Location: /user/liders/index.php?ok');
             exit;
-        } else {
-            $err='У вас не достаточно средств';
         }
     } else {
-        $err='Поле сообщения не может быть пустым';
+        $err='У вас не достаточно средств';
     }
+} else {
+    $err='Поле сообщения не может быть пустым';
+}
     err();
-    echo '<div class="foot">';
-    echo '<img src="/style/icons/str2.gif" alt="S"/> <a href="/user/money/">Дополнительные услуги</a> | <b>Стать лидером</b>';
-    echo '</div>';
-    echo '<div class="mess">';
-    echo 'Для того, чтобы попасть в Лидеры необходимо минимум <b class="off">1</b> <b style="color:green;">' . $sMonet[1] . '</b>, эта услуга в течение 1 дня обеспечит 
-Ваше пребывание в данном ТОП\'е. Ваше положение в ТОП\'е зависит от кол-ва ' . $sMonet[0] . ' (общем времени пребывания)! 
-Помимо этого, Ваша анкета будет ротироваться на страницах Знакомств и Поиска!';
-    echo '</div>';
-    echo '<form class="main" method="post" action="?">';
-    echo 'Ставка: <select name="stav">
+?>
+<div class="foot">
+	<img src="/style/icons/str2.gif" alt="S"/> <a href="/user/money/">Дополнительные услуги</a> | <strong>Стать лидером</strong>
+</div>
+<div class="mess">
+	<p>&nbsp;&nbsp;&nbsp;Для того, чтобы попасть в Лидеры, необходимо минимум <strong class="off">1 <span class="on">монету</span></strong>.
+	Эта услуга в течение 1 дня обеспечит Ваше пребывание в данном ТОП\'е.
+	<p>&nbsp;&nbsp;&nbsp;Ваше положение в ТОП\'е зависит от кол-ва монет (общем времени пребывания)! 
+	Помимо этого, Ваша анкета будет котироваться на страницах Знакомств и Поиска!</p>
+</div>
+<form class="main" method="post" action="?">
+	<p>Ставка:
+	<p><select name="stav">
 	<option value="1">1</option>
 	<option value="2">2</option>
 	<option value="3">3</option>
@@ -80,13 +80,13 @@ if (isset($user)) {
 	<option value="5">5</option>
 	<option value="6">6</option>
 	<option value="7">7</option>
-	</select> ' . $sMonet[0] . '<br />';
-    
-    echo 'Подпись (215 символов)<textarea name="msg"></textarea><br />';
-    echo '<input value="Стать лидером" type="submit" />';
-    echo '</form>';
-}
-echo '<div class="foot">';
-echo '<img src="/style/icons/str2.gif" alt="S"/> <a href="/user/money/">Дополнительные услуги</a> | <b>Стать лидером</b>';
-echo '</div>';
+	</select>&nbsp;&nbsp;монета</p>
+    <p>Подпись (215 символов)
+	<p><textarea name="msg"></textarea>
+	<p><input value="Стать лидером" type="submit" /></p>
+</form>
+<div class="foot">
+	<img src="/style/icons/str2.gif" alt="S"/> <a href="/user/money/">Дополнительные услуги</a> | <strong>Стать лидером</strong>
+</div><?php
+
 include_once '../../sys/inc/tfoot.php';
