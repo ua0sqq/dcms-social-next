@@ -1,7 +1,4 @@
 <?php
-/*
-Модификация модуля закладок от PluginS
-*/
 include_once '../../sys/inc/start.php';
 include_once '../../sys/inc/compress.php';
 include_once '../../sys/inc/sess.php';
@@ -47,7 +44,7 @@ if (isset($user) && $ank['id'] == $user['id']) {
 }
 echo "<table>";
 if (!isset($_GET['metki'])) {
-    echo "<td class='nav1'><b>Закладки</b></td><td class='nav1'><a href='?id=".$ank['id']."&metki'>Метки</a></td>";
+    echo "<td class='nav1'><b>Закладки</b></td><td class='nav1'><a href='?id=".$ank['id']."&amp;metki'>Метки</a></td>";
 } elseif (isset($_GET['metki'])) {
     echo "<td class='nav1'><a href='index.php'>Закладки</a></td><td class='nav1'><b>Метки</b></td>";
 } echo "</table>";
@@ -61,7 +58,7 @@ SELECT COUNT( * ) FROM `bookmarks` WHERE `id_user`=u.id AND `type`="forum") foru
 SELECT COUNT( * ) FROM `bookmarks` WHERE `id_user`=u.id AND `type`="notes") notes
 FROM `user` u WHERE `u`.`id`=?i', [$ank['id']])->row();
     echo '<div class="nav1">';
-    echo '<img src="/style/icons/druzya.png" alt="*" /> ';//var_dump($cnt, $people);
+    echo '<img src="/style/icons/druzya.png" alt="*" /> ';
     echo '<a href="/user/bookmark/people.php?id=' . $ank['id'] . '">Люди</a> (' . $cnt['people'] . ')';
     echo '</div>';
     echo '<div class="nav2">';
@@ -93,7 +90,7 @@ FROM `user` u WHERE `u`.`id`=?i', [$ank['id']])->row();
     $start=$set['p_str']*$page-$set['p_str'];
     $q=$db->query(
         'SELECT * FROM `bookmarks` WHERE `id_user`=?i ORDER BY `time` DESC LIMIT ?i OFFSET ?i',
-                       [$ank['id'], $set['p_str'], $start]);
+                       [$ank['id'], $set['p_str'], $start]); // TODO: ???
     while ($post=$q->row()) {
         echo "<div class='nav1'>";
         if ($post['type']=='forum') {
@@ -101,7 +98,7 @@ FROM `user` u WHERE `u`.`id`=?i', [$ank['id']])->row();
                             'SELECT * FROM `forum_t` WHERE `id`=?i',
                                     [$post['id_object']])->row();
             echo "<a href='/forum/".$them['id_forum']."/".$them['id_razdel']."/".$them['id']."/'><img src='/style/icons/Forum.gif'> ".htmlspecialchars($them['name'])."</a><br/>";
-            echo substr(htmlspecialchars($them['text']), 0, 40)." (Добавлено ".vremja($post['time']).")";
+            echo mb_substr(htmlspecialchars($them['text']), 0, 40)." (Добавлено ".vremja($post['time']).")";
         } elseif ($post['type']=='notes') {
             $notes=$db->query(
                             'SELECT * FROM `notes` WHERE `id`=?i',
@@ -119,7 +116,7 @@ FROM `user` u WHERE `u`.`id`=?i', [$ank['id']])->row();
                                     [$post['id_object']])->row();
             echo "<a href='/foto/".$foto['id_user']."/".$foto['id_gallery']."/".$foto['id']."/'><img src='/style/icons/photo.png'> ".htmlspecialchars($foto['name'])."</a><br/>";
             echo "<img style='height:60px;' src='/foto/foto0/".$foto['id'].".".$foto['ras']."'>";
-            echo !empty($foto['opis']) ? substr(htmlspecialchars($foto['opis']), 0, 40) .'[...]' : '' . ' (Добавлено '.vremja($post['time']).')';
+            echo !empty($foto['opis']) ? mb_substr(htmlspecialchars($foto['opis']), 0, 40) .'[...]' : '' . ' (Добавлено '.vremja($post['time']).')';
         } elseif ($post['type']=='file') {
             $file_id = $db->query(
                                 'SELECT  obf.id, obf.name, obf.id_dir, obf.ras, obd.dir  FROM `obmennik_files` obf

@@ -5,7 +5,7 @@
 Автор: Искатель
 ---------------------------------------
 Этот скрипт распостроняется по лицензии
-движка Dcms-Social. 
+движка Dcms-Social.
 При использовании указывать ссылку на
 оф. сайт http://dcms-social.ru
 ---------------------------------------
@@ -23,47 +23,60 @@ include_once '../../sys/inc/db_connect.php';
 include_once '../../sys/inc/ipua.php';
 include_once '../../sys/inc/fnc.php';
 include_once '../../sys/inc/user.php';
+
 only_reg();
+
 $set['title']='Настройка приватности';
 include_once '../../sys/inc/thead.php';
 title();
-$userSet = $db->query("SELECT * FROM `user_set` WHERE `id_user` = '".$user['id']."' LIMIT 1")->row();
-if (isset($_POST['save'])){
- // Просмотр стр
-if (isset($_POST['privat_str']) && ($_POST['privat_str']==0 || $_POST['privat_str']==1 || $_POST['privat_str']==2))
-{
-$db->query("UPDATE `user_set` SET `privat_str` = '".intval($_POST['privat_str'])."' WHERE `id_user` = '$user[id]'");
+
+$post_int = filter_input_array(INPUT_POST, FILTER_VALIDATE_INT);
+
+$userSet = $db->query(
+    "SELECT * FROM `user_set` WHERE `id_user`=?i",
+                      [$user['id']])->row();
+if (filter_input(INPUT_POST, 'save', FILTER_DEFAULT)) {
+    $set_private = [];
+    // Просмотр стр
+    if (isset($post_int['privat_str']) && in_array($post_int['privat_str'], [0, 1, 2], true)) {
+        $set_private += ['privat_str' => (string)$post_int['privat_str']];
+    }
+    // Сообщения
+    if (isset($post_int['privat_mail']) && in_array($post_int['privat_mail'], [0, 1, 2], true)) {
+        $set_private += ['privat_mail' => (string)$post_int['privat_mail']];
+    }
+    if (!empty($set_private)) {
+        $db->query(
+            'UPDATE `user_set` SET ?set WHERE id=?i',
+                   [$set_private, $user['id']]);
+        $_SESSION['message'] = 'Изменения успешно приняты';
+        header('Location: settings.privacy.php');
+        exit;
+    }
 }
- // Сообщения
-if (isset($_POST['privat_mail']) && ($_POST['privat_mail']==0 || $_POST['privat_mail']==1 || $_POST['privat_mail']==2))
-{
-$db->query("UPDATE `user_set` SET `privat_mail` = '".intval($_POST['privat_mail'])."' WHERE `id_user` = '$user[id]'");
-}
-$_SESSION['message'] = 'Изменения успешно приняты';
-header('Location: settings.privacy.php');
-exit;
-}
+
 err();
 aut();
+
 echo "<div id='comments' class='menus'>";
 echo "<div class='webmenu'>";
 echo "<a href='/user/info/settings.php'>Общие</a>";
-echo "</div>"; 
+echo "</div>";
 echo "<div class='webmenu last'>";
 echo "<a href='/user/tape/settings.php'>Лента</a>";
-echo "</div>"; 
+echo "</div>";
 echo "<div class='webmenu last'>";
 echo "<a href='/user/discussions/settings.php'>Обсуждения</a>";
-echo "</div>"; 
+echo "</div>";
 echo "<div class='webmenu last'>";
 echo "<a href='/user/notification/settings.php'>Уведомления</a>";
-echo "</div>"; 
+echo "</div>";
 echo "<div class='webmenu last'>";
 echo "<a href='/user/info/settings.privacy.php' class='activ'>Приватность</a>";
-echo "</div>"; 
+echo "</div>";
 echo "<div class='webmenu last'>";
 echo "<a href='/user/info/secure.php' >Пароль</a>";
-echo "</div>"; 
+echo "</div>";
 echo "</div>";
 echo "<form action='?' method=\"post\">";
  // Просмотр стр
@@ -92,6 +105,5 @@ echo "<div class=\"foot\">\n";
 echo "<img src='/style/icons/str2.gif' alt='*'> <a href='/info.php?id=$user[id]'>$user[nick]</a> | \n";
 echo '<b>Приватность</b>';
 echo "</div>\n";
-	
+    
 include_once '../../sys/inc/tfoot.php';
-?>

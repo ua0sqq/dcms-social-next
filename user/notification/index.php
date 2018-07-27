@@ -19,16 +19,19 @@ $width = ($webbrowser == 'web' ? '100' : '70'); // Размер подарков
 */
 if (isset($_GET['delete']) && $_GET['delete']=='all') {
     if (isset($user)) {
-        $db->query("DELETE FROM `notification` WHERE `id_user` = '$user[id]'");
+        $db->query("DELETE FROM `notification` WHERE `id_user`=?i",
+                   [$user['id']]);
         $_SESSION['message'] = 'Уведомления очищены';
-        header("Location: ?");
+        header('Location: ?');
         exit;
     }
 }
 if (isset($_GET['del'])) { // удаление уведомления
     if (isset($user)) {
-        if ($db->query("SELECT COUNT(*) FROM `notification`  WHERE `id_user` = '$user[id]' AND `id` = '".intval($_GET['del'])."'")->el()) {
-            $db->query("DELETE FROM `notification` WHERE `id_user` = '$user[id]' AND `id` = '".intval($_GET['del'])."' LIMIT 1");
+        if ($db->query("SELECT COUNT(*) FROM `notification`  WHERE `id_user`=?i AND `id`=?i",
+                       [$user['id'], $_GET['del']])->el()) {
+            $db->query("DELETE FROM `notification` WHERE `id_user`=?i AND `id`=?i",
+                       [$user['id'], $_GET['del']]);
             $_SESSION['message'] = 'Уведомление удалено';
             header("Location: ?komm&".intval($_GET['page'])."");
             exit;
@@ -41,26 +44,26 @@ include_once '../../sys/inc/thead.php';
 title();
 err();
 aut();
-/*
-======
-Панель
-======
-*/
-$k_notif = $db->query("SELECT COUNT(`read`) FROM `notification` WHERE `id_user` = '$user[id]' AND `read` = '0'")->el(); // Уведомления
-if ($k_notif > 0) {
-    $k_notif = '<font color=red>('.$k_notif.')</font>';
+
+// Панель
+$cnt = $db->query("SELECT (
+SELECT COUNT( * ) FROM `notification`  WHERE `id_user`=?i) k_post, (
+SELECT COUNT( * ) FROM `notification` WHERE `id_user`=?i AND `read`='0') notif, (
+SELECT COUNT( * ) FROM `discussions` WHERE `id_user`=?i AND `count`> 0) discus, (
+SELECT COUNT( * ) FROM `tape` WHERE `id_user`=?i AND `read`='0') lenta",
+        [$user['id'], $user['id'], $user['id'], $user['id']])->row(); // Уведомления
+if ($cnt['notif']) {
+    $k_notif = '<span class="off">('.$cnt['notif'].')</span>';
 } else {
     $k_notif = null;
 }
-$discuss = $db->query("SELECT COUNT(`count`) FROM `discussions` WHERE `id_user` = '$user[id]' AND `count` > '0' ")->el(); // Обсуждения
-if ($discuss > 0) {
-    $discuss = '<font color=red>('.$discuss.')</font>';
+if ($cnt['discus']) {
+    $discuss = '<span class="off">('.$cnt['discus'].')</span>';
 } else {
     $discuss = null;
 }
-$lenta = $db->query("SELECT COUNT(`read`) FROM `tape` WHERE `id_user` = '$user[id]' AND `read` = '0' ")->el(); // Лента
-if ($lenta > 0) {
-    $lenta = '<font color=red>('.$lenta.')</font>';
+if ($cnt['lenta']) {
+    $lenta = '<span class="off">('.$cnt['lenta'].')</span>';
 } else {
     $lenta = null;
 }
@@ -75,25 +78,26 @@ echo "<div class='webmenu'>";
 echo "<a href='/user/notification/' class='activ'>Уведомления $k_notif</a>";
 echo "</div>";
 echo "</div>";
-/*
-==========
-Список уведомлений
-==========
-*/
-    $k_post=$db->query("SELECT COUNT(*) FROM `notification`  WHERE `id_user` = '$user[id]' ")->el();
-    $k_page=k_page($k_post, $set['p_str']);
-    $page=page($k_page);
-    $start=$set['p_str']*$page-$set['p_str'];
+// Cписок уведомлений
+    $k_post = $cnt['k_post'];
+
+if (!$k_post) {
+    echo '<div class="mess">'."\n\t";
+    echo 'Нет новых уведомлений'."\n";
+    echo '</div>'."\n";
+} else {
+
+    $k_page = k_page($k_post, $set['p_str']);
+    $page = page($k_page);
+    $start = $set['p_str']*$page-$set['p_str'];
     
-    $q=$db->query("SELECT * FROM `notification` WHERE `id_user` = '$user[id]' ORDER BY `time` DESC LIMIT $start, $set[p_str]");
-if ($k_post==0) { //Если нет уведомлений, то...
-    echo "  <div class='mess'>\n";
-    echo "Нет новых уведомлений\n";
-    echo "  </div>\n";
-}
-//Если есть, то...
+    $q = $db->query("SELECT n.*, u.id AS avtor, u.nick, u.pol FROM `notification` n 
+LEFT JOIN `user` u ON u.id=n.avtor
+WHERE `id_user`=?i ORDER BY `time` DESC LIMIT ?i, ?i",
+                  [$user['id'], $start, $set['p_str']]);
+
 while ($post = $q->row()) {
-    /*-----------зебра-----------*/
+    // зебра
     if ($num==0) {
         echo '<div class="nav1">';
         $num=1;
@@ -101,23 +105,25 @@ while ($post = $q->row()) {
         echo '<div class="nav2">';
         $num=0;
     }
-    /*---------------------------*/
-    $type = $post['type']; //Тип уведомления
-    $avtor = get_user($post['avtor']); //От кого уведомление
-    
+    //Тип уведомления
+    $type = $post['type']; 
+    if ($post['avtor']) {
+        $avtor = ['id' => $post['avtor'], 'nick' => $post['nick'], 'pol' => $post['pol']];
+    } else {
+        $avtor = [
+                  'id' => 0,
+                  'nick' => '<span class="strike"><span class="text-color-gray">Пользователь удален</span></span>',
+                  'pol' => 1];
+    }
     if ($post['read']==0) { //Если не прочитано
-        $s1 = "<font color='red'>";
-        $s2 = "</font>";
+        $s1 = "<span class='off'>";
+        $s2 = "</span>";
     } else {
         $s1 = null;
         $s2 = null;
     }
-    /*
-    ===============================
-    Значение переменной $name для
-    определенного типа сообщения
-    ===============================
-    */
+    //Значение переменной $name для
+    //определенного типа сообщения
     if ($type == 'ok_gift') { // Принимаем подарок
         $name = 'принял'.($avtor['pol'] == 1 ? "" : "а") . ' ваш подарок ';
     } elseif ($type == 'no_gift') { // Отказ от подарка
@@ -138,7 +144,8 @@ while ($post = $q->row()) {
     } elseif ($type == 'them_komm') { // форум
         $name = 'ответил' . ($avtor['pol'] == 1 ? "" : "а") . ' вам в теме ';
     } elseif ($type == 'stena_komm') { // Стена
-        $stena = get_user($post['id_object']);
+        $stena = $db->query('SELECT `id`, `nick` FROM `user` WHERE `id`=?i',
+                            [$post['id_object']]);
         if ($stena['id'] == $user['id']) {
             $sT = 'вашей';
         } elseif ($stena['id'] == $avtor['id']) {
@@ -160,17 +167,16 @@ while ($post = $q->row()) {
     } elseif ($type=='stena_komm2') {
         $name=' написал '.($avtor['pol']==1 ? ' ' : 'a').' у Вас <a href="/user/komm.php?id='.$post['id_object'].'">в записи на стене</a>';
     }
-    /*
-    ===============================
-    Подарки
-    ===============================
-    */
+    // Подарки
     if ($type == 'new_gift' || $type == 'no_gift' || $type == 'ok_gift') {
         if ($type == 'new_gift') {
-            $id_gift =  $db->query("SELECT id,id_gift FROM `gifts_user` WHERE `id` = '$post[id_object]' LIMIT 1")->row();
-            $gift =  $db->query("SELECT * FROM `gift_list` WHERE `id` = '$id_gift[id_gift]' LIMIT 1")->row();
+            $id_gift =  $db->query("SELECT `id`, `id_gift` FROM `gifts_user` WHERE `id`=?i",
+                                   [$post['id_object']])->row();
+            $gift =  $db->query("SELECT * FROM `gift_list` WHERE `id`=?i",
+                                [$id_gift['id_gift']])->row();
         } else {
-            $gift =  $db->query("SELECT * FROM `gift_list` WHERE `id` = '$post[id_object]' LIMIT 1")->row();
+            $gift =  $db->query("SELECT * FROM `gift_list` WHERE `id`=?i",
+                                [$post['id_object']])->row();
         }
         if ($avtor['id']) {
             echo  group($avtor['id'])." ";
@@ -183,15 +189,12 @@ while ($post = $q->row()) {
             echo "  $s1 ".vremja($post['time'])." $s2";
         }
         if ($post['read'] == 0) {
-            $db->query("UPDATE `notification` SET `read` = '1' WHERE `id` = '$post[id]'");
+            $db->query("UPDATE `notification` SET `read`=? WHERE `id`=?i",
+                       ['1', $post['id']]);
         }
         echo "<div style='text-align:right;'><a href='?komm&amp;del=$post[id]&amp;page=$page'><img src='/style/icons/delete.gif' alt='*' /></a></div>";
     }
-    /*
-    ===============================
-    Друзья/Заявки
-    ===============================
-    */
+    // Друзья/Заявки
     if ($type == 'no_frend' || $type == 'ok_frend' || $type == 'del_frend' || $type == 'otm_frend') {
         if ($avtor['id']) {
             echo status($avtor['id']) .  group($avtor['id']) . " <a href='/info.php?id=$avtor[id]'>$avtor[nick]</a>";
@@ -201,18 +204,17 @@ while ($post = $q->row()) {
             echo " Этот друг уже удален с сайта =)  $s1 ".vremja($post['time'])." $s2";
         }
         echo "<div style='text-align:right;'><a href='?komm&amp;del=$post[id]&amp;page=$page'><img src='/style/icons/delete.gif' alt='*' /></a></div>";
-        $db->query("UPDATE `notification` SET `read` = '1' WHERE `id` = '$post[id]'");
+        $db->query("UPDATE `notification` SET `read`=? WHERE `id`=?i",
+                       ['1', $post['id']]);
     }
-    /*
-    ===============================
-    Дневники коментарии
-    ===============================
-    */
+    // Дневники коментарии
     if ($type == 'notes_komm') {
         if ($post['read'] == 0) {
-            $db->query("UPDATE `notification` SET `read` = '1' WHERE `id` = '$post[id]'");
+            $db->query("UPDATE `notification` SET `read`=? WHERE `id`=?i",
+                       ['1', $post['id']]);
         }
-        $notes = $db->query("SELECT * FROM `notes` WHERE `id` = '".$post['id_object']."' LIMIT 1")->row();
+        $notes = $db->query("SELECT * FROM `notes` WHERE `id`=?i",
+                            [$post['id_object']])->row();
         if ($notes['id']) {
             echo status($avtor['id']) .  group($avtor['id']) . " <a href='/info.php?id=$avtor[id]'>$avtor[nick]</a>  " . medal($avtor['id']) . " " . online($avtor['id']) . " $name ";
             echo " <img src='/style/icons/zametki.gif' alt='*'> ";
@@ -223,14 +225,11 @@ while ($post = $q->row()) {
         }
         echo "<div style='text-align:right;'><a href='?komm&amp;del=$post[id]&amp;page=$page'><img src='/style/icons/delete.gif' alt='*' /></a></div>";
     }
-    /*
-    ===============================
-    Файлы коментарии
-    ===============================
-    */
+    // Файлы коментарии
     if ($type == 'files_komm' || $type == 'obmen_komm') {
         if ($post['read'] == 0) {
-            $db->query("UPDATE `notification` SET `read` = '1' WHERE `id` = '$post[id]'");
+            $db->query("UPDATE `notification` SET `read`=? WHERE `id`=?i",
+                       ['1', $post['id']]);
         }
         $file = $db->query("SELECT * FROM `obmennik_files` WHERE `id` = '".$post['id_object']."' LIMIT 1")->row();
         $dir=$db->query("SELECT * FROM `user_files` WHERE `id` = '".$file['my_dir']."' LIMIT 1")->row();
@@ -245,14 +244,11 @@ while ($post = $q->row()) {
         }
         echo "<div style='text-align:right;'><a href='?komm&amp;del=$post[id]&amp;page=$page'><img src='/style/icons/delete.gif' alt='*' /></a></div>";
     }
-    /*
-    ===============================
-    Фото коментарии
-    ===============================
-    */
+    // Фото коментарии
     if ($type == 'foto_komm') {
         if ($post['read'] == 0) {
-            $db->query("UPDATE `notification` SET `read` = '1' WHERE `id` = '$post[id]'");
+            $db->query("UPDATE `notification` SET `read`=? WHERE `id`=?i",
+                       ['1', $post['id']]);
         }
         $foto = $db->query("SELECT * FROM `gallery_foto` WHERE `id` = '".$post['id_object']."' LIMIT 1")->row();
         if ($foto['id']) {
@@ -265,15 +261,12 @@ while ($post = $q->row()) {
         }
         echo "<div style='text-align:right;'><a href='?komm&amp;del=$post[id]&amp;page=$page'><img src='/style/icons/delete.gif' alt='*' /></a></div>";
     }
-    /*
-    ===============================
-    Форум коментарии
-    ===============================
-    */
+    // Форум коментарии
     if ($type == 'them_komm') {
         $them=$db->query("SELECT * FROM `forum_t` WHERE `id` = '".$post['id_object']."' LIMIT 1")->row();
         if ($post['read'] == 0) {
-            $db->query("UPDATE `notification` SET `read` = '1' WHERE `id` = '$post[id]'");
+            $db->query("UPDATE `notification` SET `read`=? WHERE `id`=?i",
+                       ['1', $post['id']]);
         }
         if ($them['id']) {
             echo status($avtor['id']) .  group($avtor['id']) . " <a href='/info.php?id=$avtor[id]'>$avtor[nick]</a>  " . medal($avtor['id']) . " " . online($avtor['id']) . " $name ";
@@ -284,14 +277,11 @@ while ($post = $q->row()) {
         }
         echo "<div style='text-align:right;'><a href='?komm&amp;del=$post[id]&amp;page=$page'><img src='/style/icons/delete.gif' alt='*' /></a></div>";
     }
-    /*
-    ===============================
-    Стена юзера
-    ===============================
-    */
+    // Стена юзера
     if ($type == 'stena_komm') {
         if ($post['read'] == 0) {
-            $db->query("UPDATE `notification` SET `read` = '1' WHERE `id` = '$post[id]'");
+            $db->query("UPDATE `notification` SET `read`=? WHERE `id`=?i",
+                       ['1', $post['id']]);
         }
         echo status($avtor['id']) .  group($avtor['id']) . " <a href='/info.php?id=$avtor[id]'>$avtor[nick]</a>  " . medal($avtor['id']) . " " . online($avtor['id']) . " $name ";
         echo "<img src='/style/icons/stena.gif' alt='*'> <a href='/info.php?id=$stena[id]&amp;page=$pageEnd'>стене</a> " . ($sT == null ? "$stena[nick]" : "") . "  $s1 ".vremja($post['time'])." $s2";
@@ -299,7 +289,8 @@ while ($post = $q->row()) {
     }
     if ($type=='stena_komm2') {
         if ($post['read'] == 0) {
-            $db->query("UPDATE `notification` SET `read` = '1' WHERE `id` = '$post[id]'");
+            $db->query("UPDATE `notification` SET `read`=? WHERE `id`=?i",
+                       ['1', $post['id']]);
         }
         echo status($avtor['id']) . group($avtor['id']). ' ';
         echo user::nick($avtor['id'], 1, 1, 1).' '.$name.' ';
@@ -308,21 +299,19 @@ while ($post = $q->row()) {
     }
     if ($type=='stena') {
         if ($post['read'] == 0) {
-            $db->query("UPDATE `notification` SET `read` = '1' WHERE `id` = '$post[id]'");
+            $db->query("UPDATE `notification` SET `read`=? WHERE `id`=?i",
+                       ['1', $post['id']]);
         }
         echo status($avtor['id']) . group($avtor['id']). ' ';
         echo user::nick($avtor['id'], 1, 1, 1).' написал'.($avtor['pol']==0 ? 'a' : null).' у Вас на стене';
         echo ''.$s1. vremja($post['time']). $s2.' ';
         echo "<div style='text-align:right;'><a href='?komm&amp;del=$post[id]&amp;page=$page'><img src='/style/icons/delete.gif' alt='*' /></a></div>";
     }
-    /*
-    ===============================
-    Стасус коментарии
-    ===============================
-    */
+    // Стасус коментарии
     if ($type == 'status_komm') {
         if ($post['read'] == 0) {
-            $db->query("UPDATE `notification` SET `read` = '1' WHERE `id` = '$post[id]'");
+            $db->query("UPDATE `notification` SET `read`=? WHERE `id`=?i",
+                       ['1', $post['id']]);
         }
         if ($status['id']) {
             $ankS = get_user($status['id_user']);
@@ -333,28 +322,22 @@ while ($post = $q->row()) {
         }
         echo "<div style='text-align:right;'><a href='?komm&amp;del=$post[id]&amp;page=$page'><img src='/style/icons/delete.gif' alt='*' /></a></div>";
     }
-    /*
-    ===============================
-    Новости коментарии
-    ===============================
-    */
+    // Новости коментарии
     if ($type == 'news_komm') {
         if ($post['read'] == 0) {
-            $db->query("UPDATE `notification` SET `read` = '1' WHERE `id` = '$post[id]'");
+            $db->query("UPDATE `notification` SET `read`=? WHERE `id`=?i",
+                       ['1', $post['id']]);
         }
         $news = $db->query("SELECT * FROM `news` WHERE `id` = '".$post['id_object']."' LIMIT 1")->row();
         echo status($avtor['id']) .  group($avtor['id']) . " <a href='/info.php?id=$avtor[id]'>$avtor[nick]</a>  " . medal($avtor['id']) . " " . online($avtor['id']) . " $name ";
         echo "<img src='/style/icons/news.png' alt='*'> <a href='/news/news.php?id=$news[id]&amp;page=$pageEnd'>" . htmlspecialchars($news['title']) . "</a>   $s1 ".vremja($post['time'])." $s2";
         echo "<div style='text-align:right;'><a href='?komm&amp;del=$post[id]&amp;page=$page'><img src='/style/icons/delete.gif' alt='*' /></a></div>";
     }
-    /*
-    ===============================
-    Гостевая коментарии
-    ===============================
-    */
+    // Гостевая коментарии
     if ($type == 'guest') {
         if ($post['read'] == 0) {
-            $db->query("UPDATE `notification` SET `read` = '1' WHERE `id` = '$post[id]'");
+            $db->query("UPDATE `notification` SET `read`=? WHERE `id`=?i",
+                       ['1', $post['id']]);
         }
         if ($avtor['id']) {
             echo status($avtor['id']) .  group($avtor['id']) . " <a href='/info.php?id=$avtor[id]'>$avtor[nick]</a>  " . medal($avtor['id']) . " " . online($avtor['id']) . " $name ";
@@ -364,14 +347,11 @@ while ($post = $q->row()) {
         }
         echo "<div style='text-align:right;'><a href='?komm&amp;del=$post[id]&amp;page=$page'><img src='/style/icons/delete.gif' alt='*' /></a></div>";
     }
-    /*
-    ===============================
-    Админ чат
-    ===============================
-    */
+    // Админ чат
     if ($type == 'adm_komm') {
         if ($post['read'] == 0) {
-            $db->query("UPDATE `notification` SET `read` = '1' WHERE `id` = '$post[id]'");
+            $db->query("UPDATE `notification` SET `read`=? WHERE `id`=?i",
+                       ['1', $post['id']]);
         }
         echo status($avtor['id']) .  group($avtor['id']) . " <a href='/info.php?id=$avtor[id]'>$avtor[nick]</a>  " . medal($avtor['id']) . " " . online($avtor['id']) . " $name ";
         echo "<img src='/style/icons/chat.gif' alt='S' /> <a href='/plugins/admin/chat/?page=$pageEnd'>админ чате</a>  $s1 ".vremja($post['time'])." $s2";
@@ -382,6 +362,7 @@ while ($post = $q->row()) {
 if ($k_page>1) {
     str('?', $k_page, $page);
 } // Вывод страниц
+}
 echo '<div class="mess"><img src="/style/icons/delete.gif"> <a href="?delete=all">Удалить все уведомления</a></div>';
 echo "<div class=\"foot\">\n";
 echo "<img src='/style/icons/str2.gif' alt='*'> <a href='/info.php?id=$user[id]'>$user[nick]</a> | \n";

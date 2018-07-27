@@ -14,71 +14,18 @@ $ank['id'] = isset($user) ? $user['id'] : 0;
 if (isset($_GET['id'])) {
     $ank['id']=intval($_GET['id']);
 }
+
 if ($ank['id'] == 0) {
-    $ank=array ( 'id' => 0,
+    $ank=array( 'id' => 0,
                 'nick' => 'Система',
                 'level' => 999, 'pol' => 1,
                 'group_name' => 'Системный робот',
                 'ank_o_sebe' => 'Создан для уведомлений',
                 );
     $set['title']=$ank['nick'].' - анкета '; // заголовок страницы
-    include_once '../../sys/inc/thead.php';
+    require '../../sys/inc/thead.php';
     title();
     aut();
-/*
-==================================
-Приватность станички пользователя
-Запрещаем просмотр анкеты
-==================================
-*/
-    $uSet = $db->query("SELECT * FROM `user_set` WHERE `id_user` = '$ank[id]'  LIMIT 1")->row();
-    $frend=$db->query("SELECT COUNT(*) FROM `frends` WHERE (`user` = '$user[id]' AND `frend` = '$ank[id]') OR (`user` = '$ank[id]' AND `frend` = '$user[id]') LIMIT 1")->el();
-    $frend_new=$db->query("SELECT COUNT(*) FROM `frends_new` WHERE (`user` = '$user[id]' AND `to` = '$ank[id]') OR (`user` = '$ank[id]' AND `to` = '$user[id]') LIMIT 1")->el();
-    if ($ank['id'] != $user['id'] && $user['group_access'] == 0) {
-        if (($uSet['privat_str'] == 2 && $frend != 2) || $uSet['privat_str'] == 0) { // Начинаем вывод если стр имеет приват настройки
-            if ($ank['group_access']>1) {
-                echo "<div class='err'>$ank[group_name]</div>\n";
-            }
-            echo "<div class='nav1'>";
-            echo group($ank['id'])." $ank[nick] ";
-            echo medal($ank['id'])." ".online($ank['id'])." ";
-            echo "</div>";
-            echo "<div class='nav2'>";
-            echo avatar($ank['id'], true, 128, 128);
-            echo "<br />";
-        }
-    
-    
-        if ($uSet['privat_str'] == 2 && $frend != 2) { // Если только для друзей
-            echo '<div class="mess">';
-            echo 'Просматривать страничку пользователя могут только его друзья!';
-            echo '</div>';
-        
-            // В друзья
-            if (isset($user)) {
-                echo '<div class="nav1">';
-                if ($frend_new == 0 && $frend==0) {
-                    echo "<img src='/style/icons/druzya.png' alt='*'/> <a href='/user/frends/create.php?add=".$ank['id']."'>Добавить в друзья</a><br />\n";
-                } elseif ($frend_new == 1) {
-                    echo "<img src='/style/icons/druzya.png' alt='*'/> <a href='/user/frends/create.php?otm=$ank[id]'>Отклонить заявку</a><br />\n";
-                } elseif ($frend == 2) {
-                    echo "<img src='/style/icons/druzya.png' alt='*'/> <a href='/user/frends/create.php?del=$ank[id]'>Удалить из друзей</a><br />\n";
-                }
-                echo "</div>";
-            }
-            include_once '../../sys/inc/tfoot.php';
-            exit;
-        }
-    
-        if ($uSet['privat_str'] == 0) { // Если закрыта
-            echo '<div class="mess">';
-            echo 'Пользователь запретил просматривать его страничку!';
-            echo '</div>';
-        
-            include_once '../../sys/inc/tfoot.php';
-            exit;
-        }
-    }
     
     echo "<span class=\"err\">$ank[group_name]</span><br />\n";
     if ($ank['ank_o_sebe']!=null) {
@@ -87,7 +34,7 @@ if ($ank['id'] == 0) {
     if (isset($_SESSION['refer']) && $_SESSION['refer']!=null && otkuda($_SESSION['refer'])) {
         echo "<div class='foot'>&laquo;<a href='$_SESSION[refer]'>".otkuda($_SESSION['refer'])."</a><br />\n</div>\n";
     }
-    include_once '../../sys//inc/tfoot.php';
+    require '../../sys//inc/tfoot.php';
     exit;
 }
 $ank=get_user($ank['id']);
@@ -95,7 +42,74 @@ if (!$ank) {
     header("Location: /index.php?".SID);
     exit;
 }
-$timediff=$db->query("SELECT `time` FROM `user` WHERE `id` = '$ank[id]' LIMIT 1")->el();
+
+$set['title'] = $ank['nick'].' - анкета '; // заголовок страницы
+require '../../sys/inc/thead.php';
+title();aut();
+        echo '<div class="err">' . ($ank['group_access'] < 1 ? 'Пользователь' : $ank['group_name']) . '</div>' . "\n";
+        echo '<div class="mess" style="margin: 0; border: 0;"><span class="ank_n">Посл. посещение:</span> <span class="ank_d">' .
+        vremja($ank['date_last']) . '</span></div>';
+        echo "<div class='nav1'>\n";
+        echo group($ank['id'])." $ank[nick] ";
+        echo medal($ank['id'])." ".online($ank['id'])." ";
+        echo "</div>\n";
+        
+        echo "<div class='nav2'>\n";
+        echo avatar($ank['id'], true, 128, false);
+        echo "</div>";
+/*
+==================================
+Приватность станички пользователя
+Запрещаем просмотр анкеты
+==================================
+*/
+$pattern = 'SELECT ust.privat_str FROM `user_set` ust WHERE ust.`id_user`=?i';
+$data = [$ank['id']];
+if (isset($user)) {
+    $pattern = 'SELECT ust.privat_str, (
+SELECT COUNT( * ) FROM `frends` WHERE (`user`=?i AND `frend`=ust.`id_user`) OR (`user`=ust.`id_user` AND `frend`=?i)) frend, (
+SELECT COUNT( * ) FROM `frends_new` WHERE (`user`=?i AND `to`=ust.`id_user`) OR (`user`=ust.`id_user` AND `to`=?i)) new_frend, (
+SELECT `time` FROM `user` WHERE `id`=?i) time_online
+FROM `user_set` ust WHERE ust.`id_user`=?i';
+    $data = [$user['id'], $user['id'], $user['id'], $user['id'], $ank['id'], $ank['id']];
+}
+$uSet = $db->query($pattern, $data)->row();
+    
+    if ($ank['id'] != $user['id'] && $user['group_access'] < 1) {
+    
+        // Если только для друзей
+        if ((!isset($user) && $uSet['privat_str'] == 2)  || (isset($user) && $uSet['privat_str'] == 2 && $uSet['frend'] != 2)) {
+            echo '<div class="mess">'."\n";
+            echo 'Просматривать страничку пользователя могут только его друзья!'."\n";
+            echo '</div>'."\n";
+    
+            // В друзья
+            if (isset($user)) {
+                echo '<div class="nav1">'."\n";
+                if ($uSet['frend_new'] == 0 && $uSet['frend']==0) {
+                    echo "<img src='/style/icons/druzya.png' alt='*'/> <a href='/user/frends/create.php?add=".$ank['id']."'>Добавить в друзья</a><br />\n";
+                } elseif ($uSet['frend_new'] == 1) {
+                    echo "<img src='/style/icons/druzya.png' alt='*'/> <a href='/user/frends/create.php?otm=$ank[id]'>Отклонить заявку</a><br />\n";
+                } elseif ($uSet['frend'] == 2) {
+                    echo "<img src='/style/icons/druzya.png' alt='*'/> <a href='/user/frends/create.php?del=$ank[id]'>Удалить из друзей</a><br />\n";
+                }
+                echo "</div>\n";
+            }
+            require '../../sys/inc/tfoot.php';
+            exit;
+        }
+    
+        if ($uSet['privat_str'] == 0) { // Если закрыта
+            echo '<div class="mess">'."\n";
+            echo 'Пользователь запретил просматривать его страничку!'."\n";
+            echo '</div>'."\n";
+        
+            require '../../sys/inc/tfoot.php';
+            exit;
+        }
+    }
+    // end private
+$timediff = $uSet['time_online'];
 $oneMinute=60;
 $oneHour=60*60;
 $hourfield=floor(($timediff)/$oneHour);
@@ -104,8 +118,8 @@ $secondfield=floor(($timediff-$hourfield*$oneHour-$minutefield*$oneMinute));
 $sHoursLeft=$hourfield;
 $sHoursText = "часов";
 $nHoursLeftLength = strlen($sHoursLeft);
-$h_1=substr($sHoursLeft, -1, 1);
-if (substr($sHoursLeft, -2, 1) != 1 && $nHoursLeftLength>1) {
+$h_1=mb_substr($sHoursLeft, -1, 1);
+if (mb_substr($sHoursLeft, -2, 1) != 1 && $nHoursLeftLength>1) {
     if ($h_1== 2 || $h_1== 3 || $h_1== 4) {
         $sHoursText = "часа";
     } elseif ($h_1== 1) {
@@ -121,9 +135,9 @@ if ($nHoursLeftLength==1) {
 }
 $sMinsLeft =$minutefield;
 $sMinsText = "минут";
-$nMinsLeftLength = strlen($sMinsLeft);
-$m_1=substr($sMinsLeft, -1, 1);
-if ($nMinsLeftLength>1 && substr($sMinsLeft, -2, 1) != 1) {
+$nMinsLeftLength = mb_strlen($sMinsLeft);
+$m_1=mb_substr($sMinsLeft, -1, 1);
+if ($nMinsLeftLength>1 && mb_substr($sMinsLeft, -2, 1) != 1) {
     if ($m_1== 2 || $m_1== 3 || $m_1== 4) {
         $sMinsText = "минуты";
     } elseif ($m_1== 1) {
@@ -144,14 +158,13 @@ $sMinsText." ";
 if ($timediff<0) {
     $displaystring='дата уже наступила';
 }
-$set['title']=$ank['nick'].' - анкета '; // заголовок страницы
-include_once '../../sys/inc/thead.php';
-title();
+
 if ((!isset($_SESSION['refer']) || $_SESSION['refer']==null)
 && isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!=null &&
 !preg_match('#info\.php#', $_SERVER['HTTP_REFERER'])) {
     $_SESSION['refer']=str_replace('&', '&amp;', preg_replace('#^http://[^/]*/#', '/', $_SERVER['HTTP_REFERER']));
-}aut();
+}
+
 if (isset($user) && $ank['id']==$user['id']) {
     $name = "<a href='/user/info/edit.php?act=ank&amp;set=name'>";
     $date = "<a href='/user/info/edit.php?act=ank&amp;set=date'>";
@@ -178,40 +191,32 @@ if (isset($user) && $ank['id']==$user['id']) {
     $mobile = "<a href='/user/info/edit.php?act=ank&amp;set=mobile'>";
     $a = "</a>";
 } else {
-    $name = "<font style='color : #005ba8; padding:1px;'>";
-    $date =  "<font style='color : #005ba8; padding:1px;'>";
-    $gorod =  "<font style='color : #005ba8; padding:1px;'>";
-    $orien = "<font style='color : #005ba8; padding:1px;'>";
-    $loves = "<font style='color : #005ba8; padding:1px;'>";
-    $opar = "<font style='color : #005ba8; padding:1px;'>";
-    $avto = "<font style='color : #005ba8; padding:1px;'>";
-    $baby =  "<font style='color : #005ba8; padding:1px;'>";
-    $zan = "<font style='color : #005ba8; padding:1px;'>";
-    $smok = "<font style='color : #005ba8; padding:1px;'>";
-    $mat_pol =  "<font style='color : #005ba8; padding:1px;'>";
-    $proj =  "<font style='color : #005ba8; padding:1px;'>";
-    $telo =  "<font style='color : #005ba8; padding:1px;'>";
-    $volos = "<font style='color : #005ba8; padding:1px;'>";
-    $ves =  "<font style='color : #005ba8; padding:1px;'>";
-    $glaza =  "<font style='color : #005ba8; padding:1px;'>";
-    $rost =  "<font style='color : #005ba8; padding:1px;'>";
-    $osebe =   "<font style='color : #005ba8; padding:1px;'>";
-    $pol =   "<font style='color : #005ba8; padding:1px;'>";
-    $mail =   "<font style='color : #005ba8; padding:1px;'>";
-    $icq =   "<font style='color : #005ba8; padding:1px;'>";
-    $skype =   "<font style='color : #005ba8; padding:1px;'>";
-    $mobile =   "<font style='color : #005ba8; padding:1px;'>";
-    $a = "</font>";
+    $name = '<span style="color: #005ba8; padding: 1px;">';
+    $date =  '<span style="color: #005ba8; padding: 1px;">';
+    $gorod =  '<span style="color: #005ba8; padding: 1px;">';
+    $orien = '<span style="color: #005ba8; padding: 1px;">';
+    $loves = '<span style="color: #005ba8; padding: 1px;">';
+    $opar = '<span style="color: #005ba8; padding: 1px;">';
+    $avto = '<span style="color: #005ba8; padding: 1px;">';
+    $baby =  '<span style="color: #005ba8; padding: 1px;">';
+    $zan = '<span style="color: #005ba8; padding: 1px;">';
+    $smok = '<span style="color: #005ba8; padding: 1px;">';
+    $mat_pol =  '<span style="color: #005ba8; padding: 1px;">';
+    $proj =  '<span style="color: #005ba8; padding: 1px;">';
+    $telo =  '<span style="color: #005ba8; padding: 1px;">';
+    $volos = '<span style="color: #005ba8; padding: 1px;">';
+    $ves =  '<span style="color: #005ba8; padding: 1px;">';
+    $glaza =  '<span style="color: #005ba8; padding: 1px;">';
+    $rost =  '<span style="color: #005ba8; padding: 1px;">';
+    $osebe =   '<span style="color: #005ba8; padding: 1px;">';
+    $pol =   '<span style="color: #005ba8; padding: 1px;">';
+    $mail =   '<span style="color: #005ba8; padding: 1px;">';
+    $icq =   '<span style="color: #005ba8; padding: 1px;">';
+    $skype =   '<span style="color: #005ba8; padding: 1px;">';
+    $mobile =   '<span style="color: #005ba8; padding: 1px;">';
+    $a = '</span>';
 }
-if ($ank['group_access']>1) {
-    echo "<div class='err'>$ank[group_name]</div>\n";
-}
-echo "<div class='nav2'>";
-echo "<span class=\"ank_n\">Посл. посещение:</span> <span class=\"ank_d\">".vremja($ank['date_last'])."</span><br />\n";
-echo "</div>\n";
-echo "<div class='nav1'>";
-echo avatar($ank['id'], true, 128, 128);
-echo "</div>\n";
+
 //-------------alex-borisi---------------//
 if ($ank['rating']>=0 && $ank['rating']<= 100) {
     echo "<div style='background-color: #73a8c7; width: 200px; height: 17px;'>
@@ -286,7 +291,7 @@ echo "</div>\n";
 echo "<div class='nav2'>";
 echo "<b>ID: $ank[id]</b><br /> \n";
 echo "Баллы (";
-echo "<font color='green'>$ank[balls]</font>)<br /> \n";echo $sMonet[2] . ' (' . $ank['money'] . ')<br />';
+echo "<span style='color:green;'>$ank[balls]</span>)<br /> \n";echo $sMonet[2] . ' (' . $ank['money'] . ')<br />';
 echo "<img src='/style/icons/time.png' alt='*' width='14'/> ($displaystring)<br />  \n";
 echo "</div>\n";
 //-------------------------------------------------------//
@@ -642,7 +647,7 @@ if (isset($user) && $ank['id']==$user['id']) {
 }
 //---------------------дополнительно--------------------//
 echo "<div class='nav1'>";
-echo "$alko<span class=\"ank_n\">Алкоголь:</span>$a";
+echo "$alko<span class=\"ank_n\">Алкоголь:</span></a>";
 if ($ank['ank_alko_n']==1) {
     echo " <span class=\"ank_d\">Да, выпиваю</span><br />\n";
 }
@@ -658,7 +663,7 @@ if ($ank['ank_alko_n']==0) {
 if ($ank['ank_alko'] && $ank['ank_alko_n']!=3 && $ank['ank_alko_n']!=0) {
     echo "<img src='/style/icons/str.gif' alt='*' />  <span class=\"ank_d\">".output_text($ank['ank_alko'])."</span><br />";
 }
-echo "$nark<span class=\"ank_n\">Наркотики:</span>$a";
+echo "$nark<span class=\"ank_n\">Наркотики:</span></a>";
 if ($ank['ank_nark']==1) {
     echo " <span class=\"ank_d\">Да, курю травку</span><br />\n";
 }
@@ -710,16 +715,22 @@ if ($ank['ank_skype']!=null) {
 echo "</div>\n";
 //------------------------------------------//
 echo "<div class='nav1'>";
-if ($db->query("SELECT COUNT(*) FROM `ban` WHERE `id_user` = '$ank[id]' AND `time` > '$time'")->el()) {
-    $q=$db->query("SELECT * FROM `ban` WHERE `id_user` = '$ank[id]' AND `time` > '$time' ORDER BY `time` DESC LIMIT 5");
+$cnt_ban = $db->query('SELECT * FROM (
+SELECT COUNT( * ) ban FROM `ban` WHERE `id_user`=?i AND `time`>?i) q1, (
+SELECT COUNT( * ) all_ban FROM `ban` WHERE `id_user`=?i) q2',
+        [$ank['id'], time(), $ank['id']])->row();
+if ($cnt_ban['ban']) {
+    $q=$db->query("SELECT * FROM `ban` WHERE `id_user`=?i AND `time`>?i ORDER BY `time` DESC LIMIT ?i",
+                  [$ank['id'], time(), 5]);
     while ($post = $q->row()) {
         echo "<span class='ank_n'>Забанен до ".vremja($post['time']).":</span>\n";
         echo "<span class='ank_d'>".output_text($post['prich'])."</span><br />\n";
     }
 } else {
-    $narush=$db->query("SELECT COUNT(*) FROM `ban` WHERE `id_user` = '$ank[id]'")->el();
+    $narush = $cnt_ban['all_ban'];
     echo "<span class='ank_n'>Нарушений:</span>".(($narush==0)?" <span class='ank_d'>нет</span><br />\n":" <span class=\"ank_d\">$narush</span><br />\n");
-}echo "<span class=\"ank_n\">Регистрация:</span> <span class=\"ank_d\">".vremja($ank['date_reg'])."</span><br />\n";
+}
+echo "<span class=\"ank_n\">Регистрация:</span> <span class=\"ank_d\">".vremja($ank['date_reg'])."</span><br />\n";
 echo "</div>\n";
 if ($user['level']>$ank['level']) {
     if (isset($_GET['info'])) {
@@ -778,17 +789,29 @@ if ($user['level']>$ank['level']) {
                 echo "<span class=\"ank_n\">Возможные ники:</span><br />\n";
                 echo "<span class=\"ank_d\">\n";
                 for ($i=1;$i<count($collisions);$i++) {
-                    $ank_coll=$db->query("SELECT * FROM `user` WHERE `id` = '$collisions[$i]' LIMIT 1")->row();
+                    $ank_coll_id[] = $collisions[$i];
+                }
+                echo "</span>\n";
+                $_ank = $db->query("SELECT `id`, `nick` FROM `user` WHERE `id` IN(?li)", [$ank_coll_id])->assoc();
+                echo "<span class=\"ank_d\">\n";
+                foreach ($_ank as $ank_coll) {
                     echo "\"<a href='/info.php?id=$ank_coll[id]'>$ank_coll[nick]</a>\"<br />\n";
                 }
                 echo "</span>\n";
             }
         }
-        if (user_access('adm_ref') && ($ank['level']<$user['level'] || $user['id']==$ank['id']) && $db->query("SELECT COUNT(*) FROM `user_ref` WHERE `id_user` = '$ank[id]'")->el()) {
-            $q=$db->query("SELECT * FROM `user_ref` WHERE `id_user` = '$ank[id]' ORDER BY `time` DESC LIMIT $set[p_str]");
+        if (user_access('adm_ref') && ($ank['level'] < $user['level'] || $user['id'] == $ank['id'])
+            && $db->query(
+                "SELECT COUNT( * ) FROM `user_ref` WHERE `id_user`=?i",
+                          [$ank['id']]
+            )->el()) {
+            $q = $db->query(
+                "SELECT `url`, `time` FROM `user_ref` WHERE `id_user`=?i ORDER BY `time` DESC LIMIT ?i",
+                            [$ank['id'], $set['p_str']]
+            );
             echo "Посещаемые сайты:<br />\n";
-            while ($url=$q->row()) {
-                $site=htmlentities($url['url'], ENT_QUOTES, 'UTF-8');
+            while ($url = $q->row()) {
+                $site = htmlentities($url['url'], ENT_QUOTES, 'UTF-8');
                 echo "<a".($set['web']?" target='_blank'":null)." href='/go.php?go=".base64_encode("http://$site")."'>$site</a> (".vremja($url['time']).")<br />\n";
             }
         }
@@ -827,4 +850,4 @@ if (user_access('adm_log_read') && $ank['level']!=0 && ($ank['id']==$user['id'] 
     echo "<img src='/style/icons/str.gif' alt='*' /> <a href='/adm_panel/adm_log.php?id=$ank[id]'>Отчет по администрированию</a><br />\n";
 }
 echo "</div>\n";
-include_once '../../sys//inc/tfoot.php';
+require '../../sys//inc/tfoot.php';

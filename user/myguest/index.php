@@ -13,8 +13,13 @@ only_reg();
 
 // Очистка гостей
 if (isset($_GET['truncate'])) {
-    $db->query("DELETE FROM `my_guests` WHERE `id_ank` = '$user[id]'");
-    $_SESSION['message'] = 'Список гостей очищен';
+    if ($db->query(
+        "DELETE FROM `my_guests` WHERE `id_ank`=?i",
+                  [$user['id']])->ar()) {
+        $_SESSION['message'] = 'Список гостей очищен';
+    } else {
+        $_SESSION['err'] = 'Список пуст!';
+    }
 }
 // заголовок страницы
 $set['title'] = 'Гости';
@@ -22,58 +27,85 @@ include_once '../../sys/inc/thead.php';
 title();
 aut();
 
-echo '<div class="foot">';
-echo '<img src="/style/icons/str2.gif" alt="*"> <a href="/info.php?id=' . $user['id'] . '">' . $user['nick'] . '</a> | ';
-echo '<b>Гости</b>';
-echo '</div>';
-$k_post = $db->query("SELECT COUNT(*) FROM `my_guests` WHERE `id_ank` = '$user[id]'")->el();
-$k_page = k_page($k_post, $set['p_str']);
-$page = page($k_page);
-$start = $set['p_str'] * $page - $set['p_str'];
-if ($k_post == 0) {
-    echo '<div class="mess">';
-    echo 'Вашу страничку еще не посещали';
-    echo '</div>';
-}
-$q = $db->query("SELECT * FROM `my_guests` WHERE `id_ank` = '$user[id]' ORDER BY `id` DESC  LIMIT $start, $set[p_str]");
-echo '<table class="post">';
-while ($post = $q->row()) {
-    $ank = get_user($post['id_user']);
+?>
+<!-- ./ guests list -->
+<div class="foot">
+    <img src="/style/icons/str2.gif" alt=""> <a href="/info.php?id=<?php echo $user['id'];?>"><?php echo $user['nick'];?></a> | <strong>Гости</strong>
+</div>
+<?php
+
+$k_post = $db->query(
+    "SELECT COUNT( * ) FROM `my_guests` WHERE `id_ank`=?i",
+                  [$user['id']])->el();
+
+if (!$k_post) {
+    ?>
+<div class="mess">
+    Вашу страничку еще не посещали
+</div>
+<?php
+} else {
+        $k_page = k_page($k_post, $set['p_str']);
+        $page = page($k_page);
+        $start = $set['p_str'] * $page - $set['p_str'];
+
+        $q = $db->query(
+        "SELECT `mg`.`id`, `mg`.`id_user`, `mg`.`read`, `mg`.`time`, `u`.`nick`
+FROM `my_guests` mg
+JOIN `user` u ON `u`.`id`=`mg`.`id_user`
+WHERE `id_ank`=?i LIMIT ?i, ?i",
+                    [$user['id'], $start, $set['p_str']]);
+
+        while ($post = $q->row()) {
+            if ($num == 0) {
+                ?>
+<div class="nav1">
+    <?php
+            $num = 1;
+            } elseif ($num == 1) {
+                ?>
+<div class="nav2">
+    <?php
+            $num = 0;
+            }
+            echo avatar($post['id_user']) . group($post['id_user']) . ' <a href="/info.php?id='.$post['id_user'].'">' . $post['nick'] . '</a> ' . medal($post['id_user']) . ' ' . online($post['id_user']) . "\n";
     
-    /*-----------зебра-----------*/
-    if ($num == 0) {
-        echo '<div class="nav1">';
-        $num = 1;
-    } elseif ($num == 1) {
-        echo '<div class="nav2">';
-        $num = 0;
+            if ($post['read'] == 1) {
+                // Список непрочитанных постов
+                $guest_list[] = $post['id'];
+?>
+    &nbsp;<span class="time" style="color:red"><?php echo vremja($post['time']);?></span><br />
+<?php
+            } else {
+?>
+    &nbsp;<span><?php echo vremja($post['time']);?></span><br />
+<?php
+            }
+?>
+    <a href="/mail.php?id=<?php echo $post['id_user'];?>"><img src="/style/icons/pochta.gif" alt="" /> Сообщение</a>
+</div>
+<?php
+
+        }
+        // Помечаем пост прочитанным
+        if (!empty($guest_list)) {
+            $db->query(
+        "UPDATE `my_guests` SET `read`=?string WHERE `id` IN(?li)",
+            [0, $guest_list]);
+        }
+
+        if ($k_page>1) {
+            str('?', $k_page, $page);
+        }
     }
-    /*---------------------------*/
-    echo avatar($ank['id']) . group($ank['id']) . ' <a href="/info.php?id='.$ank['id'].'">' . $ank['nick'] . '</a> ' . medal($ank['id']) . ' ' . online($ank['id']) . ' ';
-    
-    if ($post['read'] == 1) {
-        echo ' <span class="time" style="color:red">' . vremja($post['time']) . '</span><br />';
-    } else {
-        echo ' <span>' . vremja($post['time']) . '</span><br />';
-    }
-    
-    echo '<a href="/mail.php?id=' . $ank['id'] . '"><img src="/style/icons/pochta.gif" alt="*" /> Сообщение</a> ';
-    
-    echo '</div>';
-    
-    // Помечаем пост прочитанным
-    $db->query("UPDATE `my_guests` SET `read` = '0' WHERE `id` = '$post[id]' LIMIT 1");
-}
-echo '</table>';
-if ($k_page>1) {
-    str("?", $k_page, $page);
-}
-echo '<div class="foot">';
-echo '<img src="/style/icons/delete.gif" alt="*"> <a href="?truncate">Очистить список гостей</a><br />';
-echo '</div>';
-echo '<div class="foot">';
-echo '<img src="/style/icons/str2.gif" alt="*"> <a href="/info.php?id=' . $user['id'] . '">' . $user['nick'] . '</a> | ';
-echo '<b>Гости</b>';
-echo '</div>';
+?>
+<div class="foot">
+    <img src="/style/icons/delete.gif" alt="*"> <a href="?truncate">Очистить список гостей</a>
+</div>
+<div class="foot">
+    <img src="/style/icons/str2.gif" alt="*"> <a href="/info.php?id=<?php echo $user['id'];?>"><?php echo $user['nick'];?></a> | <strong>Гости</strong>
+</div>
+<!-- ./ end guests -->
+<?php
 
 include_once '../../sys/inc/tfoot.php';

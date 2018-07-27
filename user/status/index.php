@@ -1,19 +1,4 @@
 <?php
-/*
-=======================================
-Статусы юзеров для Dcms-Social
-Автор: Искатель
----------------------------------------
-Этот скрипт распостроняется по лицензии
-движка Dcms-Social.
-При использовании указывать ссылку на
-оф. сайт http://dcms-social.ru
----------------------------------------
-Контакты
-ICQ: 587863132
-http://dcms-social.ru
-=======================================
-*/
 include_once '../../sys/inc/start.php';
 include_once '../../sys/inc/compress.php';
 include_once '../../sys/inc/sess.php';
@@ -25,79 +10,99 @@ include_once '../../sys/inc/fnc.php';
 include_once '../../sys/inc/user.php';
 
  // Автор статусов
-if (isset($_GET['id'])) {
-    $anketa=get_user(intval($_GET['id']));
+if ($id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT)) {
+    $anketa = $db->query('SELECT u.id, u.nick, u.group_access, g.`name` AS group_name FROM `user` u
+LEFT JOIN `user_group` g ON g.id=u.group_access WHERE u.id=?', [$id])->row();
 } else {
-    $anketa= isset($user) ? get_user($user['id']) : false;
+    $anketa = isset($user) ? $user : null;
 }
 if (!$anketa) {
-    header("Location: /index.php");
+    http_response_code(404);
+    header('Location: /err.php?err=404');
     exit;
 }
-if (isset($_GET['reset'])) {
-    $status=$db->query("SELECT * FROM `status` WHERE `id` = '".intval($_GET['reset'])."' LIMIT 1")->row();
-    if ($status['id_user']==$user['id']) {
-        $db->query("UPDATE `status` SET `pokaz` = '0' WHERE `id_user` = '$user[id]'");
-        $db->query("UPDATE `status` SET `pokaz` = '1' WHERE `id` = '$status[id]'");
+if ($reset = filter_input(INPUT_GET, 'reset', FILTER_VALIDATE_INT)) {
+    $status = $db->query("SELECT id, id_user FROM `status` WHERE `id`=?i",
+                       [$reset])->row();
+    if ($status['id_user'] == $user['id']) {
+        $db->query("UPDATE `status` SET `pokaz`=0 WHERE `id_user`=?i",
+                   [$user['id']]);
+        $db->query("UPDATE `status` SET `pokaz`=1 WHERE `id`=?i",
+                   [$status['id']]);
         $_SESSION['message'] = 'Статус упешно включен';
-        header("Location: index.php?id=$anketa[id]");
+        header('Location: index.php?id=' . $anketa['id']);
         exit;
     }
 }
-$set['title']='Статусы '.$anketa['nick'];
+$set['title'] = 'Статусы ' . $anketa['nick'];
 include_once '../../sys/inc/thead.php';
 title();
 err();
 aut(); // форма авторизации
-/*
-==================================
-Приватность станички пользователя
-Запрещаем просмотр статусов
-==================================
-*/
-    $uSet = $db->query("SELECT * FROM `user_set` WHERE `id_user` = '$anketa[id]'  LIMIT 1")->row();
-    $frend=$db->query("SELECT COUNT(*) FROM `frends` WHERE (`user` = '$user[id]' AND `frend` = '$anketa[id]') OR (`user` = '$anketa[id]' AND `frend` = '$user[id]') LIMIT 1")->el();
-    $frend_new=$db->query("SELECT COUNT(*) FROM `frends_new` WHERE (`user` = '$user[id]' AND `to` = '$anketa[id]') OR (`user` = '$anketa[id]' AND `to` = '$user[id]') LIMIT 1")->el();
+
+// Приватность станички пользователя
+$uSet = $db->query(
+        "SELECT uset.privat_str, (
+SELECT COUNT( * ) FROM `frends` WHERE (`user`=?i AND `frend`=uset.id_user) OR (`user`=uset.id_user AND `frend`=?i)) frend, (
+SELECT COUNT( * ) FROM `frends_new` WHERE (`user`=?i AND `to`=uset.id_user) OR (`user`=uset.id_user AND `to`=?i)) frend_new
+FROM `user_set` uset WHERE uset.`id_user`=?i  LIMIT ?i",
+                       [$user['id'], $user['id'], $user['id'], $user['id'], $anketa['id'], 1])->row();
+    
 if ($anketa['id'] != $user['id'] && $user['group_access'] == 0) {
-    if (($uSet['privat_str'] == 2 && $frend != 2) || $uSet['privat_str'] == 0) { // Начинаем вывод если стр имеет приват настройки
-        if ($anketa['group_access']>1) {
+    if (($uSet['privat_str'] == 2 && $uSet['frend'] != 2) || $uSet['privat_str'] == 0) { // Начинаем вывод если стр имеет приват настройки
+        if ($anketa['group_access'] > 1) {
             echo "<div class='err'>$anketa[group_name]</div>\n";
         }
-        echo "<div class='nav1'>";
-        echo group($anketa['id'])." $anketa[nick] ";
-        echo medal($anketa['id'])." ".online($anketa['id'])." ";
-        echo "</div>";
-        echo "<div class='nav2'>";
-        avatar_ank($anketa['id']);
-        echo "</div>";
+?>
+<div class="nav1">
+    <?php echo group($anketa['id']) . ' ' . $anketa['nick'] . ' ' . medal($anketa['id']) . ' ' . online($anketa['id']);?>
+
+</div>
+<div class="nav2">
+    <?= avatar($anketa['id']);?>
+</div>
+<?php
     }
-    
-    if ($uSet['privat_str'] == 2 && $frend != 2) { // Если только для друзей
-        echo '<div class="mess">';
-        echo 'Просматривать статусы пользователя могут только его друзья!';
-        echo '</div>';
+    // Если только для друзей
+    if ($uSet['privat_str'] == 2 && $uSet['frend'] != 2) {
+?>
+<div class="mess">
+    Комментировать статус пользователя могут только его друзья!
+</div>
+<?php
         
         // В друзья
         if (isset($user)) {
-            echo '<div class="nav1">';
-            if ($frend_new == 0 && $frend==0) {
-                echo "<img src='/style/icons/druzya.png' alt='*'/> <a href='/user/frends/create.php?add=".$anketa['id']."'>Добавить в друзья</a><br />\n";
-            } elseif ($frend_new == 1) {
-                echo "<img src='/style/icons/druzya.png' alt='*'/> <a href='/user/frends/create.php?otm=$anketa[id]'>Отклонить заявку</a><br />\n";
-            } elseif ($frend == 2) {
-                echo "<img src='/style/icons/druzya.png' alt='*'/> <a href='/user/frends/create.php?del=$anketa[id]'>Удалить из друзей</a><br />\n";
+?>
+<div class="nav1">
+<?php
+            if ($uSet['frend_new'] == 0 && $uSet['frend'] == 0) {
+?>
+    <p><img src='/style/icons/druzya.png' alt=""/> <a href="/user/frends/create.php?add=<?php echo $anketa['id'];?>">Добавить в друзья</a></p>
+<?php
+            } elseif ($uSet['frend_new'] == 1) {
+?>
+    <p><img src="/style/icons/druzya.png" alt=""/> <a href="/user/frends/create.php?otm=<?php echo $anketa['id'];?>">Отклонить заявку</a></p>
+<?php
+            } elseif ($uSet['frend'] == 2) {
+?>
+    <p><img src="/style/icons/druzya.png" alt=""/> <a href="/user/frends/create.php?del=<?php echo $anketa['id'];?>">Удалить из друзей</a></p>
+<?php
             }
-            echo "</div>";
+?>
+</div>
+<?php
         }
         include_once '../../sys/inc/tfoot.php';
         exit;
     }
     
     if ($uSet['privat_str'] == 0) { // Если закрыта
-        echo '<div class="mess">';
-        echo 'Пользователь запретил просматривать его статусы!';
-        echo '</div>';
-        
+?>
+<div class="mess">
+    Пользователь запретил комментировать его статусы!
+</div>
+<?php        
         include_once '../../sys/inc/tfoot.php';
         exit;
     }
@@ -106,20 +111,28 @@ if ($anketa['id'] != $user['id'] && $user['group_access'] == 0) {
 echo "<div class='foot'>";
 echo "<img src='/style/icons/str2.gif' alt='*'> <a href=\"/info.php?id=$anketa[id]\">$anketa[nick]</a> | <b>Статусы</b>";
 echo "</div>";
-$k_post=$db->query("SELECT COUNT(*) FROM `status` WHERE `id_user` = '".$anketa['id']."'")->el();
-$k_page=k_page($k_post, $set['p_str']);
-$page=page($k_page);
-$start=$set['p_str']*$page-$set['p_str'];
-$q=$db->query("SELECT * FROM `status` WHERE `id_user` = '".$anketa['id']."' ORDER BY `id` DESC LIMIT $start, $set[p_str]");
-echo "<table class='post'>\n";
-if ($k_post==0) {
+
+$k_post=$db->query("SELECT COUNT(*) FROM `status` WHERE `id_user`=?i",
+                   [$anketa['id']])->el();
+
+if (!$k_post) {
     echo "<div class='mess'>\n";
     echo "Нет статусов\n";
     echo "</div>\n";
-}
+} else {
+    
+$k_page=k_page($k_post, $set['p_str']);
+$page=page($k_page);
+$start=$set['p_str']*$page-$set['p_str'];
+$q=$db->query("SELECT st.id, st.msg, st.pokaz, u.id AS id_user, u.`level`, (
+SELECT COUNT( * ) FROM `status_komm` WHERE `id_status`=st.id) cnt
+FROM `status` st
+JOIN `user` u ON u.id=st.id_user
+WHERE st.`id_user`=?i ORDER BY `pokaz` DESC, `id` DESC LIMIT ?i, ?i",
+                   [$anketa['id'], $start, $set['p_str']]);
+
 while ($post = $q->row()) {
-    $ank=$db->query("SELECT * FROM `user` WHERE `id` = $post[id_user] LIMIT 1")->row();
-    /*-----------зебра-----------*/
+
     if ($num==0) {
         echo '<div class="nav1">';
         $num=1;
@@ -127,34 +140,34 @@ while ($post = $q->row()) {
         echo '<div class="nav2">';
         $num=0;
     }
-    /*---------------------------*/
+
     echo '<div class="st_1"></div>';
     echo '<div class="st_2">';
     echo output_text($post['msg']);
     echo "</div>";
-    echo "<a href='komm.php?id=$post[id]'><img src='/style/icons/bbl4.png' alt=''/>" .
-    $db->query("SELECT COUNT(*) FROM `status_komm` WHERE `id_status` = '$post[id]'")->el() . "</a> ";
+    echo "<a href='komm.php?id=$post[id]'><img src='/style/icons/bbl4.png' alt=''/>" . $post['cnt'] . "</a> ";
     if ($post['pokaz']==0) {
-        if (isset($user) && ($user['level']!=0 || $user['id']==$ank['id'])) {
+        if (isset($user) && ($user['level']!=0 || $user['id']==$post['id_user'])) {
             echo "[<a href=\"index.php?id=".$anketa['id']."&amp;reset=$post[id]\"><img src='/style/icons/ok.gif' alt=''/> вкл</a>]\n";
         }
-        if (isset($user) && ($user['level']>$ank['level'] || $user['level']!=0 || $user['id']==$ank['id'])) {
-            echo " [<a href=\"delete.php?id=$post[id]\"><img src='/style/icons/delete.gif' alt=''/> удл</a>]\n";
+        if (isset($user) && ($user['level']>$post['level'] || $user['level']!=0 || $user['id']==$post['id_user'])) {
+            echo " [<a href=\"./delete.php?id=$post[id]\"><img src='/style/icons/delete.gif' alt=''/> удл</a>]\n";
         }
     } else {
-        if (isset($user) && ($user['level']>$ank['level'] || $user['level']!=0 || $user['id']==$ank['id'])) {
+        if (isset($user) && ($user['level']>$post['level'] || $user['level']!=0 || $user['id']==$post['id_user'])) {
             echo " <font color='green'>Установлен</font>\n";
         }
-        if (isset($user) && ($user['level']>$ank['level'] || $user['level']!=0 || $user['id']==$ank['id'])) {
-            echo " [<a href=\"delete.php?id=$post[id]\"><img src='/style/icons/delete.gif' alt=''/> удл</a>]\n";
+        if (isset($user) && ($user['level']>$post['level'] || $user['level']!=0 || $user['id']==$post['id_user'])) {
+            echo " [<a href=\"./delete.php?id=$post[id]\"><img src='/style/icons/delete.gif' alt=''/> удл</a>]\n";
         }
     }
     echo '</div>';
 }
-echo "</table>\n";
+
 if ($k_page>1) {
     str("index.php?id=".$anketa['id'].'&amp;', $k_page, $page);
 } // Вывод страниц
+}
 echo "<div class='foot'>";
 echo "<img src='/style/icons/str2.gif' alt='*'> <a href=\"/info.php?id=$anketa[id]\">$anketa[nick]</a> | <b>Статусы</b>";
 echo "</div>";

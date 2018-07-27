@@ -9,765 +9,503 @@ include_once '../../sys/inc/ipua.php';
 include_once '../../sys/inc/fnc.php';
 include_once '../../sys/inc/user.php';
 only_reg();
+
 $set['title']='Редактирование анкеты';
 include_once '../../sys/inc/thead.php';
 title();
 aut();
-if (isset($_GET['set']))
-{
-	$get = htmlspecialchars($_GET['set']);
-	if (isset($_GET['act']) && $_GET['act']=='ank')
-	$get2 = "act=ank&amp;";
-	elseif (isset($_GET['act']) && $_GET['act']=='ank_web')
-	$get2 = "act=ank_web&amp;";
-	else
-	$get2 = null;
-if (isset($_POST['save']) && isset($_GET['set'])){
-//----------ник------------//
-if (isset($_GET['set']) && $_GET['set']=='nick' && $user['set_nick'] == 1){
-if (!$db->query("SELECT COUNT(*) FROM `user` WHERE `nick` = '".my_esc($_POST['nick'])."'")->el())
-{
-$nick=my_esc($_POST['nick']);
-if( !preg_match("#^([A-zА-я0-9\-\_\ ])+$#ui", $_POST['nick']))$err[]='В нике присутствуют запрещенные символы';
-if (preg_match("#[a-z]+#ui", $_POST['nick']) && preg_match("#[а-я]+#ui", $_POST['nick']))$err[]='Разрешается использовать символы только русского или только английского алфавита';
-if (preg_match("#(^\ )|(\ $)#ui", $_POST['nick']))$err[]='Запрещено использовать пробел в начале и конце ника';
-if (strlen2($nick)<3)$err[]='Короткий ник';
-if (strlen2($nick)>32)$err[]='Длина ника превышает 32 символа';
-}
-else $err[]='Ник "'.stripcslashes(htmlspecialchars($_POST['nick'])).'" уже зарегистрирован';
-if (isset($_POST['nick']) && !isset($err))
-{
-$user['nick']=$_POST['nick'];
-$db->query("UPDATE `user` SET `nick` = '".my_esc($user['nick'])."' , `set_nick` = '0' WHERE `id` = '$user[id]' LIMIT 1");
-}
-}
-//----------имя------------//
-if (isset($_GET['set']) && $_GET['set']=='name'){
-if (isset($_POST['ank_name']) && preg_match('#^([A-zА-я \-]*)$#ui', $_POST['ank_name']))
-{
-$user['ank_name']=$_POST['ank_name'];
-$db->query("UPDATE `user` SET `ank_name` = '".my_esc($user['ank_name'])."' WHERE `id` = '$user[id]' LIMIT 1");
-}
-else $err[]='Неверный формат имени';
-}
-//----------глаза------------//
-if (isset($_GET['set']) && $_GET['set']=='glaza'){
-if (isset($_POST['ank_cvet_glas']) && preg_match('#^([A-zА-я \-]*)$#ui', $_POST['ank_cvet_glas']))
-{
-$user['ank_cvet_glas']=$_POST['ank_cvet_glas'];
-$db->query("UPDATE `user` SET `ank_cvet_glas` = '".my_esc($user['ank_cvet_glas'])."' WHERE `id` = '$user[id]' LIMIT 1");
-}
-else $err[]='Неверный формат цвет глаз';
-}
-//----------волосы------------//
-if (isset($_GET['set']) && $_GET['set']=='volos'){
-if (isset($_POST['ank_volos']) && preg_match('#^([A-zА-я \-]*)$#ui', $_POST['ank_volos']))
-{
-$user['ank_volos']=$_POST['ank_volos'];
-$db->query("UPDATE `user` SET `ank_volos` = '".my_esc($user['ank_volos'])."' WHERE `id` = '$user[id]' LIMIT 1");
-}
-else $err[]='Неверный формат цвет глаз';
-}
-//----------дата рождения------------//
-if (isset($_GET['set']) && $_GET['set']=='date'){
-if (isset($_POST['ank_d_r']) && (is_numeric($_POST['ank_d_r']) && $_POST['ank_d_r']>0 && $_POST['ank_d_r']<=31 || $_POST['ank_d_r']==NULL))
-{
-$user['ank_d_r']= (int) $_POST['ank_d_r'];
-if ($user['ank_d_r']==null)$user['ank_d_r']='null';
-$db->query("UPDATE `user` SET `ank_d_r` = $user[ank_d_r] WHERE `id` = '$user[id]' LIMIT 1");
-if ($user['ank_d_r']=='null')$user['ank_d_r']=NULL;
-}
-else $err[]='Неверный формат дня рождения';
-if (isset($_POST['ank_m_r']) && (is_numeric($_POST['ank_m_r']) && $_POST['ank_m_r']>0 && $_POST['ank_m_r']<=12 || $_POST['ank_m_r']==NULL))
-{
-$user['ank_m_r']= (int) $_POST['ank_m_r'];
-if ($user['ank_m_r']==null)$user['ank_m_r']='null';
-$db->query("UPDATE `user` SET `ank_m_r` = $user[ank_m_r] WHERE `id` = '$user[id]' LIMIT 1");
-if ($user['ank_m_r']=='null')$user['ank_m_r']=NULL;
-}
-else $err[]='Неверный формат месяца рождения';
-if (isset($_POST['ank_g_r']) && (is_numeric($_POST['ank_g_r']) && $_POST['ank_g_r']>0 && $_POST['ank_g_r']<=date('Y') || $_POST['ank_g_r']==NULL))
-{
-$user['ank_g_r']= (int) $_POST['ank_g_r'];
-if ($user['ank_g_r']==null)$user['ank_g_r']='null';
-$db->query("UPDATE `user` SET `ank_g_r` = $user[ank_g_r] WHERE `id` = '$user[id]' LIMIT 1");
-if ($user['ank_g_r']=='null')$user['ank_g_r']=NULL;
-}
-else $err[]='Неверный формат года рождения';
-}
-//---------------город----------------//
-if (isset($_GET['set']) && $_GET['set']=='gorod'){
-if (isset($_POST['ank_city']) && preg_match('#^([A-zА-я \-]*)$#ui', $_POST['ank_city']))
-{
-$user['ank_city']=$_POST['ank_city'];
-$db->query("UPDATE `user` SET `ank_city` = '".my_esc($user['ank_city'])."' WHERE `id` = '$user[id]' LIMIT 1");
-}
-else $err[]='Неверный формат названия города';
-}
-//--------------icq----------------//
-if (isset($_GET['set']) && $_GET['set']=='icq'){
-if (isset($_POST['ank_icq']) && (is_numeric($_POST['ank_icq']) && strlen($_POST['ank_icq'])>=5 && strlen($_POST['ank_icq'])<=9 || $_POST['ank_icq']==NULL))
-{
-$user['ank_icq']=$_POST['ank_icq'];
-if ($user['ank_icq']==null)$user['ank_icq']='null';
-$db->query("UPDATE `user` SET `ank_icq` = $user[ank_icq] WHERE `id` = '$user[id]' LIMIT 1");
-if ($user['ank_icq']=='null')$user['ank_icq']=NULL;
-}
-else $err[]='Неверный формат ICQ';
-}
-//--------------вес----------------//
-if (isset($_GET['set']) && $_GET['set']=='ves'){
-if (isset($_POST['ank_ves']) && (intval($_POST['ank_ves']) && strlen($_POST['ank_ves'])>=1 && strlen($_POST['ank_ves'])<=4 || $_POST['ank_ves']==NULL))
-{
-$user['ank_ves']=$_POST['ank_ves'];
-if ($user['ank_ves']==null)$user['ank_ves']='null';
-$db->query("UPDATE `user` SET `ank_ves` = $user[ank_ves] WHERE `id` = '$user[id]' LIMIT 1");
-if ($user['ank_ves']=='null')$user['ank_ves']=NULL;
-}
-else $err[]='Неверный формат веса';
-}
-//--------------рост----------------//
-if (isset($_GET['set']) && $_GET['set']=='rost'){
-if (isset($_POST['ank_rost']) && (intval($_POST['ank_rost']) && strlen($_POST['ank_rost'])>=1 && strlen($_POST['ank_rost'])<=4 || $_POST['ank_rost']==NULL))
-{
-$user['ank_rost']=$_POST['ank_rost'];
-if ($user['ank_rost']==null)$user['ank_rost']='null';
-$db->query("UPDATE `user` SET `ank_rost` = $user[ank_rost] WHERE `id` = '$user[id]' LIMIT 1");
-if ($user['ank_rost']=='null')$user['ank_rost']=NULL;
-}
-else $err[]='Неверный формат роста';
-}
-//-------------------skype---------------//
-if (isset($_GET['set']) && $_GET['set']=='skype'){
-if (isset($_POST['ank_skype']) && preg_match('#^([A-z0-9 \-]*)$#ui', $_POST['ank_skype']))
-{
-$user['ank_skype']=$_POST['ank_skype'];
-$db->query("UPDATE `user` SET `ank_skype` = '".my_esc($user['ank_skype'])."' WHERE `id` = '$user[id]' LIMIT 1");
-}
-else $err[]='Неверный логин Skype';
-}
-//----------------email------------------//
-if (isset($_GET['set']) && $_GET['set']=='mail'){
-if (isset($_POST['set_show_mail']) && $_POST['set_show_mail']==1)
-{
-$user['set_show_mail']=1;
-$db->query("UPDATE `user` SET `set_show_mail` = '1' WHERE `id` = '$user[id]' LIMIT 1");
-}
-else
-{
-$user['set_show_mail']=0;
-$db->query("UPDATE `user` SET `set_show_mail` = '0' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_mail']) && ($_POST['ank_mail']==null || preg_match('#^[A-z0-9-\._]+@[A-z0-9]{2,}\.[A-z]{2,4}$#ui',$_POST['ank_mail'])))
-{
-$user['ank_mail']=$_POST['ank_mail'];
-$db->query("UPDATE `user` SET `ank_mail` = '$user[ank_mail]' WHERE `id` = '$user[id]' LIMIT 1");
-}
-else $err[]='Неверный E-mail';
-}
-//----------------email------------------//
-if (isset($_GET['set']) && $_GET['set']=='loves'){
-if (isset($_POST['ank_lov_1']) && $_POST['ank_lov_1']==1)
-{
-$user['ank_lov_1']=1;
-$db->query("UPDATE `user` SET `ank_lov_1` = '1' WHERE `id` = '$user[id]' LIMIT 1");
-}
-else
-{
-$user['ank_lov_1']=0;
-$db->query("UPDATE `user` SET `ank_lov_1` = '0' WHERE `id` = '$user[id]' LIMIT 1");
-}
-####
-if (isset($_POST['ank_lov_2']) && $_POST['ank_lov_2']==1)
-{
-$user['ank_lov_2']=1;
-$db->query("UPDATE `user` SET `ank_lov_2` = '1' WHERE `id` = '$user[id]' LIMIT 1");
-}
-else
-{
-$user['ank_lov_2']=0;
-$db->query("UPDATE `user` SET `ank_lov_2` = '0' WHERE `id` = '$user[id]' LIMIT 1");
-}
-####
-if (isset($_POST['ank_lov_3']) && $_POST['ank_lov_1']==1)
-{
-$user['ank_lov_3']=1;
-$db->query("UPDATE `user` SET `ank_lov_3` = '1' WHERE `id` = '$user[id]' LIMIT 1");
-}
-else
-{
-$user['ank_lov_3']=0;
-$db->query("UPDATE `user` SET `ank_lov_3` = '0' WHERE `id` = '$user[id]' LIMIT 1");
-}
-####
-if (isset($_POST['ank_lov_4']) && $_POST['ank_lov_4']==1)
-{
-$user['ank_lov_4']=1;
-$db->query("UPDATE `user` SET `ank_lov_4` = '1' WHERE `id` = '$user[id]' LIMIT 1");
-}
-else
-{
-$user['ank_lov_4']=0;
-$db->query("UPDATE `user` SET `ank_lov_4` = '0' WHERE `id` = '$user[id]' LIMIT 1");
-}
-####
-if (isset($_POST['ank_lov_5']) && $_POST['ank_lov_5']==1)
-{
-$user['ank_lov_5']=1;
-$db->query("UPDATE `user` SET `ank_lov_5` = '1' WHERE `id` = '$user[id]' LIMIT 1");
-}
-else
-{
-$user['ank_lov_5']=0;
-$db->query("UPDATE `user` SET `ank_lov_5` = '0' WHERE `id` = '$user[id]' LIMIT 1");
-}
-####
-if (isset($_POST['ank_lov_6']) && $_POST['ank_lov_6']==1)
-{
-$user['ank_lov_6']=1;
-$db->query("UPDATE `user` SET `ank_lov_6` = '1' WHERE `id` = '$user[id]' LIMIT 1");
-}
-else
-{
-$user['ank_lov_6']=0;
-$db->query("UPDATE `user` SET `ank_lov_6` = '0' WHERE `id` = '$user[id]' LIMIT 1");
-}
-####
-if (isset($_POST['ank_lov_7']) && $_POST['ank_lov_7']==1)
-{
-$user['ank_lov_7']=1;
-$db->query("UPDATE `user` SET `ank_lov_7` = '1' WHERE `id` = '$user[id]' LIMIT 1");
-}
-else
-{
-$user['ank_lov_7']=0;
-$db->query("UPDATE `user` SET `ank_lov_7` = '0' WHERE `id` = '$user[id]' LIMIT 1");
-}
-####
-if (isset($_POST['ank_lov_8']) && $_POST['ank_lov_8']==1)
-{
-$user['ank_lov_8']=1;
-$db->query("UPDATE `user` SET `ank_lov_8` = '1' WHERE `id` = '$user[id]' LIMIT 1");
-}
-else
-{
-$user['ank_lov_8']=0;
-$db->query("UPDATE `user` SET `ank_lov_8` = '0' WHERE `id` = '$user[id]' LIMIT 1");
-}
-####
-if (isset($_POST['ank_lov_9']) && $_POST['ank_lov_9']==1)
-{
-$user['ank_lov_9']=1;
-$db->query("UPDATE `user` SET `ank_lov_9` = '1' WHERE `id` = '$user[id]' LIMIT 1");
-}
-else
-{
-$user['ank_lov_9']=0;
-$db->query("UPDATE `user` SET `ank_lov_9` = '0' WHERE `id` = '$user[id]' LIMIT 1");
-}
-####
-if (isset($_POST['ank_lov_10']) && $_POST['ank_lov_10']==1)
-{
-$user['ank_lov_10']=1;
-$db->query("UPDATE `user` SET `ank_lov_10` = '1' WHERE `id` = '$user[id]' LIMIT 1");
-}
-else
-{
-$user['ank_lov_10']=0;
-$db->query("UPDATE `user` SET `ank_lov_10` = '0' WHERE `id` = '$user[id]' LIMIT 1");
-}
-####
-if (isset($_POST['ank_lov_11']) && $_POST['ank_lov_11']==1)
-{
-$user['ank_lov_11']=1;
-$db->query("UPDATE `user` SET `ank_lov_11` = '1' WHERE `id` = '$user[id]' LIMIT 1");
-}
-else
-{
-$user['ank_lov_11']=0;
-$db->query("UPDATE `user` SET `ank_lov_11` = '0' WHERE `id` = '$user[id]' LIMIT 1");
-}
-####
-if (isset($_POST['ank_lov_12']) && $_POST['ank_lov_12']==1)
-{
-$user['ank_lov_12']=1;
-$db->query("UPDATE `user` SET `ank_lov_12` = '1' WHERE `id` = '$user[id]' LIMIT 1");
-}
-else
-{
-$user['ank_lov_12']=0;
-$db->query("UPDATE `user` SET `ank_lov_12` = '0' WHERE `id` = '$user[id]' LIMIT 1");
-}
-####
-if (isset($_POST['ank_lov_13']) && $_POST['ank_lov_13']==1)
-{
-$user['ank_lov_13']=1;
-$db->query("UPDATE `user` SET `ank_lov_13` = '1' WHERE `id` = '$user[id]' LIMIT 1");
-}
-else
-{
-$user['ank_lov_13']=0;
-$db->query("UPDATE `user` SET `ank_lov_13` = '0' WHERE `id` = '$user[id]' LIMIT 1");
-}
-####
-if (isset($_POST['ank_lov_14']) && $_POST['ank_lov_14']==1)
-{
-$user['ank_lov_14']=1;
-$db->query("UPDATE `user` SET `ank_lov_14` = '1' WHERE `id` = '$user[id]' LIMIT 1");
-}
-else
-{
-$user['ank_lov_14']=0;
-$db->query("UPDATE `user` SET `ank_lov_14` = '0' WHERE `id` = '$user[id]' LIMIT 1");
-}
-####
-}
-//-----------------------телефон------------------//
-if (isset($_GET['set']) && $_GET['set']=='mobile'){
-if (isset($_POST['ank_n_tel']) && (is_numeric($_POST['ank_n_tel']) && strlen($_POST['ank_n_tel'])>=5 && strlen($_POST['ank_n_tel'])<=11 || $_POST['ank_n_tel']==NULL))
-{
-$user['ank_n_tel']=$_POST['ank_n_tel'];
-$db->query("UPDATE `user` SET `ank_n_tel` = '$user[ank_n_tel]' WHERE `id` = '$user[id]' LIMIT 1");
-}
-else $err[]='Неверный формат номера телефона';
-}
-//-----------------телосложение-----------------//
-if (isset($_GET['set']) && $_GET['set']=='telo'){
-if (isset($_POST['ank_telosl']) && $_POST['ank_telosl']==1)
-{
-$user['ank_telosl']=1;
-$db->query("UPDATE `user` SET `ank_telosl` = '1' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_telosl']) && $_POST['ank_telosl']==0)
-{
-$user['ank_telosl']=0;
-$db->query("UPDATE `user` SET `ank_telosl` = '0' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_telosl']) && $_POST['ank_telosl']==2)
-{
-$user['ank_telosl']=2;
-$db->query("UPDATE `user` SET `ank_telosl` = '2' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_telosl']) && $_POST['ank_telosl']==3)
-{
-$user['ank_telosl']=3;
-$db->query("UPDATE `user` SET `ank_telosl` = '3' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_telosl']) && $_POST['ank_telosl']==4)
-{
-$user['ank_telosl']=4;
-$db->query("UPDATE `user` SET `ank_telosl` = '4' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_telosl']) && $_POST['ank_telosl']==5)
-{
-$user['ank_telosl']=5;
-$db->query("UPDATE `user` SET `ank_telosl` = '5' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_telosl']) && $_POST['ank_telosl']==6)
-{
-$user['ank_telosl']=6;
-$db->query("UPDATE `user` SET `ank_telosl` = '6' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_telosl']) && $_POST['ank_telosl']==7)
-{
-$user['ank_telosl']=7;
-$db->query("UPDATE `user` SET `ank_telosl` = '7' WHERE `id` = '$user[id]' LIMIT 1");
-}
-}
-//-----------------Ориентация-----------------//
-if (isset($_GET['set']) && $_GET['set']=='orien'){
-if (isset($_POST['ank_orien']) && $_POST['ank_orien']==1)
-{
-$user['ank_orien']=1;
-$db->query("UPDATE `user` SET `ank_orien` = '1' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_orien']) && $_POST['ank_orien']==0)
-{
-$user['ank_orien']=0;
-$db->query("UPDATE `user` SET `ank_orien` = '0' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_orien']) && $_POST['ank_orien']==2)
-{
-$user['ank_orien']=2;
-$db->query("UPDATE `user` SET `ank_orien` = '2' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_orien']) && $_POST['ank_orien']==3)
-{
-$user['ank_orien']=3;
-$db->query("UPDATE `user` SET `ank_orien` = '3' WHERE `id` = '$user[id]' LIMIT 1");
-}
-}
-//-----------------есть ли дети-----------------//
-if (isset($_GET['set']) && $_GET['set']=='baby'){
-if (isset($_POST['ank_baby']) && $_POST['ank_baby']==1)
-{
-$user['ank_baby']=1;
-$db->query("UPDATE `user` SET `ank_baby` = '1' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_baby']) && $_POST['ank_baby']==0)
-{
-$user['ank_baby']=0;
-$db->query("UPDATE `user` SET `ank_baby` = '0' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_baby']) && $_POST['ank_baby']==2)
-{
-$user['ank_baby']=2;
-$db->query("UPDATE `user` SET `ank_baby` = '2' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_baby']) && $_POST['ank_baby']==3)
-{
-$user['ank_baby']=3;
-$db->query("UPDATE `user` SET `ank_baby` = '3' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_baby']) && $_POST['ank_baby']==4)
-{
-$user['ank_baby']=4;
-$db->query("UPDATE `user` SET `ank_baby` = '4' WHERE `id` = '$user[id]' LIMIT 1");
-}
-}
-//-----------------Курение-----------------//
-if (isset($_GET['set']) && $_GET['set']=='smok'){
-if (isset($_POST['ank_smok']) && $_POST['ank_smok']==1)
-{
-$user['ank_smok']=1;
-$db->query("UPDATE `user` SET `ank_smok` = '1' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_smok']) && $_POST['ank_smok']==0)
-{
-$user['ank_smok']=0;
-$db->query("UPDATE `user` SET `ank_smok` = '0' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_smok']) && $_POST['ank_smok']==2)
-{
-$user['ank_smok']=2;
-$db->query("UPDATE `user` SET `ank_smok` = '2' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_smok']) && $_POST['ank_smok']==3)
-{
-$user['ank_smok']=3;
-$db->query("UPDATE `user` SET `ank_smok` = '3' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_smok']) && $_POST['ank_smok']==4)
-{
-$user['ank_smok']=4;
-$db->query("UPDATE `user` SET `ank_smok` = '4' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_smok']) && $_POST['ank_smok']==5)
-{
-$user['ank_smok']=5;
-$db->query("UPDATE `user` SET `ank_smok` = '5' WHERE `id` = '$user[id]' LIMIT 1");
-}
-}
-//-----------------материальное положение-----------------//
-if (isset($_GET['set']) && $_GET['set']=='mat_pol'){
-if (isset($_POST['ank_mat_pol']) && $_POST['ank_mat_pol']==1)
-{
-$user['ank_mat_pol']=1;
-$db->query("UPDATE `user` SET `ank_mat_pol` = '1' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_mat_pol']) && $_POST['ank_mat_pol']==0)
-{
-$user['ank_mat_pol']=0;
-$db->query("UPDATE `user` SET `ank_mat_pol` = '0' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_mat_pol']) && $_POST['ank_mat_pol']==2)
-{
-$user['ank_mat_pol']=2;
-$db->query("UPDATE `user` SET `ank_mat_pol` = '2' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_mat_pol']) && $_POST['ank_mat_pol']==3)
-{
-$user['ank_mat_pol']=3;
-$db->query("UPDATE `user` SET `ank_mat_pol` = '3' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_mat_pol']) && $_POST['ank_mat_pol']==4)
-{
-$user['ank_mat_pol']=4;
-$db->query("UPDATE `user` SET `ank_mat_pol` = '4' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_mat_pol']) && $_POST['ank_mat_pol']==5)
-{
-$user['ank_mat_pol']=5;
-$db->query("UPDATE `user` SET `ank_mat_pol` = '5' WHERE `id` = '$user[id]' LIMIT 1");
-}
-}
-//-----------------проживание-----------------//
-if (isset($_GET['set']) && $_GET['set']=='proj'){
-if (isset($_POST['ank_proj']) && $_POST['ank_proj']==1)
-{
-$user['ank_proj']=1;
-$db->query("UPDATE `user` SET `ank_proj` = '1' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_proj']) && $_POST['ank_proj']==0)
-{
-$user['ank_proj']=0;
-$db->query("UPDATE `user` SET `ank_proj` = '0' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_proj']) && $_POST['ank_proj']==2)
-{
-$user['ank_proj']=2;
-$db->query("UPDATE `user` SET `ank_proj` = '2' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_proj']) && $_POST['ank_proj']==3)
-{
-$user['ank_proj']=3;
-$db->query("UPDATE `user` SET `ank_proj` = '3' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_proj']) && $_POST['ank_proj']==4)
-{
-$user['ank_proj']=4;
-$db->query("UPDATE `user` SET `ank_proj` = '4' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_proj']) && $_POST['ank_proj']==5)
-{
-$user['ank_proj']=5;
-$db->query("UPDATE `user` SET `ank_proj` = '5' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_proj']) && $_POST['ank_proj']==6)
-{
-$user['ank_proj']=6;
-$db->query("UPDATE `user` SET `ank_proj` = '6' WHERE `id` = '$user[id]' LIMIT 1");
-}
-}
-//-----------------пол-----------------//
-if (isset($_GET['set']) && $_GET['set']=='pol'){
-if (isset($_POST['pol']) && $_POST['pol']==1)
-{
-$user['pol']=1;
-$db->query("UPDATE `user` SET `pol` = '1' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['pol']) && $_POST['pol']==0)
-{
-$user['pol']=0;
-$db->query("UPDATE `user` SET `pol` = '0' WHERE `id` = '$user[id]' LIMIT 1");
-}
-}
-//-----------------автомобиль-----------------//
-if (isset($_GET['set']) && $_GET['set']=='avto'){
-if (isset($_POST['ank_avto_n']) && $_POST['ank_avto_n']==3)
-{
-$user['ank_avto_n']=3;
-$db->query("UPDATE `user` SET `ank_avto_n` = '3' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_avto_n']) && $_POST['ank_avto_n']==2)
-{
-$user['ank_avto_n']=2;
-$db->query("UPDATE `user` SET `ank_avto_n` = '2' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_avto_n']) && $_POST['ank_avto_n']==1)
-{
-$user['ank_avto_n']=1;
-$db->query("UPDATE `user` SET `ank_avto_n` = '1' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_avto_n']) && $_POST['ank_avto_n']==0)
-{
-$user['ank_avto_n']=0;
-$db->query("UPDATE `user` SET `ank_avto_n` = '0' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_avto']) && strlen2($_POST['ank_avto'])<=215)
-{
-if (preg_match('#[^A-zА-я0-9 _\-\=\+\(\)\*\!\?\.,]#ui',$_POST['ank_avto']))$err[]='В поле "Название\Марка авто" используются запрещенные символы';
-else {
-$user['ank_avto']=$_POST['ank_avto'];
-$db->query("UPDATE `user` SET `ank_avto` = '".my_esc($user['ank_avto'])."' WHERE `id` = '$user[id]' LIMIT 1");
-}
-}
-else $err[]='О вашем авто нужно писать меньше :)';
-}
-//-----------------напиток-----------------//
-if (isset($_GET['set']) && $_GET['set']=='alko'){
-if (isset($_POST['ank_alko_n']) && $_POST['ank_alko_n']==3)
-{
-$user['ank_alko_n']=3;
-$db->query("UPDATE `user` SET `ank_alko_n` = '3' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_alko_n']) && $_POST['ank_alko_n']==2)
-{
-$user['ank_alko_n']=2;
-$db->query("UPDATE `user` SET `ank_alko_n` = '2' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_alko_n']) && $_POST['ank_alko_n']==1)
-{
-$user['ank_alko_n']=1;
-$db->query("UPDATE `user` SET `ank_alko_n` = '1' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_alko_n']) && $_POST['ank_alko_n']==0)
-{
-$user['ank_alko_n']=0;
-$db->query("UPDATE `user` SET `ank_alko_n` = '0' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_alko']) && strlen2($_POST['ank_alko'])<=215)
-{
-if (preg_match('#[^A-zА-я0-9 _\-\=\+\(\)\*\!\?\.,]#ui',$_POST['ank_alko']))$err[]='В поле "Нанпиток" используются запрещенные символы';
-else {
-$user['ank_alko']=$_POST['ank_alko'];
-$db->query("UPDATE `user` SET `ank_alko` = '".my_esc($user['ank_alko'])."' WHERE `id` = '$user[id]' LIMIT 1");
-}
-}
-else $err[]='О любимом напитке нужно писать меньше :)';
-}
-//----------------о себе-------------//
-if (isset($_GET['set']) && $_GET['set']=='osebe'){
-if (isset($_POST['ank_o_sebe']) && strlen2($_POST['ank_o_sebe'])<=512)
-{
-if (preg_match('#[^A-zА-я0-9 _\-\=\+\(\)\*\!\?\.,]#ui',$_POST['ank_o_sebe']))$err[]='В поле "О себе" используются запрещенные символы';
-else {
-$user['ank_o_sebe']=$_POST['ank_o_sebe'];
-$db->query("UPDATE `user` SET `ank_o_sebe` = '".my_esc($user['ank_o_sebe'])."' WHERE `id` = '$user[id]' LIMIT 1");
-}
-}
-else $err[]='О себе нужно писать меньше :)';
-}
-//----------------о партнере-------------//
-if (isset($_GET['set']) && $_GET['set']=='opar'){
-if (isset($_POST['ank_o_par']) && strlen2($_POST['ank_o_par'])<=215)
-{
-if (preg_match('#[^A-zА-я0-9 _\-\=\+\(\)\*\!\?\.,]#ui',$_POST['ank_o_par']))$err[]='В поле "О партнере" используются запрещенные символы';
-else {
-$user['ank_o_par']=$_POST['ank_o_par'];
-$db->query("UPDATE `user` SET `ank_o_par` = '".my_esc($user['ank_o_par'])."' WHERE `id` = '$user[id]' LIMIT 1");
-}
-}
-else $err[]='О партнере нужно писать меньше :)';
-}
-//-----------------наркотики-----------------//
-if (isset($_GET['set']) && $_GET['set']=='nark'){
-if (isset($_POST['ank_nark']) && $_POST['ank_nark']==4)
-{
-$user['ank_nark']=4;
-$db->query("UPDATE `user` SET `ank_nark` = '4' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_nark']) && $_POST['ank_nark']==3)
-{
-$user['ank_nark']=3;
-$db->query("UPDATE `user` SET `ank_nark` = '3' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_nark']) && $_POST['ank_nark']==2)
-{
-$user['ank_nark']=2;
-$db->query("UPDATE `user` SET `ank_nark` = '2' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_nark']) && $_POST['ank_nark']==1)
-{
-$user['ank_nark']=1;
-$db->query("UPDATE `user` SET `ank_nark` = '1' WHERE `id` = '$user[id]' LIMIT 1");
-}
-if (isset($_POST['ank_nark']) && $_POST['ank_nark']==0)
-{
-$user['ank_nark']=0;
-$db->query("UPDATE `user` SET `ank_nark` = '0' WHERE `id` = '$user[id]' LIMIT 1");
-}
-}
-//----------------чем занимаюсь-------------//
-if (isset($_GET['set']) && $_GET['set']=='zan'){
-if (isset($_POST['ank_zan']) && strlen2($_POST['ank_zan'])<=215)
-{
-if (preg_match('#[^A-zА-я0-9 _\-\=\+\(\)\*\!\?\.,]#ui',$_POST['ank_zan']))$err[]='В поле "Чем занимаюсь" используются запрещенные символы';
-else {
-$user['ank_zan']=$_POST['ank_zan'];
-$db->query("UPDATE `user` SET `ank_zan` = '".my_esc($user['ank_zan'])."' WHERE `id` = '$user[id]' LIMIT 1");
-}
-}
-else $err[]='Слишком большой текст';
-}
-if (!isset($err))
-{
-$_SESSION['message'] = 'Изменения успешно приняты';
-	$db->query("UPDATE `user` SET `rating_tmp` = '".($user['rating_tmp']+1)."' WHERE `id` = '$user[id]' LIMIT 1");
-		
-		if (isset($_GET['act']) && $_GET['act']=='ank')
-			header("Location: /user/info/anketa.php?".SID);
-			
-		elseif (isset($_GET['act']) && $_GET['act']=='ank_web')
-			header("Location: /info.php".SID);
-			
-		else
-			header("Location: /user/info/edit.php?".SID);
-			
-			exit;
-}
-}
-err();
-	echo "<form method='post' action='?".$get2."set=$get'>";
-	if (isset($_GET['set']) && $_GET['set']=='nick' && $user['set_nick'] == 1)
-	echo "<div class='mess'>Внимание! Изменить свой ник вы можете только один раз!</div> Nick Name:<br /><input type='text' name='nick' value='".htmlspecialchars($user['nick'],false)."' maxlength='32' /><br />";
-	
-	
-	if (isset($_GET['set']) && $_GET['set']=='name')
-	echo "Имя в реале:<br /><input type='text' name='ank_name' value='".htmlspecialchars($user['ank_name'],false)."' maxlength='32' /><br />";
-	
-	if (isset($_GET['set']) && $_GET['set']=='glaza')
-	echo "Цвет глаз:<br /><input type='text' name='ank_cvet_glas' value='".htmlspecialchars($user['ank_cvet_glas'],false)."' maxlength='32' /><br />";
-	
-	if (isset($_GET['set']) && $_GET['set']=='volos')
-	echo "Волосы:<br /><input type='text' name='ank_volos' value='".htmlspecialchars($user['ank_volos'],false)."' maxlength='32' /><br />";
-	
-	
-	if (isset($_GET['set']) && $_GET['set']=='date'){
-	echo 'Дата рождения:<br />
-	<select name="ank_d_r">
-	<option selected="'.$user['ank_d_r'].'" value="'.$user['ank_d_r'].'" >'.$user['ank_d_r'].'<option>
-	<option value="1">1</option>
-	<option value="2">2</option>
-	<option value="3">3</option>
-	<option value="4">4</option>
-	<option value="5">5</option>
-	<option value="6">6</option>
-	<option value="7">7</option>
-	<option value="8">8</option>
-	<option value="9">9</option>
-	<option value="10">10</option>
-	<option value="11">11</option>
-	<option value="12">12</option>
-	<option value="13">13</option>
-	<option value="14">14</option>
-	<option value="15">15</option>
-	<option value="16">16</option>
-	<option value="17">17</option>
-	<option value="18">18</option>
-	<option value="19">19</option>
-	<option value="20">20</option>
-	<option value="21">21</option>
-	<option value="22">22</option>
-	<option value="23">23</option>
-	<option value="24">24</option>
-	<option value="25">25</option>
-	<option value="26">26</option>
-	<option value="27">27</option>
-	<option value="28">28</option>
-	<option value="29">29</option>
-	<option value="30">30</option>
-	<option value="31">31</option>
-	</select>';
-		
-	echo '<select name="ank_m_r">
-	<option selected="'.$user['ank_m_r'].'" value="'.$user['ank_m_r'].'" >'.$user['ank_m_r'].'<option>	
-	<option value="1">1</option>
-	<option value="2">2</option>
-	<option value="3">3</option>
-	<option value="4">4</option>
-	<option value="5">5</option>
-	<option value="6">6</option>
-	<option value="7">7</option>
-	<option value="8">8</option>
-	<option value="9">9</option>
-	<option value="10">10</option>
-	<option value="11">11</option>
-	<option value="12">12</option>
-	</select>';
-	
-	echo '<select name="ank_g_r">
-	<option selected="'.$user['ank_g_r'].'" value="'.$user['ank_g_r'].'" >'.$user['ank_g_r'].'<option><option value="1996">1996</option><option value="1995">1995</option><option value="1994">1994</option><option value="1993">1993</option><option value="1992">1992</option><option value="1991">1991</option><option value="1990">1990</option><option value="1989">1989</option><option value="1988">1988</option><option value="1987">1987</option><option value="1986">1986</option><option value="1985">1985</option><option value="1984">1984</option><option value="1983">1983</option><option value="1982">1982</option><option value="1981">1981</option><option value="1980">1980</option><option value="1979">1979</option><option value="1978">1978</option><option value="1977">1977</option><option value="1976">1976</option><option value="1975">1975</option><option value="1974">1974</option><option value="1973">1973</option><option value="1972">1972</option><option value="1971">1971</option><option value="1970">1970</option><option value="1969">1969</option><option value="1968">1968</option><option value="1967">1967</option><option value="1966">1966</option><option value="1965">1965</option><option value="1964">1964</option><option value="1963">1963</option><option value="1962">1962</option><option value="1961">1961</option><option value="1960">1960</option><option value="1959">1959</option><option value="1958">1958</option><option value="1957">1957</option><option value="1956">1956</option><option value="1955">1955</option><option value="1954">1954</option><option value="1953">1953</option><option value="1952">1952</option><option value="1951">1951</option><option value="1950">1950</option><option value="1949">1949</option><option value="1948">1948</option><option value="1947">1947</option><option value="1946">1946</option><option value="1945">1945</option><option value="1944">1944</option><option value="1943">1943</option><option value="1942">1942</option><option value="1941">1941</option><option value="1940">1940</option><option value="1939">1939</option><option value="1938">1938</option><option value="1937">1937</option><option value="1936">1936</option><option value="1935">1935</option><option value="1934">1934</option><option value="1933">1933</option><option value="1932">1932</option><option value="1931">1931</option><option value="1930">1930</option><option value="1929">1929</option><option value="1928">1928</option><option value="1927">1927</option><option value="1926">1926</option><option value="1925">1925</option><option value="1924">1924</option><option value="1923">1923</option><option value="1922">1922</option><option value="1921">1921</option><option value="1920">1920</option>
-	</select><br/>';
-	}
-		
-	if (isset($_GET['set']) && $_GET['set']=='pol'){
-	echo "Пол:<br /> <input name='pol' type='radio' ".($user['pol']==1?' checked="checked"':null)." value='1' />Муж.<br />
+$get_set = filter_input(INPUT_GET, 'set', FILTER_VALIDATE_REGEXP, ['options' => ['regexp' => '/^([a-z]*)$/', 'default' => null]]);
+
+if ($get_set) {
+    $get = preg_replace('/&(.+?);/', '', $get_set);
+    $get_act = filter_input(INPUT_GET, 'act', FILTER_DEFAULT);
+    if ($get_act && $get_act == 'ank') {
+        $get2 = 'act=ank&amp;';
+    } elseif ($get_act && $get_act == 'ank_web') {
+        $get2 = "act=ank_web&amp;";
+    } else {
+        $get2 = null;
+    }
+    
+    $stream = urldecode(file_get_contents('php://input', true));
+    !$stream ?: $stream;
+    parse_str($stream, $user_set_data);
+    
+    if (isset($user_set_data['save'])) {
+        // ник
+        if ($get_set == 'nick' && $user['set_nick'] == 1 && isset($user_set_data['nick'])) {
+            if (!$db->query("SELECT COUNT( * ) FROM `user` WHERE `nick`=?",
+                            [$user_set_data['nick']])->el()) {
+                $user_set_data['nick'] = trim($user_set_data['nick']);
+                if (!preg_match("/^([A-zА-я0-9\-\_\ ])+$/ui", $user_set_data['nick'])) {
+                    $err[]='В нике присутствуют запрещенные символы';
+                }
+                if (preg_match("/[a-z]+/ui", $user_set_data['nick']) && preg_match("/[а-я]+/ui", $user_set_data['nick'])) {
+                    $err[]='Разрешается использовать символы только русского или только английского алфавита';
+                }
+                if (strlen2($user_set_data['nick']) < 3) {
+                    $err[]='Короткий ник';
+                }
+                if (strlen2($user_set_data['nick']) > 32) {
+                    $err[]='Длина ника превышает 32 символа';
+                }
+            } else {
+                $err[]='Ник "' . $user_set_data['nick'] . '" уже зарегистрирован';
+            }
+            if (!isset($err)) {
+                $user['nick'] = $user_set_data['nick'];
+                $db->query("UPDATE `user` SET `nick`=?, `set_nick`=? WHERE `id`=?i",
+                           [$user_set_data['nick'], '0', $user['id']]);
+            } else {
+                unset($user_set_data);
+            }
+        }
+        // имя
+        if ($get_set == 'name') {
+            if (isset($user_set_data['ank_name']) && preg_match('/^([A-zА-я \-]*)$/ui', $user_set_data['ank_name'])) {
+                $user['ank_name'] = $user_set_data['ank_name'];
+                $db->query("UPDATE `user` SET `ank_name`=? WHERE `id`=?i",
+                           [$user['ank_name'], $user['id']]);
+            } else {
+                $err[]='Неверный формат имени';
+            }
+        }
+        // город
+        if ($get_set == 'gorod') {
+            if (isset($user_set_data['ank_city']) && preg_match('/^([A-zА-я \-]*)$/ui', $user_set_data['ank_city'])) {
+                $user['ank_city'] = $user_set_data['ank_city'];
+                $db->query("UPDATE `user` SET `ank_city`=? WHERE `id`=?i",
+                           [$user['ank_city'], $user['id']]);
+            } else {
+                $err[]='Неверный формат названия города';
+            }
+        }
+        // Dата рождения
+        if ($get_set == 'date') {
+            $max_year_of_birth = date('Y') - 14; // TODO: ??? в настройки?
+            $min_year_of_birth = $max_year_of_birth - 70;
+            $args = [
+                     'ank_d_r' => ['filter'  => FILTER_VALIDATE_INT, 'options' => ['default'   => null, 'min_range' => 1, 'max_range' => 31],],
+                     'ank_m_r' =>  ['filter'  => FILTER_VALIDATE_INT, 'options' => ['default'   => null, 'min_range' => 1, 'max_range' => 12],],
+                     'ank_g_r' =>  ['filter'  => FILTER_VALIDATE_INT, 'options' => ['default'   => null, 'min_range' => $min_year_of_birth, 'max_range' => $max_year_of_birth],],
+                     ];
+            
+            $set_data = filter_var_array($user_set_data, $args);
+            
+            if ($set_data['ank_d_r']) {
+                $user['ank_d_r'] = $set_data['ank_d_r'];
+            } else {
+                $err[]='Неверный формат дня рождения';
+            }
+            
+            if ($set_data['ank_m_r']) {
+                $user['ank_m_r'] = $set_data['ank_m_r'];
+            } else {
+                $err[]='Неверный формат месяца рождения';
+            }
+            
+            if ($set_data['ank_g_r']) {
+                $user['ank_g_r'] = $set_data['ank_g_r'];
+            } else {
+                $err[]='Неверный формат года рождения';
+            }
+            // update data user
+            if (count($set_data)) {
+                $db->query(
+                        'UPDATE `user` SET ?set WHERE `id`=?i',
+                                [$set_data, $user['id']]);
+                unset($set_data);
+            }
+        }
+        // icq
+        if ($get_set == 'icq' && isset($user_set_data['ank_icq'])) {
+            $set_icq = filter_var($user_set_data['ank_icq'], FILTER_VALIDATE_INT,
+                                  ['options' => ['default' => null, 'min_range' => 10000, 'max_range' => 999999999]]);
+            if ($set_icq || $set_icq == null) {
+                if ($set_icq == null) {
+                    $err = 'Введите правильный номер ICQ';
+                }
+                $user['ank_icq'] = $set_icq;
+                $db->query(
+                        'UPDATE `user` SET `ank_icq`=?i WHERE `id`=?i',
+                                [$user['ank_icq'], $user['id']]);
+                unset($set_icq);
+            } else {
+                $err[]='Неверный формат ICQ';
+            }
+        }
+        // skype
+        if ($get_set == 'skype' && isset($user_set_data['ank_skype'])) {
+            $set_skype = filter_var($user_set_data['ank_skype'],
+                                    FILTER_VALIDATE_REGEXP, ['options' => ['regexp' => '/^[a-z][a-z0-9_\-\.]{5,31}$/ui', 'default' => null]]);
+            if ($set_skype || $set_skype == null) {
+                if ($set_skype == null) {
+                    $err = 'Введите правильный логин Skype';
+                }
+                $user['ank_skype'] = $set_skype;
+                $db->query("UPDATE `user` SET `ank_skype`=? WHERE `id`=?i",
+                           [$user['ank_skype'], $user['id']]);
+            } else {
+                $err[] = 'Неверный логин Skype';
+            }
+        }
+        // email
+        if ($get_set == 'mail') {
+            if (isset($user_set_data['set_show_mail']) && $user_set_data['set_show_mail'] == 1) {
+                $user['set_show_mail'] = 1;
+            } else {
+                $user['set_show_mail'] = 0;
+            }
+            $ank_mail = empty($user_set_data['ank_mail']) ? null : $user_set_data['ank_mail'];
+            $ank_mail = filter_var($user_set_data['ank_mail'], FILTER_VALIDATE_EMAIL,
+                                   ['options' => ['default' => null]]);
+            if ($ank_mail || $ank_mail == null) {
+                if ($ank_mail == null) {
+                    $err = 'Введите правильный e-mail';
+                }
+                $user['ank_mail'] = $ank_mail;
+            } else {
+                $err[]='Неверный E-mail';
+            }
+            $db->query("UPDATE `user` SET `set_show_mail`=?string, `ank_mail`=? WHERE `id`=?i",
+                       [$user['set_show_mail'], $user['ank_mail'], $user['id']]);
+        }
+        // телефон
+        if ($get_set == 'mobile') {
+            $set_tel = empty($user_set_data['ank_n_tel']) ? null : $user_set_data['ank_n_tel'];
+            if (is_numeric($set_tel) && mb_strlen($set_tel) > 4 && mb_strlen($set_tel) < 12 || $set_tel == null) {
+                if ($set_tel == null) {
+                    $err = 'Введите правильный номер телефона';
+                }
+                $user['ank_n_tel'] = $set_tel;
+                $db->query(
+                        'UPDATE `user` SET `ank_n_tel`=? WHERE `id`=?i',
+                                [$user['ank_n_tel'], $user['id']]);
+                unset($set_tel);
+            } else {
+                $err[]='Неверный формат номера телефона';
+            }
+        }
+        // пол
+        if ($get_set == 'pol' && isset($user_set_data['pol'])) {
+            $user['pol'] = $user_set_data['pol'] ? 1 : 0;
+            $db->query("UPDATE `user` SET `pol`=?string WHERE `id`=?i",
+                       [$user['pol'], $user['id']]);
+        }
+        // глаза
+        if ($get_set == 'glaza') {
+            if (isset($user_set_data['ank_cvet_glas']) && preg_match('#^([A-zА-я \-]*)$#ui', $user_set_data['ank_cvet_glas'])) {
+                $user['ank_cvet_glas'] = $user_set_data['ank_cvet_glas'];
+                $db->query("UPDATE `user` SET `ank_cvet_glas`=? WHERE `id`=?i",
+                           [$user['ank_cvet_glas'], $user['id']]);
+            } else {
+                $err[] = 'Неверный формат цвет глаз';
+            }
+        }
+        // волосы
+        if ($get_set == 'volos') {
+            if (isset($user_set_data['ank_volos']) && preg_match('#^([A-zА-я \-]*)$#ui', $user_set_data['ank_volos'])) {
+                $user['ank_volos'] = $user_set_data['ank_volos'];
+                $db->query("UPDATE `user` SET `ank_volos`=? WHERE `id`=?i",
+                           [$user['ank_volos'], $user['id']]);
+            } else {
+                $err[] = 'Неверный формат цвет глаз';
+            }
+        }
+        // вес
+        if ($get_set == 'ves' && isset($user_set_data['ank_ves'])) {
+            $ank_ves = filter_var_array($user_set_data,
+                                        [
+                                         'ank_ves' => [
+                                                       'filter' => FILTER_VALIDATE_INT,
+                                                       'options' => [
+                                                                     'min_range' => 32,
+                                                                     'max_range' => 132,
+                                                                     'default' => null
+                                                                     ]
+                                                       ]
+                                         ]);
+            if ($ank_ves['ank_ves'] == null) {
+                $err[] = 'Некорректный вес!';
+            }
+            $user['ank_ves'] = $ank_ves['ank_ves'];
+            if (!empty($ank_ves)) {
+                $db->query('UPDATE `user` SET ?set WHERE `id`=?i',
+                           [$ank_ves, $user['id']]);
+            }
+        }
+        // рост
+        if ($get_set == 'rost' && isset($user_set_data['ank_rost'])) {
+            $ank_rost = filter_var_array($user_set_data,
+                                        [
+                                         'ank_rost' => [
+                                                       'filter' => FILTER_VALIDATE_INT,
+                                                       'options' => [
+                                                                     'min_range' => 140,
+                                                                     'max_range' => 233,
+                                                                     'default' => null
+                                                                     ]
+                                                       ]
+                                         ]);
+            if ($ank_rost['ank_rost'] == null) {
+                $err[] = 'Некорректный рост!';
+            }
+            $user['ank_rost'] = $ank_rost['ank_rost'];
+            if (!empty($ank_rost)) {
+                $db->query('UPDATE `user` SET ?set WHERE `id`=?i',
+                           [$ank_rost, $user['id']]);
+            }
+        }
+        // Цели знакомства
+        if ($get_set == 'loves') {
+            $set_ank_lov = [];
+            $val = range(1, 14);
+            foreach ($val as $key) {
+                if (isset($user_set_data['ank_lov_' . $key])) {
+                    $set_ank_lov += ['ank_lov_' . $key => 1];
+                    $user['ank_lov_' . $key] = 1;
+                } else {
+                    $set_ank_lov += ['ank_lov_' . $key => 0];
+                    $user['ank_lov_' . $key] = 0;                    
+                }
+            }
+            if (!empty($set_ank_lov)) {
+                $db->query('UPDATE `user` SET ?set WHERE `id`=?i',
+                           [$set_ank_lov, $user['id']]);
+            }
+        }
+        // телосложение
+        if ($get_set == 'telo') {
+            $val = range(0, 7);
+            if (isset($user_set_data['ank_telosl']) && in_array($user_set_data['ank_telosl'] , $val)) {
+                $user['ank_telosl'] = $val[$user_set_data['ank_telosl']];
+                $db->query("UPDATE `user` SET `ank_telosl`=?i WHERE `id`=?i",
+                           [$user['ank_telosl'], $user['id']]);
+            }
+        }
+        // Ориентация
+        if ($get_set == 'orien') {
+            $val = range(0, 3);
+            if (isset($user_set_data['ank_orien']) && in_array($user_set_data['ank_orien'] , $val)) {
+                $user['ank_orien'] = $val[$user_set_data['ank_orien']];
+                $db->query("UPDATE `user` SET `ank_orien`=?i WHERE `id`=?i",
+                           [$user['ank_orien'], $user['id']]);
+            }
+        }
+        // есть ли дети
+        if ($get_set == 'baby') {
+            $val = range(0, 4);
+            if (isset($user_set_data['ank_baby']) && in_array($user_set_data['ank_baby'] , $val)) {
+                $user['ank_baby'] = $val[$user_set_data['ank_baby']];
+                $db->query("UPDATE `user` SET `ank_baby`=?i WHERE `id`=?i",
+                           [$user['ank_baby'], $user['id']]);
+            }
+        }
+        // Курение
+        if ($get_set == 'smok') {
+            $val = range(0, 5);
+            if (isset($user_set_data['ank_smok']) && in_array($user_set_data['ank_smok'] , $val)) {
+                $user['ank_smok'] = $val[$user_set_data['ank_smok']];
+                $db->query("UPDATE `user` SET `ank_smok`=?i WHERE `id`=?i",
+                           [$user['ank_smok'], $user['id']]);
+            }
+        }
+        // материальное положение
+        if ($get_set == 'mat_pol') {
+            $val = range(0, 5);
+            if (isset($user_set_data['ank_mat_pol']) && in_array($user_set_data['ank_mat_pol'] , $val)) {
+                $user['ank_mat_pol'] = $val[$user_set_data['ank_mat_pol']];
+                $db->query("UPDATE `user` SET `ank_mat_pol`=?i WHERE `id`=?i",
+                           [$user['ank_mat_pol'], $user['id']]);
+            }
+        }
+        // проживание
+        if ($get_set == 'proj') {
+            $val = range(0, 6);
+            if (isset($user_set_data['ank_proj']) && in_array($user_set_data['ank_proj'] , $val)) {
+                $user['ank_proj'] = $val[$user_set_data['ank_proj']];
+                $db->query("UPDATE `user` SET `ank_proj`=?i WHERE `id`=?i",
+                           [$user['ank_proj'], $user['id']]);
+            }
+        }
+        // автомобиль
+        if ($get_set == 'avto') {
+            $val = range(0, 3);
+            $set_ank_auto = [];
+            if (isset($user_set_data['ank_avto_n']) && in_array($user_set_data['ank_avto_n'] , $val)) {
+                $set_ank_auto += ['ank_avto_n' => $val[$user_set_data['ank_avto_n']]];
+                $user['ank_avto_n'] = $set_ank_auto['ank_avto_n'];
+            }
+            if (isset($user_set_data['ank_avto']) && strlen2($user_set_data['ank_avto']) < 216) {
+                if (preg_match('/[^a-zа-яё0-9 _\-\=\+\(\)\*\!\?\.,]/ui', $user_set_data['ank_avto'])) {
+                    $err[] = 'В поле "Название\Марка авто" используются запрещенные символы';
+                } else {
+                    $user_set_data['ank_avto'] = trim($user_set_data['ank_avto']);
+                    $user_set_data['ank_avto'] = (!empty($user_set_data['ank_avto']) && $user['ank_avto_n'] && $user['ank_avto_n'] <> 2 ? $user_set_data['ank_avto'] : null);
+                    $set_ank_auto += ['ank_avto' => (!empty($user_set_data['ank_avto']) && $user['ank_avto_n'] <> 2 ? $user_set_data['ank_avto'] : null)];
+                    $user['ank_avto'] = $set_ank_auto['ank_avto'];
+                }
+            } else {
+                $err[] = 'О вашем авто нужно писать меньше :)';
+            }
+            if (!empty($set_ank_auto)) {
+                $db->query('UPDATE `user` SET ?set WHERE `id`=?i',
+                           [$set_ank_auto, $user['id']]);
+            }
+        }
+        // напиток
+        if ($get_set == 'alko') {
+            $val = range(0, 3);
+            $set_ank_alko = [];
+            if (isset($user_set_data['ank_alko_n']) && in_array($user_set_data['ank_alko_n'] , $val)) {
+                $set_ank_alko += ['ank_alko_n' => $val[$user_set_data['ank_alko_n']]];
+                $user['ank_alko_n'] = $set_ank_alko['ank_alko_n'];
+            }
+            if (isset($user_set_data['ank_alko']) && strlen2($user_set_data['ank_alko']) < 216) {
+                if (preg_match('/[^A-zА-я0-9 _\-\=\+\(\)\*\!\?\.,]/ui', $user_set_data['ank_alko'])) {
+                    $err[] = 'В поле "Напиток" используются запрещенные символы';
+                } else {
+                    $user_set_data['ank_alko'] = trim($user_set_data['ank_alko']);
+                    $user_set_data['ank_alko'] = (!empty($user_set_data['ank_alko']) && $user['ank_alko_n'] && $user['ank_alko_n'] <> 3 ? $user_set_data['ank_alko'] : null);
+                    $set_ank_alko += ['ank_alko' => !empty($user_set_data['ank_alko']) ? $user_set_data['ank_alko'] : null];
+                    $user['ank_alko'] = $set_ank_alko['ank_alko'];
+                }
+            } else {
+                $err[] = 'О любимом напитке нужно писать меньше :)';
+            }
+            if (!empty($set_ank_alko)) {
+                $db->query('UPDATE `user` SET ?set WHERE `id`=?i',
+                           [$set_ank_alko, $user['id']]);
+            }
+        }
+        // о себе
+        if ($get_set == 'osebe') {
+            if (isset($user_set_data['ank_o_sebe']) && strlen2($user_set_data['ank_o_sebe']) < 513) {
+                if (preg_match('#[^A-zА-я0-9 _\-\=\+\(\)\*\!\?\.,]#ui', $user_set_data['ank_o_sebe'])) {
+                    $err[] = 'В поле "О себе" используются запрещенные символы';
+                } else {
+                    $user['ank_o_sebe'] = $user_set_data['ank_o_sebe'];
+                    $db->query("UPDATE `user` SET `ank_o_sebe`=? WHERE `id`=?i",
+                               [$user['ank_o_sebe'], $user['id']]);
+                }
+            } else {
+                $err[] = 'О себе нужно писать меньше :)';
+            }
+        }
+        // о партнере
+        if ($get_set == 'opar') {
+            if (isset($user_set_data['ank_o_par']) && strlen2($user_set_data['ank_o_par']) < 216) {
+                if (preg_match('#[^A-zА-я0-9 _\-\=\+\(\)\*\!\?\.,]#ui', $user_set_data['ank_o_par'])) {
+                    $err[]='В поле "О партнере" используются запрещенные символы';
+                } else {
+                    $user['ank_o_par'] = $user_set_data['ank_o_par'];
+                    $db->query("UPDATE `user` SET `ank_o_par`=? WHERE `id`=?i",
+                               [$user['ank_o_par'], $user['id']]);
+                }
+            } else {
+                $err[] = 'О партнере нужно писать меньше :)';
+            }
+        }
+        // наркотики
+        if ($get_set == 'nark') {
+            $val = range(0, 4);
+            $set_ank_nark = [];
+            if (isset($user_set_data['ank_nark']) && in_array($user_set_data['ank_nark'] , $val)) {
+                $set_ank_nark += ['ank_nark' => $val[$user_set_data['ank_nark']]];
+                $user['ank_nark'] = $set_ank_nark['ank_nark'];
+            }
+            if (!empty($set_ank_nark)) {
+                $db->query('UPDATE `user` SET ?set WHERE `id`=?i',
+                           [$set_ank_nark, $user['id']]);
+            }
+        }
+        // чем занимаюсь
+        if ($get_set == 'zan') {
+            if (isset($user_set_data['ank_zan']) && strlen2($user_set_data['ank_zan'])<=215) {
+                if (preg_match('#[^A-zА-я0-9 _\-\=\+\(\)\*\!\?\.,]#ui', $user_set_data['ank_zan'])) {
+                    $err[] = 'В поле "Чем занимаюсь" используются запрещенные символы';
+                } else {
+                    $user['ank_zan'] = $user_set_data['ank_zan'];
+                    $db->query("UPDATE `user` SET `ank_zan`=? WHERE `id`=?i",
+                                [$user['ank_zan'], $user['id']]);
+                }
+            } else {
+                $err[] = 'Слишком большой текст';
+            }
+        }
+        if (!isset($err)) {
+            $_SESSION['message'] = 'Изменения успешно приняты';
+            $db->query("UPDATE `user` SET `rating_tmp`=`rating_tmp`+?i WHERE `id`=?i",
+                       [1, $user['id']]);
+        
+            if ($get_act && $get_act['act']=='ank') {
+                header("Location: /user/info/anketa.php?".SID);
+            } elseif ($get_act && $get_act['act']=='ank_web') {
+                header("Location: /info.php".SID);
+            } else {
+                header("Location: /user/info/edit.php?".SID);
+            }
+            exit;
+        }
+    }
+    
+    err();
+    
+    echo '<form method="post" action="?' . $get2 . 'set=' . $get . '">'."\n";
+    if ($get_set == 'nick' && $user['set_nick'] == 1) {
+        echo "<div class='mess'>Внимание! Изменить свой ник вы можете только один раз!</div> Nick Name:<br /><input type='text' name='nick' value='".htmlspecialchars($user['nick'], false)."' maxlength='32' /><br />";
+    }
+    if ($get_set == 'name') {
+        echo "Имя в реале:<br /><input type='text' name='ank_name' value='".htmlspecialchars($user['ank_name'], false)."' maxlength='32' /><br />";
+    }
+    
+    if ($get_set == 'glaza') {
+        echo "Цвет глаз:<br /><input type='text' name='ank_cvet_glas' value='".htmlspecialchars($user['ank_cvet_glas'], false)."' maxlength='32' /><br />";
+    }
+    
+    if ($get_set == 'volos') {
+        echo "Волосы:<br /><input type='text' name='ank_volos' value='".htmlspecialchars($user['ank_volos'], false)."' maxlength='32' /><br />";
+    }
+    // Form Date
+    if ($get_set == 'date') {
+		$array_day = range(1, 31);
+?>
+	<p>Дата рождения:</p>
+	<p><select name="ank_d_r">
+        <option value=""></option>
+	<?php
+		foreach($array_day as $date_day) {
+			echo '  <option value="' . $date_day . '"' . ($user['ank_d_r'] == $date_day ? ' selected="selected"' : null) . '>' . $date_day . '</option>'."\n";
+		}
+?>
+	</select>
+	<select name="ank_m_r">
+        <option value=""></option>
+    <?php
+		$array_month = range(1, 12);
+		foreach($array_month as $date_month) {
+			echo '  <option value="' . $date_month . '"' . ($user['ank_m_r'] == $date_month ? ' selected="selected"' : null) . '>' . $date_month . '</option>'."\n";
+		}		
+        
+        echo '</select>'."\n";
+        $max_year_of_birth = date('Y') - 14; // TODO: ??? в настройки?
+        $min_year_of_birth = $max_year_of_birth - 70;
+		$array_year = range($min_year_of_birth, $max_year_of_birth);
+        echo '<select name="ank_g_r">'."\n".
+        '<option value=""></option>'."\n";
+		foreach($array_year as $date_year) {
+			echo '  <option value="' . $date_year . '"' . ($user['ank_g_r'] == $date_year ? ' selected="selected"' : null) . '>' . $date_year . '</option>'."\n";
+		}    
+        echo '</select><br/>';
+    }
+        
+    if ($get_set == 'pol') {
+        echo "Пол:<br /> <input name='pol' type='radio' ".($user['pol']==1?' checked="checked"':null)." value='1' />Муж.<br />
 	<input name='pol' type='radio' ".($user['pol']==0?' checked="checked"':null)." value='0' />Жен.<br />";
-	}
-		
-	if (isset($_GET['set']) && $_GET['set']=='telo'){
-	echo "Телосложение:<br /> 
+    }
+        
+    if ($get_set == 'telo') {
+        echo "Телосложение:<br /> 
 	<input name='ank_telosl' type='radio' ".($user['ank_telosl']==1?' checked="checked"':null)." value='1' />Нет ответа<br />
 	<input name='ank_telosl' type='radio' ".($user['ank_telosl']==2?' checked="checked"':null)." value='2' />Худощавое<br />
 	<input name='ank_telosl' type='radio' ".($user['ank_telosl']==3?' checked="checked"':null)." value='3' />Обычное<br />
@@ -776,60 +514,60 @@ err();
 	<input name='ank_telosl' type='radio' ".($user['ank_telosl']==6?' checked="checked"':null)." value='6' />Плотное<br />
 	<input name='ank_telosl' type='radio' ".($user['ank_telosl']==7?' checked="checked"':null)." value='7' />Полное<br />
 	<input name='ank_telosl' type='radio' ".($user['ank_telosl']==0?' checked="checked"':null)." value='0' />Не указано<br />";
-	}
-		
-	if (isset($_GET['set']) && $_GET['set']=='avto'){
-	echo "Наличие автомобиля:<br /> 
+    }
+        
+    if ($get_set == 'avto') {
+        echo "Наличие автомобиля:<br /> 
 	<input name='ank_avto_n' type='radio' ".($user['ank_avto_n']==0?' checked="checked"':null)." value='0' />Не указано<br />
 	<input name='ank_avto_n' type='radio' ".($user['ank_avto_n']==1?' checked="checked"':null)." value='1' />Есть<br />
 	<input name='ank_avto_n' type='radio' ".($user['ank_avto_n']==2?' checked="checked"':null)." value='2' />Нет<br />
 	<input name='ank_avto_n' type='radio' ".($user['ank_avto_n']==3?' checked="checked"':null)." value='3' />Хочу купить<br />";
-	echo "Название\Марка авто:<br /><input type='text' name='ank_avto' value='".htmlspecialchars($user['ank_avto'],false)."' maxlength='215' /><br />";
-	}
-	if (isset($_GET['set']) && $_GET['set']=='nark'){
-	echo "Наркотики:<br /> 
+        echo "Название\Марка авто:<br /><input type='text' name='ank_avto' value='".htmlspecialchars($user['ank_avto'], false)."' maxlength='215' /><br />";
+    }
+    if ($get_set == 'nark') {
+        echo "Наркотики:<br /> 
 	<input name='ank_nark' type='radio' ".($user['ank_nark']==0?' checked="checked"':null)." value='0' />Не указано<br />
 	<input name='ank_nark' type='radio' ".($user['ank_nark']==1?' checked="checked"':null)." value='1' />Да, курю травку<br />
 	<input name='ank_nark' type='radio' ".($user['ank_nark']==2?' checked="checked"':null)." value='2' />Да, люблю любой вид наркотических средств<br />
 	<input name='ank_nark' type='radio' ".($user['ank_nark']==3?' checked="checked"':null)." value='3' />Бросаю, прохожу реабилитацию<br />
 	<input name='ank_nark' type='radio' ".($user['ank_nark']==4?' checked="checked"':null)." value='4' />Нет, категорически не приемлю<br />";
-	}
-	if (isset($_GET['set']) && $_GET['set']=='alko'){
-	echo "Алкоголь:<br /> 
+    }
+    if ($get_set == 'alko') {
+        echo "Алкоголь:<br /> 
 	<input name='ank_alko_n' type='radio' ".($user['ank_alko_n']==0?' checked="checked"':null)." value='0' />Не указано<br />
 	<input name='ank_alko_n' type='radio' ".($user['ank_alko_n']==1?' checked="checked"':null)." value='1' />Да, выпиваю<br />
 	<input name='ank_alko_n' type='radio' ".($user['ank_alko_n']==2?' checked="checked"':null)." value='2' />Редко, по праздникам<br />
 	<input name='ank_alko_n' type='radio' ".($user['ank_alko_n']==3?' checked="checked"':null)." value='3' />Нет, категорически не приемлю<br />";
-	echo "Напиток:<br /><input type='text' name='ank_alko' value='".htmlspecialchars($user['ank_alko'],false)."' maxlength='215' /><br />";
-	}
-	if (isset($_GET['set']) && $_GET['set']=='orien'){
-	echo "Ориентация:<br /> 
+        echo "Напиток:<br /><input type='text' name='ank_alko' value='".htmlspecialchars($user['ank_alko'], false)."' maxlength='215' /><br />";
+    }
+    if ($get_set == 'orien') {
+        echo "Ориентация:<br /> 
 	<input name='ank_orien' type='radio' ".($user['ank_orien']==0?' checked="checked"':null)." value='0' />Не указано<br />
 	<input name='ank_orien' type='radio' ".($user['ank_orien']==1?' checked="checked"':null)." value='1' />Гетеро<br />
 	<input name='ank_orien' type='radio' ".($user['ank_orien']==2?' checked="checked"':null)." value='2' />Би<br />
 	<input name='ank_orien' type='radio' ".($user['ank_orien']==3?' checked="checked"':null)." value='3' />Гей/Лесби<br />";
-	}
-	if (isset($_GET['set']) && $_GET['set']=='mat_pol'){
-	echo "Материальное положение:<br /> 
+    }
+    if ($get_set == 'mat_pol') {
+        echo "Материальное положение:<br /> 
 	<input name='ank_mat_pol' type='radio' ".($user['ank_mat_pol']==0?' checked="checked"':null)." value='0' />Не указано<br />
 	<input name='ank_mat_pol' type='radio' ".($user['ank_mat_pol']==1?' checked="checked"':null)." value='1' />Непостоянные заработки<br />
 	<input name='ank_mat_pol' type='radio' ".($user['ank_mat_pol']==2?' checked="checked"':null)." value='2' />Постоянный небольшой доход<br />
 	<input name='ank_mat_pol' type='radio' ".($user['ank_mat_pol']==3?' checked="checked"':null)." value='3' />Стабильный средний доход<br />
 	<input name='ank_mat_pol' type='radio' ".($user['ank_mat_pol']==4?' checked="checked"':null)." value='4' />Хорошо зарабатываю / обеспечен<br />
 	<input name='ank_mat_pol' type='radio' ".($user['ank_mat_pol']==5?' checked="checked"':null)." value='5' />Не зарабатываю<br />";
-	}
-	if (isset($_GET['set']) && $_GET['set']=='smok'){
-	echo "Курение:<br /> 
+    }
+    if ($get_set == 'smok') {
+        echo "Курение:<br /> 
 	<input name='ank_smok' type='radio' ".($user['ank_smok']==0?' checked="checked"':null)." value='0' />Не указано<br />
 	<input name='ank_smok' type='radio' ".($user['ank_smok']==1?' checked="checked"':null)." value='1' />Не курю<br />
 	<input name='ank_smok' type='radio' ".($user['ank_smok']==2?' checked="checked"':null)." value='2' />Курю<br />
 	<input name='ank_smok' type='radio' ".($user['ank_smok']==3?' checked="checked"':null)." value='3' />Редко<br />
 	<input name='ank_smok' type='radio' ".($user['ank_smok']==4?' checked="checked"':null)." value='4' />Бросаю<br />
 	<input name='ank_smok' type='radio' ".($user['ank_smok']==5?' checked="checked"':null)." value='5' />Успешно бросил<br />";
-	}
-	
-	if (isset($_GET['set']) && $_GET['set']=='proj'){
-	echo "Проживание:<br /> 
+    }
+    
+    if ($get_set == 'proj') {
+        echo "Проживание:<br /> 
 	<input name='ank_proj' type='radio' ".($user['ank_proj']==0?' checked="checked"':null)." value='0' />Не указано<br />
 	<input name='ank_proj' type='radio' ".($user['ank_proj']==1?' checked="checked"':null)." value='1' />Отдельная квартира (снимаю или своя)<br />
 	<input name='ank_proj' type='radio' ".($user['ank_proj']==2?' checked="checked"':null)." value='2' />Комната в общежитии, коммуналка<br />
@@ -837,46 +575,51 @@ err();
 	<input name='ank_proj' type='radio' ".($user['ank_proj']==4?' checked="checked"':null)." value='4' />Живу с приятелем / с подругой<br />
 	<input name='ank_proj' type='radio' ".($user['ank_proj']==5?' checked="checked"':null)." value='5' />Живу с партнером или супругом (-ой)<br />
 	<input name='ank_proj' type='radio' ".($user['ank_proj']==6?' checked="checked"':null)." value='6' />Нет постоянного жилья<br />";
-	}
-	
-	
-	if (isset($_GET['set']) && $_GET['set']=='baby'){
-	echo "Есть ли дети:<br /> 
+    }
+    
+    
+    if ($get_set == 'baby') {
+        echo "Есть ли дети:<br /> 
 	<input name='ank_baby' type='radio' ".($user['ank_baby']==0?' checked="checked"':null)." value='0' />Не указано<br />
 	<input name='ank_baby' type='radio' ".($user['ank_baby']==1?' checked="checked"':null)." value='1' />Нет<br />
 	<input name='ank_baby' type='radio' ".($user['ank_baby']==2?' checked="checked"':null)." value='2' />Нет, но хотелось бы<br />
 	<input name='ank_baby' type='radio' ".($user['ank_baby']==3?' checked="checked"':null)." value='3' />Есть, живем вместе<br />
 	<input name='ank_baby' type='radio' ".($user['ank_baby']==4?' checked="checked"':null)." value='4' />Есть, живем порознь<br />";
-	}
-	
-	if (isset($_GET['set']) && $_GET['set']=='zan')
-	echo "Чем занимаюсь:<br /><input type='text' name='ank_zan' value='$user[ank_zan]' maxlength='215' /><br />";
-	
-	if (isset($_GET['set']) && $_GET['set']=='gorod')
-	echo "Город:<br /><input type='text' name='ank_city' value='$user[ank_city]' maxlength='32' /><br />";
-	
-	if (isset($_GET['set']) && $_GET['set']=='rost')
-	echo "Рост:<br /><input type='text' name='ank_rost' value='$user[ank_rost]' maxlength='3' /><br />";
-	
-	if (isset($_GET['set']) && $_GET['set']=='ves')
-	echo "Вес:<br /><input type='text' name='ank_ves' value='$user[ank_ves]' maxlength='3' /><br />";
-	
-	if (isset($_GET['set']) && $_GET['set']=='icq')
-	echo "ICQ:<br /><input type='text' name='ank_icq' value='$user[ank_icq]' maxlength='9' /><br />";
-	
-	if (isset($_GET['set']) && $_GET['set']=='skype')
-	echo "Skype логин<br /><input type='text' name='ank_skype' value='$user[ank_skype]' maxlength='16' /><br />";
-	
-	
-	if (isset($_GET['set']) && $_GET['set']=='mail'){
-	echo "E-mail:<br />
+    }
+    
+    if ($get_set == 'zan') {
+        echo "Чем занимаюсь:<br /><input type='text' name='ank_zan' value='$user[ank_zan]' maxlength='215' /><br />";
+    }
+    
+    if ($get_set == 'gorod') {
+        echo "Город:<br /><input type='text' name='ank_city' value='$user[ank_city]' maxlength='32' /><br />";
+    }
+    
+    if ($get_set == 'rost') {
+        echo "Рост:<br /><input type='text' name='ank_rost' value='$user[ank_rost]' maxlength='3' /><br />";
+    }
+    
+    if ($get_set == 'ves') {
+        echo "Вес:<br /><input type='text' name='ank_ves' value='$user[ank_ves]' maxlength='3' /><br />";
+    }
+    
+    if ($get_set == 'icq') {
+        echo "ICQ:<br /><input type='text' name='ank_icq' value='$user[ank_icq]' maxlength='9' /><br />";
+    }
+    
+    if ($get_set == 'skype') {
+        echo "Skype логин<br /><input type='text' name='ank_skype' value='$user[ank_skype]' maxlength='16' /><br />";
+    }
+    
+    
+    if ($get_set == 'mail') {
+        echo "E-mail:<br />
 		<input type='text' name='ank_mail' value='$user[ank_mail]' maxlength='32' /><br />
 		<label><input type='checkbox' name='set_show_mail'".($user['set_show_mail']==1?' checked="checked"':null)." value='1' /> Показывать E-mail в анкете</label><br />";
-	}
-	
-	
-	if (isset($_GET['set']) && $_GET['set']=='loves'){
-	echo "Цели знакомства:<br />
+    }
+    
+    if ($get_set == 'loves') {
+        echo "Цели знакомства:<br />
 		<label><input type='checkbox' name='ank_lov_1'".($user['ank_lov_1']==1?' checked="checked"':null)." value='1' /> Дружба и общение</label><br />
 		<label><input type='checkbox' name='ank_lov_2'".($user['ank_lov_2']==1?' checked="checked"':null)." value='1' /> Переписка</label><br />
 		<label><input type='checkbox' name='ank_lov_3'".($user['ank_lov_3']==1?' checked="checked"':null)." value='1' /> Любовь, отношения</label><br />
@@ -891,256 +634,356 @@ err();
 		<label><input type='checkbox' name='ank_lov_12'".($user['ank_lov_12']==1?' checked="checked"':null)." value='1' /> Брак для вида</label><br />
 		<label><input type='checkbox' name='ank_lov_13'".($user['ank_lov_13']==1?' checked="checked"':null)." value='1' /> Совместная аренда жилья</label><br />
 		<label><input type='checkbox' name='ank_lov_14'".($user['ank_lov_14']==1?' checked="checked"':null)." value='1' /> Занятия спортом</label><br />
-		
-		<br />";
-	}
-	
-	if (isset($_GET['set']) && $_GET['set']=='mobile')
-	echo "Номер телефона:<br /><input type='text' name='ank_n_tel' value='$user[ank_n_tel]' maxlength='11' /><br />";
-	
-	if (isset($_GET['set']) && $_GET['set']=='osebe')
-	echo "О себе:<br /><input type='text' name='ank_o_sebe' value='$user[ank_o_sebe]' maxlength='512' /><br />";
-	
-	if (isset($_GET['set']) && $_GET['set']=='opar')
-	echo "О партнере:<br /><input type='text' name='ank_o_par' value='$user[ank_o_par]' maxlength='215' /><br />";
-	
-	
-	echo "<input type='submit' name='save' value='Сохранить' /></form>\n";
-}else{
-echo "<div class='nav2'>";
-echo "Основное";
-echo "</div>";
-echo "<div class='nav1'>";
-if ($user['set_nick'] == 1)
-{
-echo "<a href='?set=nick'> <img src='/style/icons/str.gif' alt='*'>  <b>Nick Name</b></a>";
-if ($user['nick']!=NULL)
-echo " &#62; $user[nick]<br />\n";
-else
-echo "<br />\n";
-}
-echo "<a href='?set=name'> <img src='/style/icons/str.gif' alt='*'>  Имя</a>";
-if ($user['ank_name']!=NULL)
-echo " &#62; $user[ank_name]<br />\n";
-else
-echo "<br />\n";
-echo "<a href='?set=pol'> <img src='/style/icons/str.gif' alt='*'>  Пол</a> &#62; ".(($user['pol']==1)?'Мужской':'Женский')."<br />";
-echo "<a href='?set=gorod'> <img src='/style/icons/str.gif' alt='*'>  Город</a>";
-if ($user['ank_city']!=NULL)
-echo " &#62; $user[ank_city]<br />\n";
-else
-echo "<br />\n";
-echo "<a href='?set=date'> <img src='/style/icons/str.gif' alt='*'>  Дата рождения</a> ";
-if($user['ank_d_r']!=NULL && $user['ank_m_r']!=NULL && $user['ank_g_r']!=NULL)
-echo " &#62; $user[ank_d_r].$user[ank_m_r].$user[ank_g_r] г. <br />\n";
-elseif($user['ank_d_r']!=NULL && $user['ank_m_r']!=NULL)
-echo " &#62; $user[ank_d_r].$user[ank_m_r]<br />\n";
-echo "</div>";
-echo "<div class='nav2'>";
-echo "Типаж";
-echo "</div>";
-echo "<div class='nav1'>";
-echo "<a href='?set=rost'> <img src='/style/icons/str.gif' alt='*'>  Рост</a>";
-if ($user['ank_rost']!=NULL)
-echo " &#62; $user[ank_rost]<br />\n";
-else
-echo "<br />\n";
-echo "<a href='?set=ves'> <img src='/style/icons/str.gif' alt='*'>  Вес</a>";
-if ($user['ank_ves']!=NULL)
-echo " &#62; $user[ank_ves]<br />\n";
-else
-echo "<br />\n";
-echo "<a href='?set=glaza'> <img src='/style/icons/str.gif' alt='*'>  Глаза</a>";
-if ($user['ank_cvet_glas']!=NULL)
-echo " &#62; $user[ank_cvet_glas]<br />\n";
-else
-echo "<br />\n";
-echo "<a href='?set=volos'> <img src='/style/icons/str.gif' alt='*'>  Волосы</a>";
-if ($user['ank_volos']!=NULL)
-echo " &#62; $user[ank_volos]<br />\n";
-else
-echo "<br />\n";
-echo "<a href='?set=telo'> <img src='/style/icons/str.gif' alt='*'>  Телосложение</a> ";
-if ($user['ank_telosl']==1)
-echo " &#62; Нет ответа<br />\n";
-if ($user['ank_telosl']==2)
-echo " &#62; Худощавое<br />\n";
-if ($user['ank_telosl']==3)
-echo " &#62; Обычное<br />\n";
-if ($user['ank_telosl']==4)
-echo " &#62; Спортивное<br />\n";
-if ($user['ank_telosl']==5)
-echo " &#62; Мускулистое<br />\n";
-if ($user['ank_telosl']==6)
-echo " &#62; Плотное<br />\n";
-if ($user['ank_telosl']==7)
-echo " &#62; Полное<br />\n";
-if ($user['ank_telosl']==0)
-echo "<br />\n";
-echo "</div>";
-echo "<div class='nav2'>";
-echo "Для знакомства";
-echo "</div>";
-echo "<div class='nav1'>";
-echo "<a href='?set=orien'> <img src='/style/icons/str.gif' alt='*'>  Ориентация</a> ";
-if ($user['ank_orien']==0)
-echo "<br />\n";
-if ($user['ank_orien']==1)
-echo " &#62;  Гетеро<br />\n";
-if ($user['ank_orien']==2)
-echo " &#62;  Би<br />\n";
-if ($user['ank_orien']==3)
-echo " &#62;  Гей/Лесби<br />\n";
-echo "<a href='?set=loves'> <img src='/style/icons/str.gif' alt='*'>  Цели знакомства</a><br />";
-if ($user['ank_lov_1']==1)echo " &#62; Дружба и общение<br />";
-if ($user['ank_lov_2']==1)echo " &#62; Переписка<br />";
-if ($user['ank_lov_3']==1)echo " &#62; Любовь, отношения<br />";
-if ($user['ank_lov_4']==1)echo " &#62; Регулярный секс вдвоем<br />";
-if ($user['ank_lov_5']==1)echo " &#62; Секс на один-два раза<br />";
-if ($user['ank_lov_6']==1)echo " &#62; Групповой секс<br />";
-if ($user['ank_lov_7']==1)echo " &#62; Виртуальный секс<br />";
-if ($user['ank_lov_8']==1)echo "&#62; Предлагаю интим за деньги<br />";
-if ($user['ank_lov_9']==1)echo " &#62; Ищу интим за деньги<br />";
-if ($user['ank_lov_10']==1)echo " &#62; Брак, создание семьи<br />";
-if ($user['ank_lov_11']==1)echo " &#62; Рождение, воспитание ребенка<br />";
-if ($user['ank_lov_12']==1)echo " &#62; Брак для вида<br />";
-if ($user['ank_lov_13']==1)echo " &#62; Совместная аренда жилья<br />";
-if ($user['ank_lov_14']==1)echo " &#62; Занятия спортом<br />";
-echo "<a href='?set=opar'> <img src='/style/icons/str.gif' alt='*'>  О партнере</a>";
-if ($user['ank_o_par']!=NULL)
-echo " &#62; ".htmlspecialchars($user['ank_o_par'])."<br />\n";
-else
-echo "<br />";
-echo "<a href='?set=osebe'> <img src='/style/icons/str.gif' alt='*'>  О себе</a>";
-if ($user['ank_o_sebe']!=NULL)
-echo " &#62; ".htmlspecialchars($user['ank_o_sebe'])."<br />\n";
-else
-echo "<br />";
-echo "</div>";
-echo "<div class='nav2'>";
-echo "Общее положение";
-echo "</div>";
-echo "<div class='nav1'>";
-echo "<a href='?set=zan'> <img src='/style/icons/str.gif' alt='*'>  Чем занимаюсь</a> ";
-if ($user['ank_zan']!=NULL)
-echo " &#62; ".htmlspecialchars($user['ank_zan']);echo '<br />';
-echo "<a href='?set=mat_pol'> <img src='/style/icons/str.gif' alt='*'>  Материальное положение</a>";
-if ($user['ank_mat_pol']==1)
-echo " &#62; Непостоянные заработки<br />\n";
-if ($user['ank_mat_pol']==2)
-echo " &#62; Постоянный небольшой доход<br />\n";
-if ($user['ank_mat_pol']==3)
-echo " &#62; Стабильный средний доход<br />\n";
-if ($user['ank_mat_pol']==4)
-echo " &#62; Хорошо зарабатываю / обеспечен<br />\n";
-if ($user['ank_mat_pol']==5)
-echo " &#62; Не зарабатываю<br />\n";
-if ($user['ank_mat_pol']==0)
-echo "<br />\n";
-echo "<a href='?set=avto'> <img src='/style/icons/str.gif' alt='*'>  Наличие автомобиля</a>";
-if ($user['ank_avto_n']==1)
-echo " &#62; Есть<br />\n";
-if ($user['ank_avto_n']==2)
-echo " &#62; Нет<br />\n";
-if ($user['ank_avto_n']==3)
-echo " &#62; Хочу купить<br />\n";
-if ($user['ank_avto_n']==0)
-echo "<br />\n";
-if ($user['ank_avto'] && $user['ank_avto_n']!=2 && $user['ank_avto_n']!=0)
-echo "<img src='/style/icons/str.gif' alt='*'>  ".htmlspecialchars($user['ank_avto'])."<br />";
-echo "<a href='?set=proj'> <img src='/style/icons/str.gif' alt='*'>  Проживание</a> ";
-if ($user['ank_proj']==1)
-echo " &#62; Отдельная квартира (снимаю или своя)<br />\n";
-if ($user['ank_proj']==2)
-echo " &#62; Комната в общежитии, коммуналка<br />\n";
-if ($user['ank_proj']==3)
-echo " &#62; Живу с родителями<br />\n";
-if ($user['ank_proj']==4)
-echo " &#62; Живу с приятелем / с подругой<br />\n";
-if ($user['ank_proj']==5)
-echo " &#62; Живу с партнером или супругом (-ой)<br />\n";
-if ($user['ank_proj']==6)
-echo " &#62; Нет постоянного жилья<br />\n";
-if ($user['ank_proj']==0)
-echo "<br />\n";
-echo "<a href='?set=baby'> <img src='/style/icons/str.gif' alt='*'>  Есть ли дети</a> ";
-if ($user['ank_baby']==1)
-echo " &#62; Нет<br />\n";
-if ($user['ank_baby']==2)
-echo " &#62; Нет, но хотелось бы<br />\n";
-if ($user['ank_baby']==3)
-echo " &#62; Есть, живем вместе<br />\n";
-if ($user['ank_baby']==4)
-echo " &#62; Есть, живем порознь<br />\n";
-if ($user['ank_baby']==0)
-echo "<br />\n";
-echo "</div>";
-echo "<div class='nav2'>";
-echo "Привычки";
-echo "</div>";
-echo "<div class='nav1'>";
-echo "<a href='?set=smok'> <img src='/style/icons/str.gif' alt='*'>  Курение</a>";
-if ($user['ank_smok']==1)
-echo " &#62; Не курю<br />\n";
-if ($user['ank_smok']==2)
-echo " &#62; Курю<br />\n";
-if ($user['ank_smok']==3)
-echo " &#62; Редко<br />\n";
-if ($user['ank_smok']==4)
-echo " &#62; Бросаю<br />\n";
-if ($user['ank_smok']==5)
-echo " &#62; Успешно бросил<br />\n";
-if ($user['ank_smok']==0)
-echo "<br />\n";
-echo "<a href='?set=alko'> <img src='/style/icons/str.gif' alt='*'>  Алкоголь</a> ";
-if ($user['ank_alko_n']==1)
-echo "&#62; Да, выпиваю<br />\n";
-if ($user['ank_alko_n']==2)
-echo "&#62; Редко, по праздникам<br />\n";
-if ($user['ank_alko_n']==3)
-echo "&#62; Нет, категорически не приемлю<br />\n";
-if ($user['ank_alko_n']==0)
-echo "<br />\n";
-if ($user['ank_alko'] && $user['ank_alko_n']!=3 && $user['ank_alko_n']!=0)
-echo "<img src='/style/icons/str.gif' alt='*'>  ".htmlspecialchars($user['ank_alko'])."<br />";
-echo "<a href='?set=nark'> <img src='/style/icons/str.gif' alt='*'>  Наркотики</a> ";
-if ($user['ank_nark']==1)
-echo " Да, курю травку<br />\n";
-if ($user['ank_nark']==2)
-echo "&#62; Да, люблю любой вид наркотических средств<br />\n";
-if ($user['ank_nark']==3)
-echo "&#62; Бросаю, прохожу реабилитацию<br />\n";
-if ($user['ank_nark']==4)
-echo "&#62; Нет, категорически не приемлю<br />\n";
-if ($user['ank_nark']==0)
-echo "<br />\n";
-echo "</div>";
-echo "<div class='nav2'>";
-echo "Контакты";
-echo "</div>";
-echo "<div class='nav1'>";
-echo "<a href='?set=mobile'> <img src='/style/icons/str.gif' alt='*'>  Мобильный</a> ";
-if ($user['ank_n_tel'])echo "&#62; $user[ank_n_tel]<br />";
-else
-echo "<br />";
-echo "<a href='?set=icq'> <img src='/style/icons/str.gif' alt='*'>  ICQ</a> ";
-if ($user['ank_icq'])echo "&#62; $user[ank_icq]<br />";
-else
-echo "<br />";
-echo "<a href='?set=mail'> <img src='/style/icons/str.gif' alt='*'>  E-Mail</a> ";
-if ($user['ank_mail'])echo "&#62; $user[ank_mail]<br />";
-else
-echo "<br />";
-echo "<a href='?set=skype'> <img src='/style/icons/str.gif' alt='*'>  Skype</a> "; 
-if ($user['ank_skype'])echo "&#62; $user[ank_skype]<br />";
-else
-echo "<br />";
-echo "</div>";
+    	<br />";
+    }
+    
+    if ($get_set == 'mobile') {
+        echo "Номер телефона:<br /><input type='text' name='ank_n_tel' value='$user[ank_n_tel]' maxlength='11' /><br />";
+    }
+    
+    if ($get_set == 'osebe') {
+        echo "О себе:<br /><input type='text' name='ank_o_sebe' value='$user[ank_o_sebe]' maxlength='512' /><br />";
+    }
+    
+    if ($get_set == 'opar') {
+        echo "О партнере:<br /><input type='text' name='ank_o_par' value='$user[ank_o_par]' maxlength='215' /><br />";
+    }
+   
+    echo "<input type='submit' name='save' value='Сохранить' /></form>\n";
+    
+} else {
+    echo "<div class='nav2'>";
+    echo "Основное";
+    echo "</div>";
+    echo "<div class='nav1'>";
+    if ($user['set_nick'] == 1) {
+        echo "<a href='?set=nick'> <img src='/style/icons/str.gif' alt='*'>  <b>Nick Name</b></a>";
+        if ($user['nick']!=null) {
+            echo " &#62; $user[nick]<br />\n";
+        } else {
+            echo "<br />\n";
+        }
+    }
+    echo "<a href='?set=name'> <img src='/style/icons/str.gif' alt='*'>  Имя</a>";
+    if ($user['ank_name']!=null) {
+        echo " &#62; $user[ank_name]<br />\n";
+    } else {
+        echo "<br />\n";
+    }
+    echo "<a href='?set=pol'> <img src='/style/icons/str.gif' alt='*'>  Пол</a> &#62; ".(($user['pol']==1)?'Мужской':'Женский')."<br />";
+    echo "<a href='?set=gorod'> <img src='/style/icons/str.gif' alt='*'>  Город</a>";
+    if ($user['ank_city']!=null) {
+        echo " &#62; $user[ank_city]<br />\n";
+    } else {
+        echo "<br />\n";
+    }
+    echo "<a href='?set=date'> <img src='/style/icons/str.gif' alt='*'>  Дата рождения</a> ";
+    if ($user['ank_d_r']!=null && $user['ank_m_r']!=null && $user['ank_g_r']!=null) {
+        echo " &#62; $user[ank_d_r].$user[ank_m_r].$user[ank_g_r] г. <br />\n";
+    } elseif ($user['ank_d_r']!=null && $user['ank_m_r']!=null) {
+        echo " &#62; $user[ank_d_r].$user[ank_m_r]<br />\n";
+    }
+    echo "</div>";
+    echo "<div class='nav2'>";
+    echo "Типаж";
+    echo "</div>";
+    echo "<div class='nav1'>";
+    echo "<a href='?set=rost'> <img src='/style/icons/str.gif' alt='*'>  Рост</a>";
+    if ($user['ank_rost']!=null) {
+        echo " &#62; $user[ank_rost]<br />\n";
+    } else {
+        echo "<br />\n";
+    }
+    echo "<a href='?set=ves'> <img src='/style/icons/str.gif' alt='*'>  Вес</a>";
+    if ($user['ank_ves']!=null) {
+        echo " &#62; $user[ank_ves]<br />\n";
+    } else {
+        echo "<br />\n";
+    }
+    echo "<a href='?set=glaza'> <img src='/style/icons/str.gif' alt='*'>  Глаза</a>";
+    if ($user['ank_cvet_glas']!=null) {
+        echo " &#62; $user[ank_cvet_glas]<br />\n";
+    } else {
+        echo "<br />\n";
+    }
+    echo "<a href='?set=volos'> <img src='/style/icons/str.gif' alt='*'>  Волосы</a>";
+    if ($user['ank_volos']!=null) {
+        echo " &#62; $user[ank_volos]<br />\n";
+    } else {
+        echo "<br />\n";
+    }
+    echo "<a href='?set=telo'> <img src='/style/icons/str.gif' alt='*'>  Телосложение</a> ";
+    if ($user['ank_telosl']==1) {
+        echo " &#62; Нет ответа<br />\n";
+    }
+    if ($user['ank_telosl']==2) {
+        echo " &#62; Худощавое<br />\n";
+    }
+    if ($user['ank_telosl']==3) {
+        echo " &#62; Обычное<br />\n";
+    }
+    if ($user['ank_telosl']==4) {
+        echo " &#62; Спортивное<br />\n";
+    }
+    if ($user['ank_telosl']==5) {
+        echo " &#62; Мускулистое<br />\n";
+    }
+    if ($user['ank_telosl']==6) {
+        echo " &#62; Плотное<br />\n";
+    }
+    if ($user['ank_telosl']==7) {
+        echo " &#62; Полное<br />\n";
+    }
+    if ($user['ank_telosl']==0) {
+        echo "<br />\n";
+    }
+    echo "</div>";
+    echo "<div class='nav2'>";
+    echo "Для знакомства";
+    echo "</div>";
+    echo "<div class='nav1'>";
+    echo "<a href='?set=orien'> <img src='/style/icons/str.gif' alt='*'>  Ориентация</a> ";
+    if ($user['ank_orien']==0) {
+        echo "<br />\n";
+    }
+    if ($user['ank_orien']==1) {
+        echo " &#62;  Гетеро<br />\n";
+    }
+    if ($user['ank_orien']==2) {
+        echo " &#62;  Би<br />\n";
+    }
+    if ($user['ank_orien']==3) {
+        echo " &#62;  Гей/Лесби<br />\n";
+    }
+    echo "<a href='?set=loves'> <img src='/style/icons/str.gif' alt='*'>  Цели знакомства</a><br />";
+    if ($user['ank_lov_1']==1) {
+        echo " &#62; Дружба и общение<br />";
+    }
+    if ($user['ank_lov_2']==1) {
+        echo " &#62; Переписка<br />";
+    }
+    if ($user['ank_lov_3']==1) {
+        echo " &#62; Любовь, отношения<br />";
+    }
+    if ($user['ank_lov_4']==1) {
+        echo " &#62; Регулярный секс вдвоем<br />";
+    }
+    if ($user['ank_lov_5']==1) {
+        echo " &#62; Секс на один-два раза<br />";
+    }
+    if ($user['ank_lov_6']==1) {
+        echo " &#62; Групповой секс<br />";
+    }
+    if ($user['ank_lov_7']==1) {
+        echo " &#62; Виртуальный секс<br />";
+    }
+    if ($user['ank_lov_8']==1) {
+        echo "&#62; Предлагаю интим за деньги<br />";
+    }
+    if ($user['ank_lov_9']==1) {
+        echo " &#62; Ищу интим за деньги<br />";
+    }
+    if ($user['ank_lov_10']==1) {
+        echo " &#62; Брак, создание семьи<br />";
+    }
+    if ($user['ank_lov_11']==1) {
+        echo " &#62; Рождение, воспитание ребенка<br />";
+    }
+    if ($user['ank_lov_12']==1) {
+        echo " &#62; Брак для вида<br />";
+    }
+    if ($user['ank_lov_13']==1) {
+        echo " &#62; Совместная аренда жилья<br />";
+    }
+    if ($user['ank_lov_14']==1) {
+        echo " &#62; Занятия спортом<br />";
+    }
+    echo "<a href='?set=opar'> <img src='/style/icons/str.gif' alt='*'>  О партнере</a>";
+    if ($user['ank_o_par']!=null) {
+        echo " &#62; ".htmlspecialchars($user['ank_o_par'])."<br />\n";
+    } else {
+        echo "<br />";
+    }
+    echo "<a href='?set=osebe'> <img src='/style/icons/str.gif' alt='*'>  О себе</a>";
+    if ($user['ank_o_sebe']!=null) {
+        echo " &#62; ".htmlspecialchars($user['ank_o_sebe'])."<br />\n";
+    } else {
+        echo "<br />";
+    }
+    echo "</div>";
+    echo "<div class='nav2'>";
+    echo "Общее положение";
+    echo "</div>";
+    echo "<div class='nav1'>";
+    echo "<a href='?set=zan'> <img src='/style/icons/str.gif' alt='*'>  Чем занимаюсь</a> ";
+    if ($user['ank_zan']!=null) {
+        echo " &#62; ".htmlspecialchars($user['ank_zan']);
+    }
+    echo '<br />';
+    echo "<a href='?set=mat_pol'> <img src='/style/icons/str.gif' alt='*'>  Материальное положение</a>";
+    if ($user['ank_mat_pol']==1) {
+        echo " &#62; Непостоянные заработки<br />\n";
+    }
+    if ($user['ank_mat_pol']==2) {
+        echo " &#62; Постоянный небольшой доход<br />\n";
+    }
+    if ($user['ank_mat_pol']==3) {
+        echo " &#62; Стабильный средний доход<br />\n";
+    }
+    if ($user['ank_mat_pol']==4) {
+        echo " &#62; Хорошо зарабатываю / обеспечен<br />\n";
+    }
+    if ($user['ank_mat_pol']==5) {
+        echo " &#62; Не зарабатываю<br />\n";
+    }
+    if ($user['ank_mat_pol']==0) {
+        echo "<br />\n";
+    }
+    echo "<a href='?set=avto'> <img src='/style/icons/str.gif' alt='*'>  Наличие автомобиля</a>";
+    if ($user['ank_avto_n']==1) {
+        echo " &#62; Есть<br />\n";
+    }
+    if ($user['ank_avto_n']==2) {
+        echo " &#62; Нет<br />\n";
+    }
+    if ($user['ank_avto_n']==3) {
+        echo " &#62; Хочу купить<br />\n";
+    }
+    if ($user['ank_avto_n']==0) {
+        echo "<br />\n";
+    }
+    if ($user['ank_avto'] && $user['ank_avto_n']!=2 && $user['ank_avto_n']!=0) {
+        echo "<img src='/style/icons/str.gif' alt='*'>  ".htmlspecialchars($user['ank_avto'])."<br />";
+    }
+    echo "<a href='?set=proj'> <img src='/style/icons/str.gif' alt='*'>  Проживание</a> ";
+    if ($user['ank_proj']==1) {
+        echo " &#62; Отдельная квартира (снимаю или своя)<br />\n";
+    }
+    if ($user['ank_proj']==2) {
+        echo " &#62; Комната в общежитии, коммуналка<br />\n";
+    }
+    if ($user['ank_proj']==3) {
+        echo " &#62; Живу с родителями<br />\n";
+    }
+    if ($user['ank_proj']==4) {
+        echo " &#62; Живу с приятелем / с подругой<br />\n";
+    }
+    if ($user['ank_proj']==5) {
+        echo " &#62; Живу с партнером или супругом (-ой)<br />\n";
+    }
+    if ($user['ank_proj']==6) {
+        echo " &#62; Нет постоянного жилья<br />\n";
+    }
+    if ($user['ank_proj']==0) {
+        echo "<br />\n";
+    }
+    echo "<a href='?set=baby'> <img src='/style/icons/str.gif' alt='*'>  Есть ли дети</a> ";
+    if ($user['ank_baby']==1) {
+        echo " &#62; Нет<br />\n";
+    }
+    if ($user['ank_baby']==2) {
+        echo " &#62; Нет, но хотелось бы<br />\n";
+    }
+    if ($user['ank_baby']==3) {
+        echo " &#62; Есть, живем вместе<br />\n";
+    }
+    if ($user['ank_baby']==4) {
+        echo " &#62; Есть, живем порознь<br />\n";
+    }
+    if ($user['ank_baby']==0) {
+        echo "<br />\n";
+    }
+    echo "</div>";
+    echo "<div class='nav2'>";
+    echo "Привычки";
+    echo "</div>";
+    echo "<div class='nav1'>";
+    echo "<a href='?set=smok'> <img src='/style/icons/str.gif' alt='*'>  Курение</a>";
+    if ($user['ank_smok']==1) {
+        echo " &#62; Не курю<br />\n";
+    }
+    if ($user['ank_smok']==2) {
+        echo " &#62; Курю<br />\n";
+    }
+    if ($user['ank_smok']==3) {
+        echo " &#62; Редко<br />\n";
+    }
+    if ($user['ank_smok']==4) {
+        echo " &#62; Бросаю<br />\n";
+    }
+    if ($user['ank_smok']==5) {
+        echo " &#62; Успешно бросил<br />\n";
+    }
+    if ($user['ank_smok']==0) {
+        echo "<br />\n";
+    }
+    echo "<a href='?set=alko'> <img src='/style/icons/str.gif' alt='*'>  Алкоголь</a> ";
+    if ($user['ank_alko_n']==1) {
+        echo "&#62; Да, выпиваю<br />\n";
+    }
+    if ($user['ank_alko_n']==2) {
+        echo "&#62; Редко, по праздникам<br />\n";
+    }
+    if ($user['ank_alko_n']==3) {
+        echo "&#62; Нет, категорически не приемлю<br />\n";
+    }
+    if ($user['ank_alko_n']==0) {
+        echo "<br />\n";
+    }
+    if ($user['ank_alko'] && $user['ank_alko_n']!=3 && $user['ank_alko_n']!=0) {
+        echo "<img src='/style/icons/str.gif' alt='*'>  ".htmlspecialchars($user['ank_alko'])."<br />";
+    }
+    echo "<a href='?set=nark'> <img src='/style/icons/str.gif' alt='*'>  Наркотики</a> ";
+    if ($user['ank_nark']==1) {
+        echo " Да, курю травку<br />\n";
+    }
+    if ($user['ank_nark']==2) {
+        echo "&#62; Да, люблю любой вид наркотических средств<br />\n";
+    }
+    if ($user['ank_nark']==3) {
+        echo "&#62; Бросаю, прохожу реабилитацию<br />\n";
+    }
+    if ($user['ank_nark']==4) {
+        echo "&#62; Нет, категорически не приемлю<br />\n";
+    }
+    if ($user['ank_nark']==0) {
+        echo "<br />\n";
+    }
+    echo "</div>";
+    echo "<div class='nav2'>";
+    echo "Контакты";
+    echo "</div>";
+    echo "<div class='nav1'>";
+    echo "<a href='?set=mobile'> <img src='/style/icons/str.gif' alt='*'>  Мобильный</a> ";
+    if ($user['ank_n_tel']) {
+        echo "&#62; $user[ank_n_tel]<br />";
+    } else {
+        echo "<br />";
+    }
+    echo "<a href='?set=icq'> <img src='/style/icons/str.gif' alt='*'>  ICQ</a> ";
+    if ($user['ank_icq']) {
+        echo "&#62; $user[ank_icq]<br />";
+    } else {
+        echo "<br />";
+    }
+    echo "<a href='?set=mail'> <img src='/style/icons/str.gif' alt='*'>  E-Mail</a> ";
+    if ($user['ank_mail']) {
+        echo "&#62; $user[ank_mail]<br />";
+    } else {
+        echo "<br />";
+    }
+    echo "<a href='?set=skype'> <img src='/style/icons/str.gif' alt='*'>  Skype</a> ";
+    if ($user['ank_skype']) {
+        echo "&#62; $user[ank_skype]<br />";
+    } else {
+        echo "<br />";
+    }
+    echo "</div>";
 }
 echo "<div class='foot'><img src='/style/icons/str.gif' alt='*'> <a href='anketa.php'>Посмотреть анкету</a><br />";
-if(isset($_SESSION['refer']) && $_SESSION['refer']!=NULL && otkuda($_SESSION['refer']))
-echo "<img src='/style/icons/str2.gif' alt='*'> <a href='$_SESSION[refer]'>".otkuda($_SESSION['refer'])."</a><br />\n";
+if (isset($_SESSION['refer']) && $_SESSION['refer']!=null && otkuda($_SESSION['refer'])) {
+    echo "<img src='/style/icons/str2.gif' alt='*'> <a href='$_SESSION[refer]'>".otkuda($_SESSION['refer'])."</a><br />\n";
+}
 echo '</div>';
-	
+    
 include_once '../../sys/inc/tfoot.php';
-?>

@@ -1,90 +1,130 @@
 <?php
 $set['p_str']=5;
-if (isset($_GET['likepost']))
-{
-$stena=$db->query("SELECT * FROM `stena` WHERE `id` = '".intval($_GET['likepost'])."' LIMIT 1")->row();
-$ank3=get_user($stena['id_user']);
-$l=$db->query("SELECT COUNT(*) FROM `stena_like` WHERE `id_stena` = '$stena[id]'")->el();
-if (isset($_GET['likepost']) && !$db->query("SELECT COUNT(*) FROM `stena_like` WHERE
- `id_stena` = '$stena[id]' AND `id_user` = '$user[id]' LIMIT 1")->el()){
-$db->query("INSERT INTO `stena_like` (`id_user`, `id_stena`) values('$user[id]', '$stena[id]')");
-$db->query("UPDATE `user` SET `balls` = '".($ank3['balls']+1)."' WHERE `id` = '$ank3[id]' LIMIT 1");
+if ($likepost = filter_input(INPUT_GET, 'likepost', FILTER_VALIDATE_INT)) {
+    $stena=$db->query(
+        "SELECT `id`, `id_user` FROM `stena` WHERE `id`=?i",
+                      [$likepost])->row();
+    if ($stena && !$db->query(
+        "SELECT COUNT( * ) FROM `stena_like` WHERE `id_stena`=?i AND `id_user`=?i",
+                                                [$stena['id'], $user['id']])->el()) {
+        $db->query(
+            "INSERT INTO `stena_like` (`id_user`, `id_stena`) VALUES(?i, ?i)",
+                   [$user['id'], $stena['id']]);
+        $db->query(
+            "UPDATE `user` SET `balls`=`balls`+1 WHERE `id`=?i",
+                   [$stena['id']]);
+    }
 }
-}
-$k_post=$db->query("SELECT COUNT(*) FROM `stena` WHERE `id_stena` = '$ank[id]'")->el();
-$k_page=k_page($k_post,$set['p_str']);
-$page=page($k_page);
-$start=$set['p_str']*$page-$set['p_str'];
-if ($k_post==0)
-{
-echo "  <div class='mess'>\n";
-echo "Нет сообщений\n";
-echo "  </div>\n";
-}
-else
-{
-/*------------сортировка по времени--------------*/
-if (isset($user)){
-echo "<div id='comments' class='menus'>";
-echo "<div class='webmenu'>";
-echo "<a href='/info.php?id=$ank[id]&amp;page=$page&amp;sort=1' class='".($user['sort']==1?'activ':'')."'>Внизу</a>";
-echo "</div>"; 
-echo "<div class='webmenu'>";
-echo "<a href='/info.php?id=$ank[id]&amp;page=$page&amp;sort=0' class='".($user['sort']==0?'activ':'')."'>Вверху</a>";
-echo "</div>"; 
-echo "</div>";
-}
-/*---------------alex-borisi---------------------*/
-}
-$q=$db->query("SELECT * FROM `stena` WHERE `id_stena` = '$ank[id]' ORDER BY id $sort LIMIT $start, $set[p_str]");
-$num=0;
-while ($post = $q->row())
-{
-/*-----------зебра-----------*/
-if ($num==0)
-{echo "  <div class='nav1'>\n";
-$num=1;
-}elseif ($num==1)
-{echo "  <div class='nav2'>\n";
-$num=0;}
-/*---------------------------*/
-$ank_stena=$db->query("SELECT * FROM `user` WHERE `id` = $post[id_user] LIMIT 1")->row();
-if ($set['set_show_icon']==2){
-avatar($ank_stena['id']);
-}
-elseif ($set['set_show_icon']==1)
-{
-echo "".group($ank_stena['id'])."";
-}
-echo "<a href='/info.php?id=$ank_stena[id]'>$ank_stena[nick]</a>\n";
-echo "".medal($ank_stena['id'])." ".online($ank_stena['id'])."";
-if (isset($user))echo " <a href='/info.php?id=$ank[id]&amp;response=$ank_stena[id]'>[*]</a>";
-echo " (".vremja($post['time']).")<br />";
-echo stena($ank_stena['id'],$post['id']).' <br/>';
-echo output_text($post['msg'])."<br />\n";
-if (isset($user))
-{
-$l=$db->query("SELECT COUNT(*) FROM `stena_like` WHERE `id_stena` = '$post[id]'")->el();
-echo '<a href="/user/komm.php?id='.$post['id'].'"><img src="/style/icons/uv.png"> ('.
-$db->query("SELECT COUNT(*) FROM `stena_komm` WHERE `id_stena` = '$post[id]'")->el().') </a><span style="float:right;"> <a href="?id='.$ank['id'].'&amp;likepost='.$post['id'].'&amp;page='.$page.'" >&hearts; '.$l.'</a> ';
-if (isset($user) && $ank_stena['id']!=$user['id'])echo "<a href=\"/info.php?id=$ank[id]&amp;page=$page&amp;spam=$post[id]\"><img src='/style/icons/blicon.gif' alt='*' title='Это спам'></a>"; 
-if (user_access('guest_delete') || $ank['id']==$user['id'])
-{
-echo "<a href='?id=$ank[id]&amp;delete_post=$post[id]'><img src='/style/icons/delete.gif' alt='удалить' /></a>\n";
-}
-echo "   </span>\n";
-}
-echo "</div>\n";
-}
-if ($k_page>1)str('?id='.$ank['id'].'&',$k_page,$page); // Вывод страниц
-if (isset($user) || (isset($set['write_guest']) && $set['write_guest']==1 && (!isset($_SESSION['antiflood']) || $_SESSION['antiflood']<$time-300)))
-{
-echo "<form method=\"post\" name='message' action=\"?id=$ank[id]$go_link\">\n";
-if ($set['web'] && is_file(H.'style/themes/'.$set['set_them'].'/altername_post_form.php'))
-include_once H.'style/themes/'.$set['set_them'].'/altername_post_form.php';
-else
-echo "$tPanel<textarea name=\"msg\">$insert</textarea><br />\n";
-echo "<input value=\"Отправить\" type=\"submit\" />\n";
-echo "</form><table width='99%'>\n";
-}
+
+$k_post=$db->query(
+    "SELECT COUNT( * ) FROM `stena` WHERE `id_stena`=?i",
+                   [$ank['id']])->el();
+
+if (!$k_post) {
+    ?>
+<div class="mess">
+    Нет сообщений
+</div><?php
+} else {
+        $k_page=k_page($k_post, $set['p_str']);
+        $page=page($k_page);
+        $start=$set['p_str']*$page-$set['p_str'];
+        // сортировка по времени
+        if (isset($user)) {
+            ?>
+<!-- ./stena -->
+<div id="comments" class="menus">
+    <a id="bottom"></a>
+    <div class="webmenu">
+        <a href="/info.php?id=<?php echo $ank['id'] . '&amp;page=' . $page . '&amp;sort=1#bottom" class="' . ($user['sort']==1 ? 'activ' : ''); ?>">Внизу</a>
+    </div>
+    <div class="webmenu">
+        <a href="/info.php?id=<?php echo $ank['id'] . '&amp;page=' . $page . '&amp;sort=0#bottom" class="' . ($user['sort']==0 ? 'activ' : ''); ?>">Вверху</a>
+    </div>
+</div>
+<?php
+        }
+        $sql ='';
+        $stena_data = [$sql, $ank['id'], $sort, $start, $set['p_str']];
+        if (isset($user)) {
+            $sql = ', (
+SELECT COUNT( * ) FROM `stena_like` WHERE `id_stena`=st.id AND `id_user`=' . $user['id'] . ') AS `user_like`';
+            $stena_data = [$sql, $ank['id'], $sort, $start, $set['p_str']];
+        }
+        $q=$db->query(
+    "SELECT `st`.`id`, `st`.`id_user`, `st`.`msg`, `st`.`time`, `u`.`nick`, (
+SELECT COUNT( * ) FROM `stena_like` WHERE `id_stena`=st.id) AS `like`, (
+SELECT COUNT( * ) FROM `stena_komm` WHERE `id_stena`=st.id) AS `komm`?q
+FROM `stena` st
+JOIN `user` u ON `u`.`id`=`st`.`id_user`
+WHERE `id_stena`=?i ORDER BY st.`id` ?q LIMIT ?i, ?i",
+            $stena_data);
+        $num=0;
+        while ($post = $q->row()) {
+            if ($num==0) {
+                ?>
+<div class="nav1">
+    <p><?php
+        $num=1;
+            } elseif ($num==1) {
+                ?>
+<div class="nav2">
+    <p><?php
+        $num=0;
+            }
+
+            if ($set['set_show_icon'] == 2) {
+                echo avatar($post['id_user']);
+            } elseif ($set['set_show_icon'] == 1) {
+                echo group($post['id_user']);
+            } ?>
+    <a href="/info.php?id=<?php echo $post['id_user']; ?>"><?php echo $post['nick']; ?></a><?php
+    echo medal($post['id_user']) . ' ' . online($post['id_user']);
+            if (isset($user) && $post['id_user'] != $user['id']) {
+                ?>
+    <a href="/info.php?id=<?php echo $ank['id'] . '&amp;response=' . $post['id_user']; ?>">[*]</a><?php
+            }
+            echo ' (' . vremja($post['time']) . ')</p>';
+            echo '<p>' . stena($post['id_user'], $post['id']) . '</p>';
+            echo '<p style="padding:5px;">' . output_text($post['msg']) . '</p>'."\n";
+            //if (isset($user)) {
+                ?>
+    <p><a href="/user/komm.php?id=<?php echo $post['id']; ?>"><img src="/style/icons/uv.png"> (<?php echo $post['komm']; ?>) </a>
+    <span style="float:right;"><?php
+
+            if (isset($user) && isset($post['user_like']) && $post['user_like'] == 0 && $post['id_user'] != $user['id']) {
+                ?><a href="/id<?php echo $ank['id'] . '?likepost=' . $post['id'] . '&amp;page=' . $page;?>">&hearts; <?php echo $post['like']; ?></a><?php
+            } else {
+                ?><span class="on">&hearts; <?php echo $post['like'];?></span><?php
+            }
+            if (isset($user) && $post['id_user'] != $user['id']) {
+                ?><a href="/info.php?id=<?php echo $ank['id'] . '&amp;page=' . $page . '&amp;spam=' . $post['id']; ?>"><img src="/style/icons/blicon.gif" alt="*" title="Это спам"></a><?php
+            }
+                if (user_access('guest_delete') || $ank['id']==$user['id']) {
+                    ?><a href="?id=<?php echo $ank['id'] . '&amp;delete_post=' . $post['id']; ?>"><img src="/style/icons/delete.gif" alt="удалить" /></a><?php
+                } ?></span></p>
+    <span style="clear:both;"></span>
+</div><?php
+        }
+
+        if ($k_page>1) {
+            str('?id='.$ank['id'].'&amp;', $k_page, $page);
+        }
+    }
+
+if (isset($user) || (isset($set['write_guest']) && $set['write_guest']==1 && (!isset($_SESSION['antiflood']) || $_SESSION['antiflood']<$time-300))) {
 ?>
+<form method="post" name="message" action="?id=<?php echo $ank['id'] . $go_link;?>"><?php
+    if ($set['web'] && is_file(H . 'style/themes/' . $set['set_them'] . '/altername_post_form.php')) {
+        include_once H . 'style/themes/' . $set['set_them'] . '/altername_post_form.php';
+    } else {
+        echo $tPanel. '<textarea name="msg">' . $insert . '</textarea><br />'."\n";
+    }
+?>
+    <input value="Отправить" type="submit" />
+</form>
+<!-- ./end stena --><?php
+    if ($set['web']) {
+        echo '<!-- table style="width:99%"> // TODO: ??? что за хрень? -->';
+    } 
+}

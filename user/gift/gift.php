@@ -23,7 +23,7 @@ include_once '../../sys/inc/db_connect.php';
 include_once '../../sys/inc/ipua.php';
 include_once '../../sys/inc/fnc.php';
 include_once '../../sys/inc/user.php';
-$db->setDebug('mydebug');
+
 only_reg();
     // Размер подарков при выводе в браузер
     $width = ($webbrowser == 'web' ? '100' : '70');

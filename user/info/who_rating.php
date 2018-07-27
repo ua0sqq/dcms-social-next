@@ -21,46 +21,50 @@ if (!$ank) {
     header("Location: /index.php?".SID);
     exit;
 }
-// TODO: херня какая то а не рейтинг!
-$user_id=$ank['id'];
-if ((!isset($_SESSION['refer']) || $_SESSION['refer']==null)
-&& isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!=null &&
-!preg_match('#info\.php#', $_SERVER['HTTP_REFERER'])) {
-    $_SESSION['refer']=str_replace('&', '&amp;', preg_replace('#^http://[^/]*/#', '/', $_SERVER['HTTP_REFERER']));
-}
-if (isset($_POST['rating']) && isset($user) && isset($_POST['msg']) && $user['id']!=$ank['id'] && $user['rating']>=2
-    && $db->query("SELECT SUM(`rating`) FROM `user_voice2` WHERE `id_kont` = '$user[id]'")->el() > -1) {
-    $msg=my_esc($_POST['msg']);
-    if (strlen($msg)<3) {
+
+if (isset($_POST['rating']) && isset($user) && isset($_POST['msg']) && $user['id']!=$ank['id'] && $user['rating'] > 1
+    && (int)$db->query("SELECT SUM(`rating`) FROM `user_voice2` WHERE `id_kont`=?i",
+                       [$user['id']])->el() > (-1)) {
+    $msg = trim($_POST['msg']);
+    if (mb_strlen($msg)<3) {
         $err='Короткий Отзыв';
     }
-    if (strlen($msg)>1024) {
+    if (mb_strlen($msg)>256) {
         $err='Длиный Отзыв';
-    } elseif ($db->query("SELECT COUNT(*) FROM `user_voice2` WHERE `id_user` = '$user[id]' AND `msg` = '".my_esc($msg)."' LIMIT 1")->el()) {
+    } elseif ($db->query("SELECT COUNT( * ) FROM `user_voice2` WHERE `id_user`=?i AND `msg`=?",
+                         [$user['id'], $msg])->el()) {
         $err='Ваш отзыв повторяется';
     }
     if (!isset($err)) {
         $new_r=min(max(@intval($_POST['rating']), -2), 2);
-        $db->query("DELETE FROM `user_voice2` WHERE `id_user` = '$user[id]' AND `id_kont` = '$ank[id]' LIMIT 1");
-        echo $new_r;
+        $db->query("DELETE FROM `user_voice2` WHERE `id_user`=?i AND `id_kont`=?i",
+                   [$user['id'], $ank['id']]);
+        
         if ($new_r) {
-            if (!$db->query("SELECT COUNT(*) FROM `user_voice2` WHERE `id_user` = '$user[id]' AND `id_kont` = '$ank[id]' LIMIT 1")->el()) {
-                $db->query("INSERT INTO `user_voice2` (`rating`, `id_user`, `id_kont`, `msg`, `time`) VALUES ('$new_r','$user[id]','$ank[id]', '$msg', '$time')");
-                $db->query("UPDATE `user` SET `rating` = '".($ank['rating'] + $new_r)."' WHERE `id` = '$ank[id]' LIMIT 1");
+            if (!$db->query("SELECT COUNT( * ) FROM `user_voice2` WHERE `id_user`=?i AND `id_kont`=?i",
+                            [$user['id'], $ank['id']])->el()) {
+                $db->query("INSERT INTO `user_voice2` (`rating`, `id_user`, `id_kont`, `msg`, `time`) VALUES ( ?i, ?i, ?i, ?, ?i)",
+                           [$new_r, $user['id'], $ank['id'], $msg, time()]);
+                $db->query("UPDATE `user` SET `rating`=`rating`+?i WHERE `id`=?i",
+                           [$new_r, $ank['id']]);
             } else {
-                $db->query("UPDATE `user_voice2` SET `rating` = '".$new_r."', msg = $msg, time = $time WHERE `id_user` = '$user[id]' AND `id_kont` = '$ank[id]' LIMIT 1");
+                $db->query("UPDATE `user_voice2` SET `rating`=?i, `msg`=?, `time`=?i WHERE `id_user`=?i AND `id_kont`=?i",
+                           [$new_r, $msg, time(), $user['id'], $ank['id']]);
             }
         }
         if ($new_r>0) {
-            $db->query("INSERT INTO `mail` (`id_user`, `id_kont`, `msg`, `time`) values('0', '$ank[id]', '$user[nick] оставил о Вас [url=/user/info/who_rating.php]положительный отзыв[/url]', '$time')");
+            $send = $user['nick'] . ' оставил о Вас [url=/user/info/who_rating.php]положительный отзыв[/url]';
         }
         if ($new_r<0) {
-            $db->query("INSERT INTO `mail` (`id_user`, `id_kont`, `msg`, `time`) values('0', '$ank[id]', '$user[nick] оставил о Вас [url=/user/info/who_rating.php]негативный отзыв[/url]', '$time')");
+            $send = $user['nick'] . ' оставил о Вас [url=/user/info/who_rating.php]негативный отзыв[/url]';
         }
         if ($new_r==0) {
-            $db->query("INSERT INTO `mail` (`id_user`, `id_kont`, `msg`, `time`) values('0', '$ank[id]', '$user[nick] оставил о Вас [url=/user/info/who_rating.php]нейтральный отзыв[/url]', '$time')");
+            $send = $user['nick'] . ' оставил о Вас [url=/user/info/who_rating.php]нейтральный отзыв[/url]';
         }
-        $db->query("UPDATE `user` SET `rating_tmp` = '".($user['rating_tmp']+1)."' WHERE `id` = '$user[id]' LIMIT 1");
+        $db->query("INSERT INTO `mail` (`id_user`, `id_kont`, `msg`, `time`) VALUES(?i, ?i, ?, ?i)",
+                   [0, $ank['id'], $send, time()]);
+        $db->query("UPDATE `user` SET `rating_tmp`=`rating_tmp`+1 WHERE `id`=?i",
+                   [$user['id']]);
         $_SESSION['message'] = 'Ваше мнение о пользователе успешно изменено';
     }
 }
@@ -69,17 +73,19 @@ include_once '../../sys/inc/thead.php';
 title();
 aut();
 err();
+
 if (isset($user)) {
     $ank['id']=$user['id'];
 }
 if (isset($_GET['id'])) {
     $ank['id']=intval($_GET['id']);
 }
-if (isset($user) && $user['id']!=$ank['id'] && $user['rating']>=2
-    && $db->query("SELECT SUM(`rating`) FROM `user_voice2` WHERE `id_kont` = '$user[id]'")->el() > -1) {
+if (isset($user) && $user['id']!=$ank['id'] && $user['rating'] > 1 && (int)$db->query("SELECT SUM(`rating`) FROM `user_voice2` WHERE `id_kont`=?i",
+                       [$user['id']])->el() > (-1)) {
     echo "<b>Ваше отношение:</b><br />\n";
     // мое отношение к пользователю
-    $my_r=intval($db->query("SELECT `rating` FROM `user_voice2` WHERE `id_user` = '$user[id]' AND `id_kont` = '$ank[id]'")->el());
+    $my_r = (int)($db->query("SELECT `rating` FROM `user_voice2` WHERE `id_user`=?i AND `id_kont`=?i",
+                             [$user['id'], $ank['id']])->el());
     echo "<form method='post' action='?id=$ank[id]&amp;$passgen'>\n";
     echo "<select name='rating'>\n";
     echo "<option value='2' ".($my_r==2?'selected="selected"':null).">Замечательное</option>\n";
@@ -98,17 +104,20 @@ if (isset($user) && $user['id']!=$ank['id'] && $user['rating']>=2
     echo 'Чтобы оставить отзыв, вам необходимо набрать 2 или более % рейтинга.';
     echo "</div>";
 }
-$k_post=$db->query("SELECT COUNT(*) FROM `user_voice2` WHERE `id_kont` = '".$ank['id']."'")->el();
+
+$k_post=$db->query("SELECT COUNT( * ) FROM `user_voice2` WHERE `id_kont`=?i",
+                   [$ank['id']])->el();
 $k_page=k_page($k_post, $set['p_str']);
 $page=page($k_page);
 $start=$set['p_str']*$page-$set['p_str'];
-echo "<table class='post'>\n";
+
 if ($k_post==0) {
     echo '<div class="mess">';
     echo "Нет положительных отзывов\n";
     echo '</div>';
 }
-$q=$db->query("SELECT * FROM `user_voice2` WHERE `id_kont` = '$ank[id]' ORDER BY `time` DESC LIMIT $start, $set[p_str]");
+$q=$db->query("SELECT * FROM `user_voice2` WHERE `id_kont`=?i ORDER BY `time` DESC LIMIT ?i, ?i",
+              [$ank['id'], $start, $set['p_str']]);
 while ($post = $q->row()) {
     $ank=get_user($post['id_user']);
     // Лесенка дивов
@@ -139,13 +148,13 @@ while ($post = $q->row()) {
         echo "Негативный<br />\n";
         break;
     }
-    $msg=stripcslashes(htmlspecialchars($post['msg']));
+    $msg = htmlspecialchars($post['msg']);
     echo "<br />$msg\n";
     echo '</div>';
 }
-echo "</table>\n";
+
 if ($k_page>1) {
-    str('who_rating.php?id='.$user_id.'&amp;', $k_page, $page);
+    str('who_rating.php?id='.$ank['id'].'&amp;', $k_page, $page);
 } // Вывод страниц
 
 include_once '../../sys/inc/tfoot.php';

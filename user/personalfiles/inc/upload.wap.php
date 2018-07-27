@@ -68,7 +68,7 @@ VALUES (?i, ?i, ?, ?, ?, ?i, ?i, ?i, ?i, ?, ?i)",
             if (!$dir['pass']) {
                 // Лента друзей
                 $q = $db->query(
-                'SELECT fr.user, fr.lenta_obmen, ts.lenta_files as ts_foto FROM `frends` fr 
+                'SELECT fr.user, fr.lenta_obmen, ts.lenta_files FROM `frends` fr 
 JOIN tape_set ts ON ts.id_user=fr.user
 WHERE fr.`frend`=?i AND fr.`lenta_obmen`=?i AND `i`=?i',
                             [$user['id'], 1, 1]);
@@ -76,14 +76,14 @@ WHERE fr.`frend`=?i AND fr.`lenta_obmen`=?i AND `i`=?i',
                     // Фильтр рассылки
                     if ($frend['lenta_obmen']==1 && $frend['lenta_files']==1) {
                         if (!$db->query(
-        'SELECT COUNT(*) FROM `tape` WHERE `id_user`=?i AND `type`=? AND `id_file`=?i',
+        'SELECT COUNT( * ) FROM `tape` WHERE `id_user`=?i AND `type`=? AND `id_file`=?i',
                     [$frend['user'], 'obmen', $dir['id']])->el()) {
                             /* Если нет в ленте этой папки */
                             $db->query(
             'INSERT INTO `tape` (`id_user`, `avtor`, `type`, `time`, `id_file`, `count`) VALUES(?i, ?i, ?, ?i, ?i, ?i)',
                    [$frend['user'], $dir['id_user'], 'obmen', $time, $dir['id'], 1]);
                         } elseif ($db->query(
-        'SELECT COUNT(*) FROM `tape` WHERE `id_user`=?i AND `type`=? AND `id_file`=?i =?iAND `read`=?',
+        'SELECT COUNT( * ) FROM `tape` WHERE `id_user`=?i AND `type`=? AND `id_file`=?i AND `read`=?',
                          [$frend['user'], 'obmen', $dir['id'],  '1'])->el()) {
                             /* Если папка есть в ленте то удаляем запись и создаем новую */
                             $db->query(

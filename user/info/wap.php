@@ -1,5 +1,5 @@
 <?php
-/*-----------------------статус форма-----------------------*/
+// статус форма
 if (isset($user) && isset($_GET['status'])) {
     if ($user['id'] == $ank['id']) {
         echo '<div class="main">Статус [512 символов]</div>';
@@ -12,7 +12,7 @@ if (isset($user) && isset($_GET['status'])) {
         exit;
     }
 }
-/*-----------------------------------------------------------*/
+
 if ($ank['group_access']>1) {
     echo "<div class='err'>$ank[group_name]</div>";
 }
@@ -29,19 +29,17 @@ echo avatar($ank['id'], true, 128, false);
 echo "<br />";
 if (isset($user) && isset($_GET['like']) && $user['id']!=$ank['id']
     && !$db->query(
-        "SELECT COUNT(*) FROM `status_like` WHERE `id_status`=?i AND `id_user`=?i",
-                   [$status['id'], $user['id']]
-    )->el()) {
+        "SELECT COUNT( * ) FROM `status_like` WHERE `id_status`=?i AND `id_user`=?i",
+                   [$status['id'], $user['id']])->el()) {
     $db->query(
         "INSERT INTO `status_like` (`id_user`, `id_status`) VALUES(?i, ?i)",
-               [$user['id'], $status['id']]
-    );
+               [$user['id'], $status['id']]);
 }
 if ($status['id'] || $ank['id'] == $user['id']) {
     echo "<div class='st_1'></div>";
     echo "<div class='st_2'>";
     if ($status['id']) {
-        echo output_text($status['msg']) . ' <font style="font-size:11px; color:gray;">' . vremja($status['time']) . '</font>';
+        echo output_text($status['msg']) . ' <span style="font-size:11px; color:gray;">' . vremja($status['time']) . '</span>';
         if ($ank['id'] == $user['id']) {
             echo " [<a href='?id=$ank[id]&amp;status'><img src='/style/icons/edit.gif' alt='*'> нов</a>]";
         }
@@ -63,8 +61,7 @@ SELECT COUNT( * ) FROM `status_like` WHERE `id_status`='.$status['id'].' AND `id
 SELECT COUNT( * ) FROM `status` WHERE `id_user`=?i) all_user_status, (
 SELECT COUNT( * ) FROM `status_komm` WHERE `id_status`=?i) status_komm, (
 SELECT COUNT( * ) FROM `status_like` WHERE `id_status`=?i) all_like ?q;',
-                            [$ank['id'], $status['id'], $status['id'], $sql_like]
-    )->row();
+                            [$ank['id'], $status['id'], $status['id'], $sql_like])->row();
         echo " <a href='/user/status/komm.php?id=$status[id]'><img src='/style/icons/bbl4.png' alt=''/> " . $cnt['status_komm'] . " </a> ";
         $l=$cnt['all_like'];
         if (isset($user) && $user['id']!=$ank['id'] && !$cnt['user_like']) {
@@ -90,14 +87,12 @@ echo "</div>";
 $width = ($webbrowser == 'web' ? '60' : '45'); // Размер подарков при выводе в браузер
 if ($gifts = $db->query(
                     'SELECT COUNT( * ) FROM `gifts_user` WHERE `id_user`=?i AND `status`=?i',
-                            [$ank['id'], 1]
-)->el()) {
+                            [$ank['id'], 1])->el()) {
     $q = $db->query(
                 'SELECT `sts`.`id`, `sts`.`status`, `stl`.`id` AS id_gift FROM `gifts_user` `sts`
 JOIN `gift_list` stl ON stl.id=sts.id_gift
 WHERE `sts`.`id_user`=?i AND `sts`.`status`=?i ORDER BY `sts`.`id` DESC LIMIT ?i',
-                        [$ank['id'], 1, 5]
-    );
+                        [$ank['id'], 1, 5]);
     echo '<div class="nav2">';
     while ($post = $q->row()) {
         echo '<a href="/user/gift/gift.php?id=' . $post['id'] . '"><img src="/sys/gift/' . $post['id_gift'] . '.png" style="max-width:' . $width . 'px;" alt="Подарок" /></a> ';
@@ -123,11 +118,9 @@ if (isset($user) && $user['id'] == $ank['id']) {
     
     $cnt = $db->query(
                         'SELECT (
-SELECT COUNT(*) FROM `my_guests` WHERE `id_ank`=?i AND `read`=?) my_guest, (
-SELECT COUNT(*) FROM `gallery_rating` WHERE `avtor`=?i  AND `read`=?) glr_rating',
-                                [$user['id'], '1', $ank['id'], '1']
-    
-    )->row();
+SELECT COUNT( * ) FROM `my_guests` WHERE `id_ank`=?i AND `read`=?) my_guest, (
+SELECT COUNT( * ) FROM `gallery_rating` WHERE `avtor`=?i  AND `read`=?) glr_rating',
+                                [$user['id'], '1', $ank['id'], '1'])->row();
     
     echo '<img src="/style/icons/guests.gif" alt="*" /> ';
     
@@ -150,7 +143,8 @@ $k_fr = $db->query("SELECT (
 SELECT COUNT( * ) FROM `frends_new` WHERE `to`=?i) new_frend, (
 SELECT COUNT( * ) FROM `frends` WHERE `user`=?i AND `i`=1) all_frend, (
 SELECT COUNT( * ) FROM `frends` WHERE `user`=?i AND `i`=1 AND `frend` IN(
-SELECT `id` FROM `user` WHERE `date_last`>?i)) online_frend", [$ank['id'], $ank['id'], $ank['id'], (time()-600)])->row();
+SELECT `id` FROM `user` WHERE `date_last`>?i)) online_frend",
+            [$ank['id'], $ank['id'], $ank['id'], (time()-600)])->row();
 
 echo '<div class="nav2">';
 echo '<img src="/style/icons/druzya.png" alt="*" /> ';
@@ -167,10 +161,8 @@ if (isset($user) && $user['id'] == $ank['id']) {
     // Уведомления
     if (isset($user) && $user['id']==$ank['id']) {
         $k_notif = $db->query(
-                        'SELECT COUNT(`read`) FROM `notification` WHERE `id_user`=?i AND `read`=?',
-                                [$user['id'], '0']
-    
-    )->el();
+                        'SELECT COUNT( * ) FROM `notification` WHERE `id_user`=?i AND `read`=?',
+                                [$user['id'], '0'])->el();
         
         if ($k_notif > 0) {
             echo "<img src='/style/icons/notif.png' alt='*' /> ";
@@ -186,8 +178,7 @@ if (isset($user) && $user['id'] == $ank['id']) {
                         'SELECT (
 SELECT COUNT( * ) FROM `discussions` WHERE `id_user`=?i AND `count`>?i) discut, (
 SELECT COUNT( * ) FROM `tape` WHERE `id_user`=?i  AND  `read`=?) tape',
-                                [$user['id'], 0, $user['id'], '0']
-    )->row();
+                                [$user['id'], 0, $user['id'], '0'])->row();
         echo '<img src="/style/icons/chat.gif" alt="*" /> ';
         if ($new_g['discut']) {
             echo "<a href='/user/discussions/index.php'><font color='red'>Обсуждения</font></a> ";
@@ -218,14 +209,13 @@ SELECT COUNT( * ) FROM `tape` WHERE `id_user`=?i  AND  `read`=?) tape',
 
 // TODO: охуеть сколько ненужного хлама
 $dir_osn = $db->query(
-    "SELECT usf.id, (
-SELECT COUNT( * ) FROM `gallery_foto` WHERE `id_user`=`usf`.`id_user`) photo, (
-SELECT COUNT( * ) FROM `user_files` WHERE `id_user`=`usf`.`id_user` AND `osn`=1) user_file, (
-SELECT COUNT( * ) FROM `obmennik_files` WHERE `id_user`=`usf`.`id_user`) user_obmen_files, (
-SELECT COUNT( * ) FROM `user_music` WHERE `id_user`=`usf`.`id_user`) music
-FROM `user_files` usf WHERE usf.`id_user`=?i AND usf.`osn`=?i LIMIT 1",
-                      [$ank['id'], 1]
-)->row();
+    "SELECT (
+SELECT COUNT( * ) FROM `gallery_foto` WHERE `id_user`=?i) photo, (
+SELECT COUNT( * ) FROM `user_files` WHERE `id_user`=?i AND `osn`=1) user_file, (
+SELECT COUNT( * ) FROM `obmennik_files` WHERE `id_user`=?i) user_obmen_files, (
+SELECT COUNT( * ) FROM `user_music` WHERE `id_user`=?i) music, (
+SELECT `id` FROM `user_files` WHERE `id_user`=?i AND `osn`=?i) id",
+                      [$ank['id'], $ank['id'], $ank['id'], $ank['id'], $ank['id'], 1])->row();
 
 echo "<div class='nav1'>";
 
@@ -235,12 +225,13 @@ echo "<a href='/foto/$ank[id]/'>Фотографии</a> ";
 echo "(" . $dir_osn['photo'] . ")<br />";
 
 // Файлы
-if (!$dir_osn['user_file']) {
-    $db->query(
+if (isset($user) && $ank['id'] == $user['id'] && !$dir_osn['user_file']) {
+    $dir_id = $db->query(
         "INSERT INTO `user_files` (`id_user`, `name`,  `osn`) VALUES(?i, ?, ?i)",
-               [$ank['id'], 'Файлы', 1]
-    );
-}
+               [$ank['id'], 'Файлы', 1])->id();
+echo "<img src='/style/icons/files.gif' alt='*' /> ";
+echo "<a href='/user/personalfiles/$ank[id]/$dir_id/'>Файлы</a> ";
+} elseif ($dir_osn['user_file']) {
 echo "<img src='/style/icons/files.gif' alt='*' /> ";
 echo "<a href='/user/personalfiles/$ank[id]/$dir_osn[id]/'>Файлы</a> ";
 echo "(" . $dir_osn['user_file'] . "/" . $dir_osn['user_obmen_files'] . ")<br />";
@@ -250,7 +241,7 @@ echo "<img src='/style/icons/play.png' alt='*' width='16'/> ";
 echo "<a href='/user/music/index.php?id=$ank[id]'>Музыка</a> ";
 echo "(" . $dir_osn['music'] . ")";
 echo "</div>";
-
+}
 // Темы и комментарии
 echo "<div class='nav2'><img src='/style/icons/blogi.png' alt='*' width='16'/> ";
 echo "<a href='/user/info/them_p.php?id=".$ank['id']."'>Темы и комментарии</a> ";
@@ -270,8 +261,7 @@ echo "<img src='/style/icons/fav.gif' alt='*' /> ";
 echo '<a href="/user/bookmark/index.php?id='.$ank['id'].'">Закладки</a> ('.$counters['user_marks'].')<br />';
 
 // Отзывы
-echo "<img src='/style/my_menu/who_rating.png' alt='*' /> <a href='/user/info/who_rating.php?id=$ank[id]'>Отзывы</a>
- (".$counters['user_voice'].")<br />";
+echo "<img src='/style/my_menu/who_rating.png' alt='*' /> <a href='/user/info/who_rating.php?id=$ank[id]'>Отзывы</a> (".$counters['user_voice'].")<br />";
  echo "</div>";
 
 // Сообщение
@@ -292,8 +282,7 @@ if (isset($user) && $ank['id'] != $user['id']) {
     echo '<img src="/style/icons/fav.gif" alt="*" /> ';
     if (!$db->query(
     "SELECT COUNT( * ) FROM `bookmarks` WHERE `id_user`=?i AND `id_object`=?i AND `type`=?",
-                    [$user['id'], $ank['id'], 'people']
-)->el()) {
+                    [$user['id'], $ank['id'], 'people'])->el()) {
         echo '<a href="?id=' . $ank['id'] . '&amp;fav=1">В закладки</a><br />';
     } else {
         echo '<a href="?id=' . $ank['id'] . '&amp;fav=0">Удалить из закладок</a><br />';
@@ -318,16 +307,16 @@ if (isset($user) && $ank['id']==$user['id']) {
 }
 
 // Стена
-echo "<div class='foot'>";
+echo "<div class='foot'>\n";
 echo "<img src='/style/icons/stena.gif' alt='*' /> ";
 if (isset($user) && $user['wall']==0) {
-    echo "<a href='/info.php?id=$ank[id]&amp;wall=1'>Стена</a>";
+    echo "<a href='/info.php?id=$ank[id]&amp;wall=1'>Стена</a>\n";
 } elseif (isset($user)) {
-    echo "<a href='/info.php?id=$ank[id]&amp;wall=0'>Стена</a>";
+    echo "<a href='/info.php?id=$ank[id]&amp;wall=0'>Стена</a>\n";
 } else {
-    echo "Стена";
+    echo "Стена\n";
 }
-echo "</div>";
+echo "</div>\n";
 if ($user['wall']==0) {
     include_once H.'user/stena/index.php';
 }

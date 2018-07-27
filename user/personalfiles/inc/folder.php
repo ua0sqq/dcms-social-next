@@ -18,7 +18,7 @@ $set['title'] = text($dir['name']);
 title();
 aut();
  // Редактирование и удаление файлов\папок
-if (isset($user) && (user_access('obmen_file_edit') || $ank['id']==$user['id'])) {
+if (isset($user) && (user_access('obmen_file_edit') || $ank['id'] == $user['id'])) {
     // Удаление папок и файлов в них
     include "inc/folder.delete.php";
     
@@ -30,11 +30,11 @@ if (isset($user) && (user_access('obmen_file_edit') || $ank['id']==$user['id']))
 }
  // Вывод обратной навигации
 echo "<div class='foot'>";
-echo "<img src='/style/icons/up_dir.gif' alt='*'> ".($dir['osn']==1?'Файлы':'')." ".user_files($dir['id_dires'])." ".($dir['osn']==1?'':'&gt; '.text($dir['name']))."\n";
+echo "<img src='/style/icons/up_dir.gif' alt='*'> ".($dir['osn'] == 1 ? 'Файлы' : '')." ".user_files($dir['id_dires'])." ".($dir['osn'] == 1 ? '' : '&gt; '.text($dir['name']))."\n";
 echo "</div>";
  // Перемещение файла в другую папку
 if (isset($_GET['go']) && $db->query(
-    'SELECT COUNT(*) FROM `obmennik_files` WHERE `id`=?i',
+    'SELECT COUNT( * ) FROM `obmennik_files` WHERE `id`=?i',
                                      [$_GET['go']])->el()) {
     $file_go = $db->query(
         'SELECT * FROM `obmennik_files` WHERE `id`=?i',
@@ -49,20 +49,20 @@ if (isset($_GET['go']) && $db->query(
     }
 }
 // Папка под паролем
-if ($dir['pass']!=null) {
+if ($dir['pass'] != null) {
     if (isset($_POST['password'])) {
-        $_SESSION['pass']=my_esc($_POST['password']);
-        if ($_SESSION['pass']!=$dir['pass']) {
+        $_SESSION['pass'] = trim($_POST['password']);
+        if ($_SESSION['pass'] != $dir['pass']) {
             $_SESSION['message'] = 'Неверный пароль';
-            $_SESSION['pass']=null;
+            $_SESSION['pass'] = null;
         }
         header("Location: ?");
     }
-    if (!user_access('obmen_dir_edit') && ($user['id']!=$ank['id'] && $_SESSION['pass']!=$dir['pass'])) {
+    if (!user_access('obmen_dir_edit') && ($user['id'] != $ank['id'] && $_SESSION['pass'] != $dir['pass'])) {
         echo '<form action="?" method="POST">Пароль: <br />		<input type="pass" name="password" value="" /><br />		
 <input type="submit" value="Войти"/></form>';
         echo "<div class='foot'>";
-        echo "<img src='/style/icons/up_dir.gif' alt='*'> ".($dir['osn']==1?'Файлы':'')." ".user_files($dir['id_dires'])." ".($dir['osn']==1?'':'&gt; '.text($dir['name']))."\n";
+        echo "<img src='/style/icons/up_dir.gif' alt='*'> ".($dir['osn'] == 1 ? 'Файлы' : '')." ".user_files($dir['id_dires'])." ".($dir['osn'] == 1 ? '' : '&gt; '.text($dir['name']))."\n";
         echo "</div>";
         include_once '../../sys/inc/tfoot.php';
         exit;
@@ -79,7 +79,7 @@ if (isset($_GET['go'])) {
 }
 if (isset($_SESSION['obmen_dir']) || isset($_GET['obmen_dir'])) {
     if (!isset($_SESSION['obmen_dir']) && $db->query(
-        'SELECT COUNT(*) FROM `obmennik_dir` WHERE `id`=?i AND `upload`=?',
+        'SELECT COUNT( * ) FROM `obmennik_dir` WHERE `id`=?i AND `upload`=?',
                                                      [$_GET['obmen_dir'], '1'])->el()) {
         
 		$_SESSION['obmen_dir'] = abs(intval($_GET['obmen_dir']));
@@ -95,15 +95,14 @@ $cnt = $db->query(
     'SELECT * FROM (
 SELECT COUNT( * ) files FROM `obmennik_files`  WHERE `my_dir`=?i AND `id_user`=?i)q, (
 SELECT COUNT( * ) post FROM `user_files` WHERE `id_dir`=?i AND `id_user`=?i)q2',
-[$dir['id'], $ank['id'], $dir['id'], $ank['id']]
-)->row();
+[$dir['id'], $ank['id'], $dir['id'], $ank['id']])->row();
 
 $k_post=$cnt['post']+$cnt['files'];
 $k_page=k_page($k_post, $set['p_str']);
 $page=page($k_page);
 $start=$set['p_str']*$page-$set['p_str'];
 
-if ($k_post==0) {
+if (!$k_post) {
     echo '<div class="mess">'."\n";
     echo "Папка пуста\n";
     echo "  </div>\n";
@@ -125,7 +124,7 @@ while ($post = $q->row()) {
         $num=0;
     }
 
-    echo "<img src='/style/themes/$set[set_them]/loads/14/".($post['pass']!=null?'lock.gif':'dir.png')."' alt='*'>";
+    echo "<img src='/style/themes/$set[set_them]/loads/14/".($post['pass'] != null ? 'lock.gif' : 'dir.png')."' alt='*'>";
     // Если перемещаем файл
     if (isset($_GET['go'])) {
         echo " <a href='/user/personalfiles/$ank[id]/$post[id]/?go=$file_go[id]'>".text($post['name'])."</a>\n";
@@ -162,7 +161,7 @@ FROM `user_files` usf WHERE usf.`id_dires` LIKE "%?e%"',
     $k_f2 += $post['cnt_dir'];
 
     echo ' ('.$k_f.'/'.$k_f2.') ';
-    if (isset($user) && $user['group_access']>2 || $ank['id']==$user['id']) {
+    if (isset($user) && $user['group_access']>2 || $ank['id'] == $user['id']) {
         echo "<a href='?edit_folder=$post[id]'><img src='/style/icons/edit.gif' alt='*'></a> <a href='?delete_folder=$post[id]'><img src='/style/icons/delete.gif' alt='*'></a><br />\n";
     }
     echo "</div>\n";
@@ -198,7 +197,7 @@ FROM `obmennik_files` of  WHERE of.`my_dir`=?i AND of.`id_user`=?i ORDER BY of.`
         } else {
             echo "<img src='/style/themes/$set[set_them]/loads/14/file.png' alt='file' /> \n";
         }
-        if ($set['echo_rassh']==1) {
+        if ($set['echo_rassh'] == 1) {
             $ras=$post['ras'];
         } else {
             $ras=null;
@@ -211,10 +210,10 @@ FROM `obmennik_files` of  WHERE of.`my_dir`=?i AND of.`id_user`=?i ORDER BY of.`
         if ($user['id'] == $post['id_user'] && $post['my'] == 1) {
             echo '<a href="/obmen/?trans='.$post['id'].'"><img src="/style/icons/z.gif" alt="*"> в зону</a> ';
         }
-        if (user_access('obmen_file_edit') || $user['id']==$post['id_user']) {
+        if (user_access('obmen_file_edit') || $user['id'] == $post['id_user']) {
             echo '<a href="?id_file='.$post['id'].'&amp;edit"><img src="/style/icons/edit.gif" alt="*"></a> ';
         }
-        if (user_access('obmen_file_delete') || $user['id']==$post['id_user']) {
+        if (user_access('obmen_file_delete') || $user['id'] == $post['id_user']) {
             echo '<a href="?id_file='.$post['id'].'&amp;delete&amp;page='.$page.'"><img src="/style/icons/delete.gif" alt="*"></a> ';
         }
         echo '<br />';
@@ -231,5 +230,5 @@ if ($k_page>1) {
 }
 
 echo "<div class='foot'>\n";
-echo "<img src='/style/icons/up_dir.gif' alt='*'> ".($dir['osn']==1?'Файлы':'')." ".user_files($dir['id_dires'])." ".($dir['osn']==1?'':'&gt; '.text($dir['name']))."\n";
+echo "<img src='/style/icons/up_dir.gif' alt='*'> ".($dir['osn'] == 1 ? 'Файлы' : '')." ".user_files($dir['id_dires'])." ".($dir['osn'] == 1 ? '' : '&gt; '.text($dir['name']))."\n";
 echo "</div>\n";

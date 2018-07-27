@@ -32,7 +32,6 @@ if ($in_post['stav'] && !empty($in_post['msg'])) {
     } else {
         $err = 'Неверное значение';
     }
-
     if ($user['money'] >= $in_post['stav']) {
         if (!isset($err)) {
             if (!$db->query(
@@ -41,15 +40,16 @@ if ($in_post['stav'] && !empty($in_post['msg'])) {
                 $db->query(
                     "INSERT INTO `liders` (`id_user`, `stav`, `msg`, `time`, `time_p`) VALUES(?i, ?i, ?, ?i, ?i)",
                            [$user['id'], $in_post['stav'], $in_post['msg'], $tm, time()]);
+				$_SESSION['message'] = 'Вы успешно стали лидером';
             } else {
                 $db->query(
                     "UPDATE `liders` SET `time`=?i, `time_p`=?i, `msg`=?, `stav`=?i WHERE `id_user`=?i",
                            [$tm, time(), $in_post['msg'], $in_post['stav'], $user['id']]);
+				$_SESSION['message'] = 'Вы добавили время лидера';
             }
             $db->query(
                 "UPDATE `user` SET `money`=`money`-?i WHERE `id`=?i",
                        [$in_post['stav'], $user['id']]);
-            $_SESSION['message'] = 'Вы успешно стали лидером';
             header('Location: /user/liders/index.php?ok');
             exit;
         }

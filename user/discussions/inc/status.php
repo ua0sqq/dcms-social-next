@@ -1,16 +1,12 @@
 <?php
-/*
-* Заголовок обсуждения
-*/
+//Заголовок обсуждения
 if ($type == 'status' && $post['avtor'] != $user['id']) {
     $name = __('Статус друга');
 } elseif ($type == 'status' && $post['avtor'] == $user['id']) {
     $name = __('Ваш статус');
 }
  
-/*
-* Выводим на экран
-*/
+// Выводим на экран
 if ($type == 'status') {
     $status = $db->query(
                          'SELECT st.*, (
@@ -22,23 +18,23 @@ FROM `status` st WHERE st.`id`=?i',
     if ($status['id']) {
         ?>
 		<div class="nav1">
-		<span class="time"><?= $s1 . vremja($post['time']) . $s2?></span>
-		<img src="/style/icons/comment.png" alt="*" /> <a href="/user/status/komm.php?id=<?= $status['id']?>"><?= $name?></a> 
+			<?= $s1 . vremja($post['time']) . $s2?>
+			<img src="/style/icons/comment.png" alt="*" /> <a href="/user/status/komm.php?id=<?= $status['id']?>"><?= $name?></a> 
 		
 		<?php
-        if ($post['count'] > 0) {
-            ?><b><font color='red'>+<?= $post['count']?></font></b><?php
+        if ($post['count']) {
+            ?><strong><span class='off'>+<?= $post['count']?></span></strong><?php
         } ?>
 		</div>
 		
 		<div class="nav2">
-		<b><font color='green'><?= $avtor['nick']?></font></b> 
+		<strong><span class='on'><?= $avtor['nick']?></span></strong> 
 		<?= ($avtor['id'] != $user['id'] ? '<a href="user.settings.php?id=' . $avtor['id'] . '">[!]</a>' : '')?> 
 		<?= $avtor['medal']?> <?= $avtor['online']?> <br />
 		
 		<div class="st_1"></div>
-		<div class="st_2">	
-		<span class="text"><?= output_text($status['msg'])?></span><br />
+		<div class="st_2">
+			<?= output_text($status['msg'])?>
 		</div>
 		
 		<a href="/user/status/komm.php?id=<?= $status['id']?>"><img src="/style/icons/bbl4.png" alt="*" /> 
@@ -66,8 +62,7 @@ FROM `status` st WHERE st.`id`=?i',
     } else {
         ?>
 		<div class="mess">
-		<?= __('Статус уже удален =(')?> 
-		<span class="time"><?= $s1 . vremja($post['time']) . $s2?></span>
+		<?= __('Статус уже удален =(')?> <?= $s1 . vremja($post['time']) . $s2?>
 		</div>
 		<?php
     }

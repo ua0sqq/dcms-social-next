@@ -1,19 +1,4 @@
 <?php
-/*
-=======================================
-Лента друзей для Dcms-Social
-Автор: Искатель
----------------------------------------
-Этот скрипт распостроняется по лицензии
-движка Dcms-Social.
-При использовании указывать ссылку на
-оф. сайт http://dcms-social.ru
----------------------------------------
-Контакты
-ICQ: 587863132
-http://dcms-social.ru
-=======================================
-*/
 include_once '../../sys/inc/start.php';
 include_once '../../sys/inc/compress.php';
 include_once '../../sys/inc/sess.php';
@@ -28,143 +13,199 @@ $my = null;
 $frend = null;
 $all = null;
 only_reg();
-    
-/* Класс к статусу */
-if (isset($_GET['likestatus'])) {
+
+$args = [
+         'likestatus' => FILTER_VALIDATE_INT,
+         'page' => [
+                    'filter'  => FILTER_VALIDATE_INT,
+                    'options' => [
+                                  'default'   => 1,
+                                  'min_range' => 1,
+                                  ],
+                    ],
+         'read' =>  FILTER_DEFAULT,
+         'delete' => FILTER_DEFAULT,
+         ];
+$input_get = filter_input_array(INPUT_GET, $args);
+unset($args);
+// Класс к статусу
+if ($input_get['likestatus']) {
     // Статус пользователя
-    $status = $db->query("SELECT * FROM `status` WHERE `id` = '".intval($_GET['likestatus'])."' LIMIT 1")->row();
-    $ank = get_user($status['id_user']);
-    if ($user['id']!=$ank['id'] && !$db->query("SELECT COUNT(*) FROM `status_like` WHERE `id_status` = '$status[id]' AND `id_user` = '$user[id]' LIMIT 1")->el()) {
-        $db->query("INSERT INTO `status_like` (`id_user`, `time`, `id_status`) values('$user[id]', '$time', '$status[id]')");
-        /*
-        ===================================
-        Лента
-        ===================================
-        */
-        $q = $db->query("SELECT * FROM `frends` WHERE `user` = '" . $user['id'] . "' AND `i` = '1'");
-        while ($f = $q->row()) {
-            $a = get_user($f['frend']);
-            
-            $lentaSet = $db->query("SELECT * FROM `tape_set` WHERE `id_user` = '".$a['id']."' LIMIT 1")->row(); // Общая настройка ленты
-            if ($a['id'] != $ank['id'] && $f['lenta_status_like']==1 && $lentaSet['lenta_status_like']==1) {
-                $db->query("INSERT INTO `tape` (`id_user`,`ot_kogo`,  `avtor`, `type`, `time`, `id_file`) values('$a[id]', '$user[id]', '$status[id_user]', 'status_like', '$time', '$status[id]')");
+    $status = $db->query(
+        "SELECT `id`, `id_user` FROM `status` WHERE `id`=?i",
+                         [$input_get['likestatus']])->row();
+    
+    if ($user['id'] != $status['id_user']
+        && !$db->query(
+                    "SELECT COUNT( * ) FROM `status_like` WHERE `id_status`=?i AND `id_user`=?i",
+                            [$status['id'], $user['id']])->el()) {
+        $db->query(
+            "INSERT INTO `status_like` (`id_user`, `time`, `id_status`) VALUES(?i, ?i, ?i)",
+                   [$user['id'], time(), $status['id']]);
+        
+        // Лента
+        $res = $db->query(
+            "SELECT `fr`.`frend`
+FROM `frends` fr
+JOIN `tape_set` tps ON `tps`.`id_user`=`fr`.`frend`
+WHERE `fr`.`user`=?i AND fr.`frend`<>?i AND fr.`i`=1 AND `fr`.`lenta_status_like`=1 AND `tps`.`lenta_status_like`=1",
+            [$user['id'], $status['id_user']])->assoc();
+        if (!empty($res)) {
+            foreach ($res as $lentaSet) {
+                    $val[] = [(int)$lentaSet['frend'], (int)$user['id'], (int)$status['id_user'], 'status_like', time(), (int)$status['id']];
             }
+            $db->query(
+                "INSERT INTO `tape` (`id_user`,`ot_kogo`,  `avtor`, `type`, `time`, `id_file`) VALUES ?v",
+                       [$val]);
         }
-        header("Location: ?page=" . intval($_GET['page']));
+        header('Location: ?page=' . $input_get['page']);
         exit;
     }
 }
 $set['title']='Лента';
 include_once '../../sys/inc/thead.php';
-/*
-===============================
-Очищение списка непрочитанных
-===============================
-*/
-if (isset($_GET['read']) && $_GET['read']=='all') {
+// Очищение списка непрочитанных
+if ($input_get['read'] && $input_get['read'] == 'all') {
     if (isset($user)) {
-        $db->query("UPDATE `tape` SET `read` = '1' WHERE `id_user` = '$user[id]'");
+        $db->query(
+            "UPDATE `tape` SET `read`=? WHERE `id_user`=?i",
+                   ['1', $user['id']]);
         $_SESSION['message'] = 'Список непрочитанных очищен';
-        header("Location: ?page=".intval($_GET['page'])."");
+        header('Location: ?page=' . $input_get['page']);
         exit;
     }
 }
-/*
-===============================
-Полная очистка ленты
-===============================
-*/
-if (isset($_GET['delete']) && $_GET['delete']=='all') {
+// Полная очистка ленты
+if ($input_get['delete'] && $input_get['delete'] == 'all') {
     if (isset($user)) {
-        $db->query("DELETE FROM `tape` WHERE `id_user` = '$user[id]'");
+        $db->query("DELETE FROM `tape` WHERE `id_user`=?i",
+                   [$user['id']]);
+        $db->query('OPTIMIZE TABLE `tape`;');
         $_SESSION['message'] = 'Лента успешно очищена';
         header("Location: ?");
         exit;
     }
 }
+
 title();
 err();
 aut();
-$k_notif = $db->query("SELECT COUNT(`read`) FROM `notification` WHERE `id_user` = '$user[id]' AND `read` = '0'")->el(); // Уведомления
-if ($k_notif > 0) {
-    $k_notif = '<font color=red>('.$k_notif.')</font>';
+
+$cnt = $db->query(
+    'SELECT (
+SELECT COUNT( * ) FROM `tape`  WHERE `id_user`=?i) k_post, (
+SELECT COUNT( * ) FROM `notification` WHERE `id_user`=?i AND `read`="0") notify, (
+SELECT COUNT( * ) FROM `discussions` WHERE `id_user`=?i AND `count`>"0") discus, (
+SELECT COUNT( * ) FROM `tape` WHERE `id_user`=?i AND `read`="0") tape',
+            [$user['id'], $user['id'], $user['id'], $user['id']])->row();
+
+if ($cnt['notify']) {
+    $cnt['notify'] = '<span class="off">('.$cnt['notify'].')</span>';
 } else {
-    $k_notif = null;
+    $cnt['notify'] = null;
 }
-$discuss = $db->query("SELECT COUNT(`count`) FROM `discussions` WHERE `id_user` = '$user[id]' AND `count` > '0' ")->el(); // Обсуждения
-if ($discuss > 0) {
-    $discuss = '<font color=red>('.$discuss.')</font>';
+
+if ($cnt['discus']) {
+    $cnt['discus'] = '<span class="off">('.$cnt['discus'].')</span>';
 } else {
-    $discuss = null;
+    $cnt['discus'] = null;
 }
-$lenta = $db->query("SELECT COUNT(`read`) FROM `tape` WHERE `id_user` = '$user[id]' AND `read` = '0' ")->el(); // Лента
-if ($lenta > 0) {
-    $lenta = '<font color=red>('.$lenta.')</font>';
+
+if ($cnt['tape']) {
+    $cnt['tape'] = '<span class="off">('.$cnt['tape'].')</span>';
 } else {
-    $lenta = null;
+    $cnt['tape'] = null;
 }
-echo "<div id='comments' class='menus'>";
-echo "<div class='webmenu'>";
-echo "<a href='/user/tape/' class='activ'>Лента $lenta</a>";
-echo "</div>";
-echo "<div class='webmenu'>";
-echo "<a href='/user/discussions/' >Обсуждения  $discuss</a>";
-echo "</div>";
-echo "<div class='webmenu'>";
-echo "<a href='/user/notification/'>Уведомления $k_notif</a>";
-echo "</div>";
-echo "</div>";
-$k_post = $db->query("SELECT COUNT(*) FROM `tape`  WHERE `id_user` = '$user[id]' ")->el();
-$k_page = k_page($k_post, $set['p_str']);
-$page = page($k_page);
-$start = $set['p_str'] * $page-$set['p_str'];
-    
-echo '<div class="foot">';
-echo '<a href="?page=' . $page . '&amp;read=all"><img src="/style/icons/ok.gif"> Отметить всё как прочитанное</a>';
-echo '</div>';
-$q = $db->query("SELECT * FROM `tape` WHERE `id_user` = '$user[id]' ORDER BY `time` DESC LIMIT $start, $set[p_str]");
-if ($k_post == 0) {
-    echo "  <div class='mess'>\n";
-    echo "Нет новых событий\n";
-    echo "  </div>\n";
-}
-while ($post = $q->row()) {
-    $type = $post['type'];
-    $avtor = get_user($post['avtor']);
-    $name = null;
-    
-    if ($post['read'] == 0) {
-        $s1 = "<font color='red'>";
-        $s2 = "</font>";
-        $db->query("UPDATE `tape` SET `read` = '1' WHERE `id` = '$post[id]'");
-    } else {
-        $s1 = null;
-        $s2 = null;
-    }
-    /*
-    ===============================
-    Помечаем сообщение прочитанным
-    ===============================
-    */
-    $d = opendir('inc/');
-    while ($dname = readdir($d)) {
-        if ($dname != '.' && $dname != '..') {
-            include 'inc/' . $dname;
+?>
+<!-- ./ lenta -->
+<div id="comments" class="menus">
+    <div class="webmenu">
+        <a href="/user/tape/" class="activ">Лента <?php echo $cnt['tape'];?></a>
+    </div>
+    <div class="webmenu">
+        <a href="/user/discussions/" >Обсуждения  <?php echo $cnt['discus'];?></a>
+    </div>
+    <div class="webmenu">
+        <a href="/user/notification/">Уведомления <?php echo $cnt['notify'];?></a>
+    </div>
+</div>
+<div class="foot">
+    <a href="?page=<?php echo $input_get['page'];?>&amp;read=all"><img src="/style/icons/ok.gif"> Отметить всё как прочитанное</a>
+</div><?php
+
+if (!$cnt['k_post']) {
+?>
+<div class="mess">
+    Нет новых событий
+</div><?php
+} else {
+    $k_page = k_page($cnt['k_post'], $set['p_str']);
+    $page = page($k_page);
+    $start = $set['p_str'] * $page-$set['p_str'];
+    $q = $db->query(
+    "SELECT tp.*, u.nick, u.pol, st.msg AS msg_status, glr.id AS id_gallery, glr.`name` AS name_gallery, 
+glf.id AS id_foto, glf.`name` AS name_foto, glf.id_gallery AS id_gallery_foto,
+glfa.id AS id_foto_avatar, glfa.`name` AS name_foto_avatar, glfa.id_gallery AS id_gallery_avatar, 
+n.id AS id_note, n.`name` AS name_note, n.msg AS msg_note,
+them.id AS id_them, them.id_razdel, them.id_forum, them.name AS name_them, them.text, 
+uf.`name` AS user_dir_name, (
+SELECT COUNT( * ) FROM `status_komm` WHERE `id_status`=tp.id_file AND (tp.`type`='status' OR tp.`type`='status_like')) komm_status, (
+SELECT COUNT( * ) FROM `status_like` WHERE `id_status`=tp.id_file AND (tp.`type`='status' OR tp.`type`='status_like')) like_status, (
+SELECT COUNT( * ) FROM `status_like` WHERE `id_status`=tp.id_file AND (tp.`type`='status' OR tp.`type`='status_like') AND `id_user`=?i) user_like_status, (
+SELECT COUNT( * ) FROM `gallery_komm` WHERE `id_foto`=glf.id) cnt_komm_foto, (
+SELECT COUNT( * ) FROM `notes_komm` WHERE `id_notes`=n.id) komm_note
+FROM `tape` tp
+JOIN `user` u ON u.id=tp.avtor
+LEFT JOIN `status` st ON (st.id=tp.id_file AND (tp.`type`='status' OR tp.`type`='status_like'))
+LEFT JOIN `gallery` glr ON (glr.id=tp.id_file AND tp.`type`='album')
+LEFT JOIN `gallery_foto` glf ON (glf.id=tp.id_file AND tp.`type`='avatar')
+LEFT JOIN `gallery_foto` glfa ON glfa.id=tp.avatar
+LEFT JOIN `notes` n ON (n.id=tp.id_file AND tp.`type`='notes')
+LEFT JOIN `forum_t` them ON (them.id=tp.id_file AND tp.`type`='them')
+LEFT JOIN `user_files` uf ON (uf.id=tp.id_file AND tp.`type`='obmen')
+WHERE tp.`id_user`=?i ORDER BY `read`, `time` DESC LIMIT ?i, ?i",
+                [$user['id'], $user['id'], $start, $set['p_str']]);
+
+    while ($post = $q->row()) {
+        $type = $post['type'];
+        $avtor = ['id' => $post['avtor'], 'nick' => $post['nick'], 'pol' => $post['pol']];
+        $name = null;
+
+        if ($post['read'] == 0) {
+            $s1 = '<span class="off">&nbsp;';
+            $s2 = '</span>';
+            $read_list[] = $post['id'];
+        } else {
+            $s1 = '&nbsp;';
+            $s2 = '&nbsp;'."\n";
         }
+        // Помечаем сообщение прочитанным
+        $d = opendir('inc/');
+        while ($dname = readdir($d)) {
+            if ($dname != '.' && $dname != '..') {
+                include 'inc/' . $dname;
+            }
+        }
+?>
+</div><?php
     }
-    
-    echo '</div>';
+    if ($k_page>1) {
+        str('?', $k_page, $page);
+    }
+    if(!empty($read_list)) {
+        $db->query('UPDATE `tape` SET `read`="1" WHERE `id` IN (?li)',
+                [$read_list]);
+    }
 }
-if ($k_page>1) {
-    str('?', $k_page, $page);
-}
-echo '<div class="foot">';
-echo '<a href="?page=' . $page . '&amp;delete=all"><img src="/style/icons/delete.gif"> Очистить ленту</a>';
-echo '</div>';
-    
-echo '<div class="foot">';
-echo '<img src="/style/icons/str2.gif" alt="*"> <a href="/info.php?id=' . $user['id'] . '">' . $user['nick'] . '</a> | ';
-echo '<b>Лента</b>';
-echo '</div>';
+?>
+
+<div class="foot">
+    <a href="?page=<?php echo $input_get['page'];?>&amp;delete=all"><img src="/style/icons/delete.gif"> Очистить ленту</a>
+</div>
+<div class="foot">
+    <img src="/style/icons/str2.gif" alt="*"> <a href="/info.php?id=<?php echo $user['id'];?>"><?php echo $user['nick'];?></a> | <strong>Лента</strong>
+</div>
+<!-- ./ end lenta -->
+<?php
 
 include_once '../../sys/inc/tfoot.php';

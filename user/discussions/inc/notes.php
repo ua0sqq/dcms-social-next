@@ -1,16 +1,12 @@
 <?php
-/*
-* Заголовок обсуждения
-*/
+// Заголовок обсуждения
 if ($type == 'notes' && $post['avtor'] != $user['id']) {
     $name = __('Дневник друга');
 } elseif ($type == 'notes' && $post['avtor'] == $user['id']) {
     $name = __('Ваш дневник');
 }
  
-/*
-* Выводим на экран
-*/
+// Выводим на экран
 if ($type == 'notes') {
     $notes = $db->query(
                         'SELECT * FROM `notes` WHERE `id`=?i',
@@ -22,23 +18,22 @@ if ($type == 'notes') {
 		<img src="/style/icons/dnev.png" alt="*"/> <a href="/plugins/notes/list.php?id=<?= $notes['id']?>&amp;page=<?= $pageEnd?>"><?= $name?></a> 
 		<?php
         if ($post['count'] > 0) {
-            ?><b><font color='red'>+<?= $post['count']?></font></b><?php
+            ?><strong><span class='off'>+<?= $post['count']?></span></strong><?php
         } ?>
-		<span class="time"><?= $s1 . vremja($post['time']) . $s2?></span>
+		<?= $s1 . vremja($post['time']) . $s2?>
 		</div>
 		
 		<div class="nav2">
-		<b><font color='green'><?= $avtor['nick']?></font></b> 
+		<p><strong><span class='on'><?= $avtor['nick']?></span></strong> 
 		<?= ($avtor['id'] != $user['id'] ? '<a href="user.settings.php?id=' . $avtor['id'] . '">[!]</a>' : '')?> 
-		<?= $avtor['medal']?> <?= $avtor['online']?> &raquo; <b><?= text($notes['name'])?></b><br />
-		<span class="text"><?= output_text($notes['msg'])?></span>
+		<?= $avtor['medal']?> <?= $avtor['online']?> &raquo; <strong><?= text($notes['name'])?></strong></p>
+		<p><?= output_text($notes['msg'])?></p>
 		</div>
 		<?php
     } else {
         ?>
 		<div class="mess">
-		<?= __('Тема форума уже удалена =(')?>
-		<span class="time"><?= $s1 . vremja($post['time']) . $s2?></span>
+		<?= __('Тема форума уже удалена =(')?> <?= $s1 . vremja($post['time']) . $s2?>
 		</div>
 		<?php
     }

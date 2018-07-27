@@ -1,16 +1,12 @@
 <?php
-/*
-* Заголовок обсуждения
-*/
+// Заголовок обсуждения
 if ($type == 'foto' && $post['avtor'] != $user['id']) {
     $name = __('Фотография друга');
 } elseif ($type == 'foto' && $post['avtor'] == $user['id']) {
     $name = __('Ваша фотография');
 }
  
-/*
-* Выводим на экран
-*/
+// Выводим на экран
 if ($type == 'foto') {
     $foto = $db->query(
         "SELECT * FROM `gallery_foto` WHERE `id`=?i",
@@ -22,23 +18,22 @@ if ($type == 'foto') {
 		<img src="/style/icons/camera.png" alt="*"/> <a href="/foto/<?= $avtor['id']?>/<?= $foto['id_gallery']?>/<?= $foto['id']?>/?page=<?= $pageEnd?>"><?= $name?></a> 
 		<?php
         if ($post['count'] > 0) {
-            ?><b><font color='red'>+<?= $post['count']?></font></b><?php
+            ?><strong><span class='off'>+<?= $post['count']?></span></strong><?php
         } ?>
-		<span class="time"><?= $s1 . vremja($post['time']) . $s2?></span>
+		<?= $s1 . vremja($post['time']) . $s2?>
 		</div>
 		
 		<div class="nav2">
-		<b><font color='green'><?= $avtor['nick']?></font></b> 
+		<p><strong><span class='on'><?= $avtor['nick']?></span></strong> 
 		<?= ($avtor['id'] != $user['id'] ? '<a href="user.settings.php?id=' . $avtor['id'] . '">[!]</a>' : '')?> 
-		<?= $avtor['medal']?> <?= $avtor['online']?> &raquo; <b><?= text($foto['name'])?></b><br />
-		<img src="/foto/foto50/<?= $foto['id']?>.<?= $foto['ras']?>" alt="Image" />
+		<?= $avtor['medal']?> <?= $avtor['online']?> &raquo; <strong><?= text($foto['name'])?></strong></p>
+		<p><img src="/foto/foto50/<?= $foto['id']?>.<?= $foto['ras']?>" alt="Image" /></p>
 		</div>
 		<?php
     } else {
         ?>
 		<div class="mess">
-		<?= __('Фотография уже удалена =(')?>
-		<span class="time"><?= $s1 . vremja($post['time']) . $s2?></span>
+		<?= __('Фотография уже удалена =(')?> <?= $s1 . vremja($post['time']) . $s2?>
 		</div>
 		<?php
     }

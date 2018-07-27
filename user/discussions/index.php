@@ -58,7 +58,7 @@ if (isset($_GET['likestatus'])) {
     
 	if (isset($user) && $user['id'] != $status['id_user'] &&
     !$db->query(
-        'SELECT COUNT(*) FROM `status_like` WHERE `id_status`=?i AND `id_user`=?i',
+        'SELECT COUNT( * ) FROM `status_like` WHERE `id_status`=?i AND `id_user`=?i',
                 [$status['id'], $user['id']])->el()) {
         $db->query(
 			'INSERT INTO `status_like` (`id_user`, `time`, `id_status`) VALUES(?i, ?i, ?i)',
@@ -80,8 +80,8 @@ if (isset($_GET['likestatus'])) {
 
 $cnt = $db->query(
     'SELECT (
-SELECT COUNT(*) FROM `discussions`  WHERE `id_user`=?i AND `count`>0 AND `avtor`=?i) count_my, (
-SELECT COUNT(*) FROM `discussions`  WHERE `id_user`=?i AND `count`>0 AND `avtor`<>?i) count_f',
+SELECT COUNT( * ) FROM `discussions`  WHERE `id_user`=?i AND `count`>0 AND `avtor`=?i) count_my, (
+SELECT COUNT( * ) FROM `discussions`  WHERE `id_user`=?i AND `count`>0 AND `avtor`<>?i) count_f',
 			[$user['id'], $user['id'], $user['id'], $user['id']])->row();
 
 if ($cnt['count_my']) {
@@ -159,19 +159,22 @@ if ($cnt['is_tape']) {
 </div>
 <?php
 $k_post = $cnt['cnt_dispute'];
-$k_page = k_page($k_post, $set['p_str']);
-$page = page($k_page);
-$start = $set['p_str'] * $page - $set['p_str'];
-$q = $db->query(
-    'SELECT * FROM `discussions` WHERE `id_user`=?i ?q ORDER BY `time` DESC LIMIT ?i OFFSET ?i',
-                [$user['id'], $order, $set['p_str'], $start]);
-if ($k_post == 0) {
+
+if (!$k_post) {
     ?>
 	<div class="mess">
 	<?= __('Нет новых обсуждений')?>
 	</div>
 	<?php
-}
+} else {
+
+$k_page = k_page($k_post, $set['p_str']);
+$page = page($k_page);
+$start = $set['p_str'] * $page - $set['p_str'];
+$q = $db->query(
+    'SELECT * FROM `discussions` WHERE `id_user`=?i ?q ORDER BY `time` DESC LIMIT ?i OFFSET ?i',
+                [$user['id'], $order, $set['p_str'], $start]); // TODO: ???
+
 while ($post = $q->row()) {
     $type = $post['type'];
     $avtor = user::get_user($post['avtor']);
@@ -192,6 +195,7 @@ while ($post = $q->row()) {
 if ($k_page > 1) {
     str('?' . $sort, $k_page, $page);
 }
+}
 ?>
 <div class="foot">
 	<a href="?read=all"><img src="/style/icons/ok.gif"> Отметить всё как прочитанное</a>
@@ -200,5 +204,5 @@ if ($k_page > 1) {
 	<a href="?delete=all"><img src="/style/icons/delete.gif"> Удалить все обсуждения</a> | <a href="settings.php">Настройки</a>
 </div>
 <?php
+
 include_once '../../sys/inc/tfoot.php';
-?>
