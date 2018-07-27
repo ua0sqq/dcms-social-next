@@ -8,75 +8,59 @@ include_once '../../../sys/inc/db_connect.php';
 include_once '../../../sys/inc/ipua.php';
 include_once '../../../sys/inc/fnc.php';
 include_once '../../../sys/inc/user.php';
-if (isset($_GET['id']) && $db->query(
-    "SELECT COUNT(*) FROM `spamus` WHERE `id`=?i",
-                                     [$_GET['id']])->el()) {
+
+if (!isset($user) || $user['group_access'] < 2) {
+    header('location: /err.php?err=403');
+    exit;
+}
+//var_dump($user['group_access']);exit;
+$id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+if ($db->query(
+    "SELECT COUNT( * ) FROM `spamus` WHERE `id`=?i",
+                                     [$id])->el()) {
+    $res = $db->query('select * from user_group where id=15')->vars();
     $post=$db->query(
-    "SELECT * FROM `spamus` WHERE `id`=?i",
-                                     [$_GET['id']])->row();
-    $spamer = get_user($post['id_spam']);
-    $ank=get_user($post['id_user']);
+    "SELECT spm.*, a.nick AS ank_nick, s.nick AS spam_nick
+FROM `spamus` spm
+JOIN `user` a ON a.id=spm.id_user
+JOIN `user` s ON s.id=spm.id_spam WHERE spm.`id`=?i",
+    [$id])->row();
+
     if ($user['group_access'] == 2) {
-        $adm = 'Модератором чата';
+        $res['type'] = "chat";
     } elseif ($user['group_access'] == 3) {
-        $adm = 'Модератором форума';
+        $res['type'] = "forum";
     } elseif ($user['group_access'] == 4) {
-        $adm = 'Модератором зоны обмена';
+        $res['type'] = "obmen_komm";
     } elseif ($user['group_access'] == 5) {
-        $adm = 'Модератором библиотеки';
+        $res['type'] = "notes_komm";
     } elseif ($user['group_access'] == 6) {
-        $adm = 'Модератором фотографий';
-    } elseif ($user['group_access'] == 7) {
-        $adm = 'Модератором';
-    } elseif ($user['group_access'] == 8) {
-        $adm = 'Администратором';
-    } elseif ($user['group_access'] == 9) {
-        $adm = 'Главным администратором';
-    } elseif ($user['group_access'] == 11) {
-        $adm = 'Модератором дневников';
-    } elseif ($user['group_access'] == 12) {
-        $adm = 'Модератором гостевой';
-    } elseif ($user['group_access'] == 15) {
-        $adm = 'Создателем';
-    }
-    if ($user['group_access']==2) {
-        $types = "chat";
-    } elseif ($user['group_access']==3) {
-        $types ="forum";
-    } elseif ($user['group_access']==4) {
-        $types = "obmen_komm";
-    } elseif ($user['group_access']==5) {
-        $types = "lib_komm";
-    } elseif ($user['group_access']==6) {
-        $types = "foto_komm";
-    } elseif ($user['group_access']==11) {
-        $types = "notes_komm' ";
-    } elseif ($user['group_access']==12) {
-        $types = "guest";
-    } elseif (($user['group_access']>6 && $user['group_access']<10) || $user['group_access']==15) {
-        $types = true;
+        $res['type'] = "foto_komm";
+    } elseif ($user['group_access'] > 6) {
+        $res['type'] = 'all';
     } else {
-        $types = false;
+        $res['type'] = 0;
     }
-    if ($types == $post['types'] || $types == true) {
-        admin_log('Жалобы', 'Удаление жалобы', "Удаление жалобы от $ank[nick] на $spamer[nick]");
+
+    if ($res['type'] == $post['razdel'] || $res['type'] == 'all') {
+        admin_log('Жалобы', 'Удаление жалобы', 'Удаление жалобы от ' . $post['ank_nick'] . ' на ' . $post['spam_nick']);
         // отправка сообщения
-        if (isset($_GET['otkl'])) {
-            $msg = "Ваша жалоба на пользователя [b]$spamer[nick][/b] отклонена $adm [b]$user[nick][/b] [br][red]Будьте внимательней, в следующий раз это может привести к блокировке вашего аккаунта![/red]";
+        if (filter_input(INPUT_GET, 'otkl', FILTER_DEFAULT)) {
+            $msg = "Вашу жалобу на пользователя [b]$post[spam_nick][/b] отклонил {$res[$user['group_access']]} [b]$user[nick][/b] [br][red]Будьте внимательней, в следующий раз это может привести к блокировке вашего аккаунта![/red]";
         } else {
-            $msg = "Ваша жалоба на пользователя [b]$spamer[nick][/b] рассмотрена $adm [b]$user[nick][/b]. [br][b]$ank[nick][/b] спасибо вам за вашу бдительность! .дружба.";
+            $msg = "Вашу жалобу на пользователя [b]$post[spam_nick][/b] рассмотрел {$res[$user['group_access']]} [b]$user[nick][/b]. [br][b]$post[ank_nick][/b] спасибо вам за вашу бдительность! .дружба.";
         }
         $db->query(
-    "INSERT INTO `mail` (`id_user`, `id_kont`, `msg`, `time`) values(?i, ?i, ?, ?i)",
-           [0, $ank['id'], $msg, $time]);
+    "INSERT INTO `mail` (`id_user`, `id_kont`, `msg`, `time`) VALUES(?i, ?i, ?, ?i)",
+           [0, $post['id_user'], $msg, time()]);
         $db->query(
     "DELETE FROM `spamus` WHERE `id`=?i",
            [$post['id']]);
     }
 }
 
-if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!=null) {
-    header("Location: ".$_SERVER['HTTP_REFERER']);
+if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER'] != null) {
+    header('Location: ' . $_SERVER['HTTP_REFERER']);
 } else {
-    header("Location: index.php?".SID);
+    header('Location: index.php?' . SID);
 }

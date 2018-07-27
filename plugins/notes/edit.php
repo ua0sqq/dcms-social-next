@@ -41,15 +41,15 @@ if (user_access('notes_edit') || $user['id'] == $notes['id_user']) {
         } else {
             $name = trim($_POST['name']);
         }
-        if (strlen2($name)>50) {
-            $err='Длина названия превышает предел в 50 символов';
+        if (strlen2($name)>32) {
+            $err='Длина названия превышает предел в 32 символов';
         }
         if (strlen2($msg)<3) {
             $err='Короткий Текст';
         }
-        if (strlen2($msg)>10000) {
-            $err='Длина текста превышает предел в 10000 символа';
-        }var_dump([$name, $type, $id_dir, $msg, $privat, $privat_komm, $notes['id']]);
+        if (strlen2($msg)>30000) {
+            $err='Длина текста превышает предел в 30000 символа';
+        }
         if (!isset($err)) {
             $db->query("UPDATE `notes` SET `name`=?, `type`=?i, `id_dir`=?in, `msg`=?, `private`=?i, `private_komm`=?i WHERE `id`=?i",
                        [$name, $type, $id_dir, $msg, $privat, $privat_komm, $notes['id']]);

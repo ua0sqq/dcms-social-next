@@ -26,7 +26,8 @@ SELECT COUNT( * ) FROM `discussions` WHERE `id_user`=' . $user['id'] . ' AND `ty
 $notes = $db->query(
                     'SELECT n.*, u.id AS id_user, u.nick, (
 SELECT COUNT( * ) FROM `bookmarks` WHERE `id_object`=n.id AND `type`="notes") mark?q;
-FROM `notes` n JOIN `user` u ON u.id=n.id_user WHERE n.`id`=?i',
+FROM `notes` n
+LEFT JOIN `user` u ON u.id=n.id_user WHERE n.`id`=?i',
                     [$sql, $input_get['id']])->row();
 
 if (!$notes['id']) {
@@ -53,13 +54,13 @@ if (isset($user) && $notes['notes_not_read']) {
 if (isset($input_get['spam'])  &&  isset($user)) {
     $mess = $db->query(
         'SELECT nk.id, nk.`time`, nk.msg, u.id AS id_user, (
-SELECT COUNT(*) FROM `spamus` WHERE `id_object`=nk.id AND `id_user`=' . $user['id'] . ' AND `id_spam`=nk.id_user AND `razdel`="notes_komm") is_spam
+SELECT COUNT( * ) FROM `spamus` WHERE `id_object`=nk.id AND `id_user`=' . $user['id'] . ' AND `id_spam`=nk.id_user AND `razdel`="notes_komm") is_spam
 FROM `notes_komm` nk
 JOIN `user` u ON u.id=nk.id_user WHERE nk.`id`=?i',
                        [$input_get['spam']])->row();
 
     if (!$db->query(
-        "SELECT COUNT(*) FROM `spamus` WHERE `id_user`=?i AND `id_spam`=?i AND `razdel`=? AND `spam`=?",
+        "SELECT COUNT( * ) FROM `spamus` WHERE `id_user`=?i AND `id_spam`=?i AND `razdel`=? AND `spam`=?",
                     [$user['id'], $mess['id_user'], 'notes_komm', $mess['msg']])->el()) {
         if (isset($_POST['msg'])) {
             if ($mess['id_user'] != $user['id']) {
@@ -147,7 +148,7 @@ if (isset($_POST['msg']) && isset($user)) {
         $err='Сообщение слишком длинное';
     } elseif (strlen2($msg)<2) {
         $err='Короткое сообщение';
-    } elseif ($db->query("SELECT COUNT(*) FROM `notes_komm` WHERE `id_notes`=?i AND `id_user`=?i AND `msg`=?",
+    } elseif ($db->query("SELECT COUNT( * ) FROM `notes_komm` WHERE `id_notes`=?i AND `id_user`=?i AND `msg`=?",
                          [$input_get['id'], $user['id'], $msg])->el()) {
         $err='Ваше сообщение повторяет предыдущее';
     } elseif (!isset($err)) {
@@ -170,7 +171,7 @@ WHERE fr.`frend`=?i AND fr.`disc_notes`=?i AND ds.`disc_notes`=?i AND `i`=?i",
         while ($frend = $q->row()) {
             // друзьям автора
             if (!$db->query(
-    "SELECT COUNT(*) FROM `discussions` WHERE `id_user`=?i AND `type`=? AND `id_sim`=?i",
+    "SELECT COUNT( * ) FROM `discussions` WHERE `id_user`=?i AND `type`=? AND `id_sim`=?i",
                 [$frend['user'], 'notes', $notes['id']])->el()) {
                 if ($notes['id_user'] != $frend['user']  || $frend['user'] != $user['id']) {
                     $db->query(
@@ -187,7 +188,7 @@ WHERE fr.`frend`=?i AND fr.`disc_notes`=?i AND ds.`disc_notes`=?i AND `i`=?i",
         }
         // отправляем автору
         if (!$db->query(
-            "SELECT COUNT(*) FROM `discussions` WHERE `id_user`=?i AND `type`=? AND `id_sim`=?i",
+            "SELECT COUNT( * ) FROM `discussions` WHERE `id_user`=?i AND `type`=? AND `id_sim`=?i",
                         [$notes['id_user'], 'notes', $notes['id']])->el()) {
             if ($notes['id_user'] != $user['id']) {
                 $db->query(
@@ -215,7 +216,7 @@ WHERE fr.`frend`=?i AND fr.`disc_notes`=?i AND ds.`disc_notes`=?i AND `i`=?i",
 }
 // листинг
 $listing = $db->query('SELECT tbl2.id as start_id, tbl3.id as end_id, (
-SELECT COUNT(*)+1 FROM notes WHERE id>tbl1.id) AS cnt, (SELECT COUNT(*) FROM notes) AS all_cnt
+SELECT COUNT( * )+1 FROM notes WHERE id>tbl1.id) AS cnt, (SELECT COUNT( * ) FROM notes) AS all_cnt
 FROM `notes` tbl1
 LEFT JOIN `notes` tbl2 ON tbl1.id > tbl2.id
 LEFT JOIN `notes` tbl3 ON tbl1.id < tbl3.id
@@ -258,14 +259,14 @@ if ((!isset($user) && $notes['private'] == 2)
 if (isset($input_get['delete']) && ($user['id']==$avtor['id'] || user_access('notes_delete'))) {
     echo '<div class="mess" style="text-align:center;">'."\n";
     echo '<p>Вы действительно хотите удалить дневник ' . output_text($notes['name']) . '?</p>';
-    echo "[<a href='delete.php?id=$notes[id]'><img src='/style/icons/ok.gif'> удалить</a>] [<a href='/plugins/notes/list.php?id=$notes[id]'><img src='/style/icons/delete.gif'> отмена</a>] \n";
+    echo "[<a href='./delete.php?id=$notes[id]'><img src='/style/icons/ok.gif'> удалить</a>] [<a href='/plugins/notes/list.php?id=$notes[id]'><img src='/style/icons/delete.gif'> отмена</a>] \n";
     echo "</div>";
     include_once '../../sys/inc/tfoot.php';
 }
 if (isset($user)) {
     if (isset($input_get['like']) && $input_get['like'] == 1) {
         if (!$db->query(
-            "SELECT COUNT(*) FROM `notes_like` WHERE `id_user`=?i AND `id_notes`=?i",
+            "SELECT COUNT( * ) FROM `notes_like` WHERE `id_user`=?i AND `id_notes`=?i",
                         [$user['id'], $notes['id']])->el()) {
             $db->query(
                 "INSERT INTO `notes_like` (`id_notes`, `id_user`, `like`) VALUES (?i, ?i, ?i)",
@@ -281,7 +282,7 @@ if (isset($user)) {
     }
     if (isset($input_get['like']) && $input_get['like'] == 0) {
         if (!$db->query(
-            "SELECT COUNT(*) FROM `notes_like` WHERE `id_user`=?i AND `id_notes`=?i",
+            "SELECT COUNT( * ) FROM `notes_like` WHERE `id_user`=?i AND `id_notes`=?i",
                         [$user['id'], $notes['id']])->el()) {
             $db->query(
                 "INSERT INTO `notes_like` (`id_notes`, `id_user`, `like`) VALUES (?i, ?i, ?i)",
@@ -297,7 +298,7 @@ if (isset($user)) {
     }
     if (isset($input_get['fav']) && $input_get['fav']==1) {
         if (!$db->query(
-            "SELECT COUNT(*) FROM `bookmarks` WHERE `id_user`=?i AND `id_object`=?i AND `type`=?",
+            "SELECT COUNT( * ) FROM `bookmarks` WHERE `id_user`=?i AND `id_object`=?i AND `type`=?",
                         [$user['id'], $notes['id'], 'notes'])->el()) {
             $db->query(
                 "INSERT INTO `bookmarks` (`type`,`id_object`, `id_user`, `time`) VALUES (?, ?i, ?i, ?i)",
@@ -309,7 +310,7 @@ if (isset($user)) {
     }
     if (isset($input_get['fav']) && $input_get['fav']==0) {
         if ($db->query(
-            "SELECT COUNT(*) FROM `bookmarks` WHERE `id_user`=?i AND `id_object`=?i AND `type`=?",
+            "SELECT COUNT( * ) FROM `bookmarks` WHERE `id_user`=?i AND `id_object`=?i AND `type`=?",
                         [$user['id'], $notes['id'], 'notes'])->el()) {
             $db->query(
                 "DELETE FROM `bookmarks` WHERE `id_user`=?i AND  `id_object`=?i AND `type`=?",
@@ -409,7 +410,7 @@ echo "</div>";
 
 // Комментарии дневников
 $k_post=$db->query(
-    "SELECT COUNT(*) FROM `notes_komm` WHERE `id_notes`=?i",
+    "SELECT COUNT( * ) FROM `notes_komm` WHERE `id_notes`=?i",
                    [$input_get['id']])->el();
 $k_page=k_page($k_post, $set['p_str']);
 $page=page($k_page);
@@ -469,7 +470,7 @@ WHERE nk.`id_notes`=?i ORDER BY nk.`time` ?q LIMIT ?i OFFSET ?i',
                 echo "<a href=\"?id=$notes[id]&amp;page=$page&amp;spam=$post[id]\"><img src='/style/icons/blicon.gif' alt='*' title='Это спам'></a> ";
             }
             if (isset($user) && (user_access('notes_delete') || $user['id']==$notes['id_user'])) {
-                echo '<a href="delete.php?komm='.$post['id'].'"><img src="/style/icons/delete.gif" alt="*"></a>';
+                echo '<a href="./delete.php?komm='.$post['id'].'"><img src="/style/icons/delete.gif" alt="*"></a>';
             }
     
             echo "</div>\n";

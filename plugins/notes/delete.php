@@ -69,7 +69,7 @@ JOIN `notes` n ON n.id=nkm.id_notes WHERE nkm.`id`=?i",
 } else {
     echo output_text('А как ты сюда попал? .дум.');
 }
-$db->setDebug('mydebug');
+
 if (isset($_GET['dir']) && $db->query("SELECT COUNT(*) FROM `notes_dir` WHERE `id`=?i",
                                       [$_GET['dir']])->el()) {
     $ar = 0;

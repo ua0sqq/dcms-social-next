@@ -9,21 +9,26 @@ include_once '../../sys/inc/ipua.php';
 include_once '../../sys/inc/fnc.php';
 include_once '../../sys/inc/user.php';
 
-if (isset($user) && $user['level'] < 3) {
-    header("Location: /");
-}
+only_level(3);
 
-if (isset($_GET['del']) && $id = $db->query("SELECT `id` FROM `rules_p` WHERE `id` = '".intval($_GET['del'])."'")->el()) {
-    
-	$post=$db->query("SELECT * FROM `rules_p` WHERE `id` = ?i", [$id])->row();
-    $ank=$db->query("SELECT * FROM `user` WHERE `id` = $post[id_user] LIMIT 1")->row();
-    if ($user['level'] > $ank['level']) {
-        $db->query("DELETE FROM `rules_p` WHERE `id` = '$post[id]'");
+if ($del = filter_input(INPUT_GET, 'del', FILTER_VALIDATE_INT)) {
+    if ($id = $db->query(
+    "SELECT `id` FROM `rules_p` WHERE `id`=?i",
+                     [$del])->el()) {
+        $post = $db->query(
+		"SELECT r.id, u.id AS id_user, u.`level` FROM `rules_p` r
+JOIN `user` u ON u.id=r.id_user WHERE r.`id`=?i",
+                       [$id])->row();
+        if ($user['level'] > $post['level']) {
+            $db->query(
+            "DELETE FROM `rules_p` WHERE `id`=?i",
+                   [$post['id']]);
+        }
     }
 }
 
 if (isset($_SERVER['HTTP_REFERER']) && $_SERVER['HTTP_REFERER']!=null) {
-    header("Location: ".$_SERVER['HTTP_REFERER']);
+    header('Location: ' . $_SERVER['HTTP_REFERER']);
 } else {
-    header("Location: post.php?".SID);
+    header('Location: post.php?' . SID);
 }
