@@ -33,7 +33,7 @@ if ($set['antidos']) {
         }
     }
     if ($k_loads>100) {
-        if (!$db->query("SELECT COUNT(*) FROM `ban_ip` WHERE `min` <= ?i AND `max` >= ?i",
+        if (!$db->query("SELECT COUNT( * ) FROM `ban_ip` WHERE `min` <= ?i AND `max` >= ?i",
                         [$iplong, $iplong])->el()) {
             $db->query("INSERT INTO `ban_ip` (`min`, `max`) values(?i , ?i)",
                        [$iplong, $iplong]);
@@ -125,15 +125,24 @@ if (!isset($hard_process)) {
         }
         $last_day = mktime(0, 0, 0, date('m'), date('d') - 1); // начало вчерашних суток
         $today_time = mktime(0, 0, 0); // начало сегодняшних суток
-        if (!$db->query('SELECT COUNT(*) FROM `visit_everyday` WHERE `time`=?i',
+        if (!$db->query('SELECT COUNT( * ) FROM `visit_everyday` WHERE `time`=?i',
                         [$last_day])->el()) {
             $hard_process = true;
             // записываем общие данные за вчерашние сутки в отдельную таблицу
-            $data = [$today_time, $today_time, $today_time, $last_day];
+            $data = [$today_time, $today_time, $today_time, $last_day];try{
             $db->query('INSERT INTO `visit_everyday` (`host` , `host_ip_ua`, `hit`, `time`) VALUES ((
 SELECT COUNT(DISTINCT `ip`) FROM `visit_today` WHERE `time` < ?i),(
-SELECT COUNT(DISTINCT `ip`, `ua`) FROM `visit_today` WHERE `time` < ?i),(
-SELECT COUNT(*) FROM `visit_today` WHERE `time` < ?i), ?i)', $data);
+SELECT COUNT(DISTINCT (`ip` || `ua`)) FROM `visit_today` WHERE `time` < ?i),(
+SELECT COUNT( * ) FROM `visit_today` WHERE `time` < ?i), ?i)', $data);
+                } catch (go\DB\Exceptions\Query $e) {
+                echo '<div class="foot">';
+                echo '<ol style="overflow-x: auto;font-family: monospace;font-size: small;">';
+                echo '<li><span style="color: #8F3504;">SQL-query: '.$e->getQuery().'</span></li>'."\n";
+                echo '<li><span style="color: red;">Error description: '.$e->getError()."</span></li>\n";
+                echo '<li>Error code: '.$e->getErrorCode().'</li>';
+                echo '</ol>';
+                echo '</div>'."\n";
+            }
             $db->query('DELETE FROM `visit_today` WHERE `time` < ?i',
                        [$today_time]);
             unset($data);
@@ -166,7 +175,7 @@ SELECT COUNT(*) FROM `visit_today` WHERE `time` < ?i), ?i)', $data);
         while ($deleted = $qd->row()) {
             $db->query('DELETE FROM `users_konts` WHERE `id_user`=?i AND `id_kont`=?i',
                        [$deleted['id_user'], $deleted['id_kont']]);
-            if (!$db->query('SELECT COUNT(*) FROM `users_konts` WHERE `id_kont`=?i AND `id_user`=?i',
+            if (!$db->query('SELECT COUNT( * ) FROM `users_konts` WHERE `id_kont`=?i AND `id_user`=?i',
                             [$deleted['id_user'], $deleted['id_kont']])->el()) {
                 // если юзер не находится в контакте у другого, то удаляем и все сообщения
                 $db->query('DELETE FROM `mail` WHERE `id_user`=?i AND `id_kont`=?i OR `id_kont`=?i AND `id_user`=?i',
@@ -228,7 +237,7 @@ function get_user($user_id=0)
         //$user_id=intval($user_id);
         $users[0]=false;
         if (!isset($users[$user_id])) {
-            if (go\DB\query('SELECT COUNT(*) FROM `user` WHERE `id`=?i', [$user_id])->el()) {
+            if (go\DB\query('SELECT COUNT( * ) FROM `user` WHERE `id`=?i', [$user_id])->el()) {
                 $users[$user_id] = go\DB\query('SELECT `u` . *, `gr`.`name` AS `group_name`, `gr`.`level` AS `level` FROM `user` u
 LEFT JOIN `user_group` gr ON `gr`.`id`=`u`.`group_access` WHERE `u`.`id`=?i', [$user_id])->row();
 
@@ -364,8 +373,10 @@ if (count($q)) {
     foreach ($q as $mail);
     $adds="From: \"admin@$_SERVER[HTTP_HOST]\" <admin@$_SERVER[HTTP_HOST]>\n";
     $adds .= "Content-Type: text/html; charset=utf-8\n";
-    mail($mail['mail'], '=?utf-8?B?'.base64_encode($mail['them']).'?=', $mail['msg'], $adds);
-    $db->query("DELETE FROM `mail_to_send` WHERE `id` = '$mail[id]'");
+    mail($mail['mail'], '=?utf-8?B?' . base64_encode($mail['them']) . '?=', $mail['msg'], $adds);
+    $db->query("DELETE FROM `mail_to_send` WHERE `id`=?i",
+               [$mail['id']]);
+    $db->query('OPTIMIZE TABLE  `mail_to_send`;');
 }
 // сохранение настроек системы
 function save_settings($set)

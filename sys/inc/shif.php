@@ -11,15 +11,14 @@ function shif($string)
 
 function cookie_encrypt($string, $id = 0)
 {
-    $method = 'AES-256-CBC';
-    $ks = openssl_cipher_iv_length($method);
+    $ks = openssl_cipher_iv_length($method = 'AES-256-CBC');
     $key = substr(md5($id.@$_SERVER['HTTP_USER_AGENT']), 0, $ks);
     if (!$iv = @file_get_contents(H . 'sys/dat/shif_iv.dat')) {
         $iv = openssl_random_pseudo_bytes($ks);
         file_put_contents(H . 'sys/dat/shif_iv.dat', base64_encode($iv));
-        chmod(H . 'sys/dat/shif_iv.dat', 0755);
+        chmod(H . 'sys/dat/shif_iv.dat', 0644);
     }
-    $string = openssl_encrypt($string, $method, $key, 0, base64_decode($iv));
+    $string = openssl_encrypt($string, $method, $key, $options=OPENSSL_RAW_DATA, base64_decode($iv));
     $string = base64_encode($string);
     return $string;
 }
@@ -27,14 +26,14 @@ function cookie_encrypt($string, $id = 0)
 function cookie_decrypt($string, $id=0)
 {
     $string=base64_decode($string);
-    $method = 'AES-256-CBC';
-    $ks = openssl_cipher_iv_length($method);
+
+    $ks = openssl_cipher_iv_length($method = 'AES-256-CBC');
     $key = substr(md5($id.@$_SERVER['HTTP_USER_AGENT']), 0, $ks);
     if (!$iv = file_get_contents(H . 'sys/dat/shif_iv.dat')) {
         $iv = openssl_random_pseudo_bytes($ks);
         file_put_contents(H . 'sys/dat/shif_iv.dat', base64_encode($iv));
-        chmod(H . 'sys/dat/shif_iv.dat', 0755);
+        chmod(H . 'sys/dat/shif_iv.dat', 0644);
     }
-    $string = openssl_decrypt($string, $method, $key, 0, base64_decode($iv));
+    $string = openssl_decrypt($string, $method, $key, $options=OPENSSL_RAW_DATA, base64_decode($iv));
     return $string;
 }

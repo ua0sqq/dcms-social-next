@@ -42,7 +42,7 @@ function rez_text($text, $maxwords = 15, $maxchar = 100)
     if ($char > $maxchar) {
         $text = iconv_substr($text, 0, $maxchar, 'utf-8');
     }
-    return $text.$sep2;
+    return htmlspecialchars($text).$sep2;
 }
 
 function rez_text2($text, $maxwords = 70, $maxchar = 700)

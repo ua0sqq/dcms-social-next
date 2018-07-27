@@ -81,10 +81,10 @@ if (function_exists('imagecreatefromstring') && function_exists('gd_info')) {
     $err[]='GD необходима для корректной работы движка';
 }
 if (function_exists('mysqli_info')) {
-    echo "<span class='on'>MySQL: OK</span><br />\n";
+    echo "<span class='on'>SQL: OK</span><br />\n";
 } else {
-    echo "<span class='off'>MySQL: Нет</span><br />\n";
-    $err[]='Без MySQL работа не возможна';
+    echo "<span class='off'>SQL: Нет</span><br />\n";
+    $err[]='Без SQL работа не возможна';
 }
 if (function_exists('iconv')) {
     echo "<span class='on'>Iconv: OK</span><br />\n";

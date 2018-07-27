@@ -10,7 +10,7 @@ function user_files($path)
         for ($z=0;$z<=$i;$z++) {
             $of.=$path_arr[$z].'/';
         }
-        $dir_id=go\DB\query("SELECT * FROM `user_files` WHERE `id` = ?i", [$path_arr[$i]])->row();
+        $dir_id=go\DB\query("SELECT `id`, `id_user`, `name` FROM `user_files` WHERE `id` = ?i", [$path_arr[$i]])->row();
         $dirname=$dir_id['name'];
         $rudir.=' <a href="/user/personalfiles/'.$dir_id['id_user'].'/'.$dir_id['id'].'/">'.htmlspecialchars($dirname).'</a> &gt; ';
     }

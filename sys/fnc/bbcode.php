@@ -40,7 +40,7 @@ function BBcode($msg)
         $bbcode['/\[white\](.+)\[\/white\]/isU'] = '<span style="color:#ffffff;">$1</span>';
     }
     if ($set['bb_size']) {
-        $bbcode['/\[size=([0-9]+)\](.+)\[\/size\]/isU'] = '<span style="font-size:$1px;">$2</span>';
+        $bbcode['/\[size=([6-9]|[1-6][\d]|7[0-2])\](.+)\[\/size\]/isU'] = '<span style="font-size:$1px;">$2</span>';
     }
     if (count($bbcode)) {
         $msg = preg_replace(array_keys($bbcode), array_values($bbcode), $msg);

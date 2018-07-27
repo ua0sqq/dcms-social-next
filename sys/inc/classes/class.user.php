@@ -20,7 +20,8 @@ class user
         * $medal == 1	Выводит медальку рядом со значком онлайн
         */
         
-        $ank =go\DB\query('SELECT `nick`, `date_last`, `rating`, `browser` FROM `user` WHERE `id` = "' . $user . '" LIMIT 1 ')->row();
+        $ank =go\DB\query('SELECT `nick`, `date_last`, `rating`, `browser` FROM `user` WHERE `id`=?i',
+                          [$user])->row();
         
         $nick = null;
         $online = null;
@@ -29,7 +30,7 @@ class user
         // Вывод ника
         if ($user == 0) {
             $ank = array('id' => '0', 'nick' => 'Cистема', 'pol' => '1', 'rating' => '0', 'browser' => 'wap', 'date_last' => time());
-        } elseif (!$ank) {
+        } elseif (!$ank) {$url = 0;
             $ank = array('id' => '0', 'nick' => '[Удален]', 'pol' => '1', 'rating' => '0', 'browser' => 'wap', 'date_last' => time());
         }
         
@@ -67,7 +68,7 @@ class user
             } elseif ($R >= 60) {
                 $img = 7;
             }
-            $icon_medal = ' <img src="/style/medal/' . $img . '.png" alt="*" /> ';
+            $icon_medal = ' <img src="/style/medal/' . $img . '.png" alt="ico" /> ';
         }
         
         return $nick . $icon_medal . $online;
@@ -87,7 +88,8 @@ class user
         $AVATAR = null;
         $icon = null;
         if ($user != 0) {
-            $ank =go\DB\query('SELECT `pol`, `id`, `group_access` FROM `user` WHERE `id` = "' . $user . '" LIMIT 1 ')->row();
+            $ank =go\DB\query('SELECT `pol`, `id`, `group_access` FROM `user` WHERE `id`=?i',
+                              [$user])->row();
         }
         
         if ($user == 0) {
@@ -99,9 +101,10 @@ class user
         
         // Аватар
         if ($type == 0 || $type == 1) {
-            $avatar =go\DB\query("SELECT id,ras FROM `gallery_foto` WHERE `id_user` = '$user' AND `avatar` = '1' LIMIT 1")->row();
+            $avatar =go\DB\query("SELECT `id`, `ras` FROM `gallery_foto` WHERE `id_user`=?i AND `avatar`=? LIMIT ?i",
+                                 [$user, '1', 1])->row();
             
-            if (is_file(H.'sys/gallery/50/' . $avatar['id'] . '.' . $avatar['ras'])) {
+            if (is_file(H . 'sys/gallery/50/' . $avatar['id'] . '.' . $avatar['ras'])) {
                 $AVATAR = ' <img class="avatar" src="/foto/foto50/' . $avatar['id'] . '.' . $avatar['ras'] . '" alt="Avatar" /> ';
             } else {
                 $AVATAR = '<img class="avatar" src="/style/user/avatar.gif" width="50" alt="No Avatar" />';
@@ -111,20 +114,21 @@ class user
         
         // Иконка пользователя
         if ($type == 0 || $type == 2) {
-            if (go\DB\query("SELECT COUNT(*) FROM `ban` WHERE `id_user` = '$user' AND (`time` > '$time' OR `navsegda` = '1')")->el()) {
-                $icon = ' <img src="/style/user/ban.png" alt="*" class="icon" id="icon_group" /> ';
+            if (go\DB\query("SELECT COUNT( * ) FROM `ban` WHERE `id_user`=?i AND (`time`>?i OR `navsegda`=?i)",
+                            [$user, time(), 1])->el()) {
+                $icon = ' <img src="/style/user/ban.png" alt="ico" class="icon" id="icon_group" /> ';
             } else {
                 if ($ank['group_access'] > 7 && ($ank['group_access'] < 10 || $ank['group_access'] > 14)) {
                     if ($ank['pol'] == 1) {
-                        $icon = '<img src="/style/user/1.png" alt="*" class="icon" id="icon_group" /> ';
+                        $icon = '<img src="/style/user/1.png" alt="ico" class="icon" id="icon_group" /> ';
                     } else {
                         $icon = '<img src="/style/user/2.png" alt="" class="icon"/> ';
                     }
                 } elseif (($ank['group_access'] > 1 && $ank['group_access'] <= 7) || ($ank['group_access'] > 10 && $ank['group_access'] <= 14)) {
                     if ($ank['pol'] == 1) {
-                        $icon = '<img src="/style/user/3.png" alt="*" class="icon" id="icon_group" /> ';
+                        $icon = '<img src="/style/user/3.png" alt="ico" class="icon" id="icon_group" /> ';
                     } else {
-                        $icon = '<img src="/style/user/4.png" alt="*" class="icon" id="icon_group" /> ';
+                        $icon = '<img src="/style/user/4.png" alt="ico" class="icon" id="icon_group" /> ';
                     }
                 } elseif (isset($ank['status']) == 0) {
                     if ($ank['pol'] == 1) {
@@ -164,7 +168,7 @@ class user
             $ank = $user;
         } else {
             // Иначе выбираем из базы
-            $ank = go\DB\query('SELECT * FROM `user` WHERE `id` = "' . $ID . '" LIMIT 1')->row();
+            $ank = go\DB\query('SELECT * FROM `user` WHERE `id`=?i', [$ID])->row();
         }
         
         // Если система или неопределенный юзер
@@ -173,7 +177,8 @@ class user
         } elseif (!$ank) {
             $ank = array('id' => '0', 'pol' => '1', 'wmid' => '0', 'group_access' => '0', 'level' => '0');
         } else {
-            $tmp_us = go\DB\query("SELECT `level`,`name` AS `group_name` FROM `user_group` WHERE `id` = '" . $ank['group_access'] . "' LIMIT 1")->row();
+            $tmp_us = go\DB\query("SELECT `level`, `name` AS `group_name` FROM `user_group` WHERE `id`=?i",
+                                  [$ank['group_access']])->row();
             $ank['group_name'] = $tmp_us['group_name'];
             $ank['level'] = $tmp_us['level'];
         }
@@ -181,7 +186,8 @@ class user
         // Если поставлен параметр выводить фото
         if ($photo) {
             // Определяем аватар
-            $avatar = go\DB\query("SELECT id,ras FROM `gallery_foto` WHERE `id_user` = '$ID' AND `avatar` = '1' LIMIT 1")->row();
+            $avatar = go\DB\query("SELECT `id`, `ras` FROM `gallery_foto` WHERE `id_user`=?i AND `avatar`=? LIMIT ?i",
+                                  [$ID, '1', 1])->row();
             
             if (is_file(H.'sys/gallery/50/' . $avatar['id'] . '.' . $avatar['ras'])) {
                 $ank['avatar'] = ' <img class="avatar" src="/sys/gallery/50/' . $avatar['id'] . '.' . $avatar['ras'] . '" alt="Avatar" /> ';
@@ -220,26 +226,27 @@ class user
             } elseif ($R >= 60) {
                 $img = 7;
             }
-            $ank['medal'] = ' <img src="/style/medal/' . $img . '.png" alt="*" /> ';
+            $ank['medal'] = ' <img src="/style/medal/' . $img . '.png" alt="ico" /> ';
         } else {
             $ank['medal'] = null;
         }
         
         // Иконка пользователя
-        if (go\DB\query("SELECT COUNT(*) FROM `ban` WHERE `id_user` = '$ID' AND (`time` > '" . time() . "' OR `navsegda` = '1')")->el()) {
-            $ank['icon'] = ' <img src="/style/user/ban.png" alt="*" class="icon" id="icon_group" /> ';
+        if (go\DB\query("SELECT COUNT( * ) FROM `ban` WHERE `id_user`=?i AND (`time`>?i OR `navsegda`=?i)",
+                        [$ID, time(), 1])->el()) {
+            $ank['icon'] = ' <img src="/style/user/ban.png" alt="ico" class="icon" id="icon_group" /> ';
         } else {
             if ($ank['group_access'] > 7 && ($ank['group_access'] < 10 || $ank['group_access'] > 14)) {
                 if ($ank['pol'] == 1) {
-                    $ank['icon'] = '<img src="/style/user/2.png" alt="*" class="icon" id="icon_group" /> ';
+                    $ank['icon'] = '<img src="/style/user/2.png" alt="ico" class="icon" id="icon_group" /> ';
                 } else {
                     $ank['icon'] = '<img src="/style/user/120.png" alt="" class="icon"/> ';
                 }
             } elseif (($ank['group_access'] > 1 && $ank['group_access'] <= 7) || ($ank['group_access'] > 10 && $ank['group_access'] <= 14)) {
                 if ($ank['pol'] == 1) {
-                    $ank['icon'] = '<img src="/style/user/77.png" alt="*" class="icon" id="icon_group" /> ';
+                    $ank['icon'] = '<img src="/style/user/77.png" alt="ico" class="icon" id="icon_group" /> ';
                 } else {
-                    $ank['icon'] = '<img src="/style/user/118.png" alt="*" class="icon" id="icon_group" /> ';
+                    $ank['icon'] = '<img src="/style/user/118.png" alt="ico" class="icon" id="icon_group" /> ';
                 }
             } else {
                 if ($ank['pol'] == 1) {
