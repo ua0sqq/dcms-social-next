@@ -18,22 +18,32 @@ include_once '../sys/inc/thead.php';
 title();
 aut();
 
-$k_post=$db->query("SELECT COUNT(`user`.`id`) FROM `user` LEFT JOIN `user_group` ON `user`.`group_access` = `user_group`.`id` WHERE `user_group`.`level` != 0 AND `user_group`.`level` IS NOT NULL")->el();
-$k_page=k_page($k_post, $set['p_str']);
+$k_post = $db->query('SELECT COUNT( * ) FROM `user`
+LEFT JOIN `user_group` ON `user`.`group_access`=`user_group`.`id`
+WHERE `user_group`.`level`<>? AND `user_group`.`level` IS NOT NULL', ['0'])->el();
+
+if (!$k_post) {
+    echo "<div class='mess'>\n";
+    echo "Нет результатов\n";
+    echo "</div>\n";
+} else {
+    
+    $k_page=k_page($k_post, $set['p_str']);
 $page=page($k_page);
 $start=$set['p_str']*$page-$set['p_str'];
+$mes=mktime(0, 0, 0, date('m') - 1);
+$q = $db->query('SELECT `user`.`id`, (
+SELECT COUNT( * ) FROM `admin_log` WHERE `id_user`=`user`.`id`) adm_log_c_all, (
+SELECT COUNT( * ) FROM `admin_log` WHERE `id_user`=`user`.`id` AND `time` >' . $mes . ') adm_log_c_mes
+FROM `user`
+LEFT JOIN `user_group` ON `user`.`group_access`=`user_group`.`id`
+WHERE `user_group`.`level`<>? AND `user_group`.`level` IS NOT NULL
+ORDER BY `user_group`.`level` DESC LIMIT ?i, ?i', ['0', $start, $set['p_str']]);
 echo "<table class='post'>\n";
-if ($k_post==0) {
+while ($post = $q->row()) {
+    $ank=get_user($post['id']);
     echo "   <tr>\n";
-    echo "  <td class='p_t'>\n";
-    echo "Нет результатов\n";
-    echo "  </td>\n";
-    echo "   </tr>\n";
-}
-$q=$db->query("SELECT `user`.`id` FROM `user` LEFT JOIN `user_group` ON `user`.`group_access` = `user_group`.`id` WHERE `user_group`.`level` != 0 AND `user_group`.`level` IS NOT NULL ORDER BY `user_group`.`level` DESC LIMIT $start, $set[p_str]");
-while ($ank = $q->row()) {
-    $ank=get_user($ank['id']);
-    echo "   <tr>\n";
+
     if ($set['set_show_icon']==2) {
         echo "  <td class='icon48' rowspan='2'>\n";
         avatar($ank['id']);
@@ -57,17 +67,15 @@ while ($ank = $q->row()) {
     } else {
         echo "  <td class='p_m'>\n";
     }
+
     echo "<span class=\"ank_n\">Пол:</span> <span class=\"ank_d\">".(($ank['pol']==1)?'Мужской':'Женский')."</span><br />\n";
-    $adm_log_c_all=$db->query("SELECT COUNT(*) FROM `admin_log` WHERE `id_user` = '$ank[id]'")->el();
-    // время месяц назад
-    $mes=mktime(0, 0, 0, date('m')-1); 
-    $adm_log_c_mes=$db->query("SELECT COUNT(*) FROM `admin_log` WHERE `id_user` = '$ank[id]' AND `time` > '$mes'")->el();
-    echo "<span class='ank_n'>Вся активность:</span> <span class='ank_d'>$adm_log_c_all</span><br />\n";
-    echo "<span class='ank_n'>Активность за месяц:</span> <span class='ank_d'>$adm_log_c_mes</span><br />\n";
+    echo '<span class="ank_n">Вся активность:</span> <span class="ank_d">' . $post['adm_log_c_all'] . '</span><br />';
+    echo '<span class="ank_n">Активность за месяц:</span> <span class="ank_d"> ' . $post['adm_log_c_mes'] . '</span><br />';
     echo "<span class=\"ank_n\">Посл. посещение:</span> <span class=\"ank_d\">".vremja($ank['date_last'])."</span><br />\n";
     if (isset($user) && ($user['level']>$ank['level'] || $user['level']==4)) {
         echo "<a href='/adm_panel/user.php?id=$ank[id]'>Редактировать профиль</a><br />\n";
     }
+
     echo "  </td>\n";
     echo "   </tr>\n";
 }
@@ -75,6 +83,7 @@ echo "</table>\n";
 if ($k_page>1) {
     str("?", $k_page, $page);
 } // Вывод страниц
+}
 if (user_access('adm_panel_show')) {
     echo "<div class='foot'>\n";
     echo "&laquo;<a href='/adm_panel/'>В админку</a><br />\n";

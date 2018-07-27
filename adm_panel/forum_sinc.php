@@ -20,45 +20,47 @@ err();
 aut();
 
 if (isset($_GET['ok']) && isset($_POST['accept'])) {
-    $d_r=0;
-    $d_t=0;
-    $d_p=0;
+    $d_r = 0;
+    $d_t = 0;
+    $d_p = 0;
     // удаление разделов
-    $q=$db->query("SELECT `id`,`id_forum` FROM `forum_r`");
-    while ($razd=$q->row()) {
-        if (!$db->query("SELECT COUNT(*) FROM `forum_f` WHERE `id` = '$razd[id_forum]'")->el()) {
-            $db->query("DELETE FROM `forum_r` WHERE `id` = '$razd[id]' LIMIT 1");
-            $d_r++;
-        }
+    $list_id_razdel = $db->query("SELECT `id` FROM `forum_r` WHERE `id_forum` NOT IN(SELECT `id` FROM `forum_f`)")->col();
+    if (!empty($list_id_razdel)) {
+        $d_r = $db->query("DELETE FROM `forum_r` WHERE `id` IN(?li)",
+                   [$list_id_razdel])->ar();
     }
     // удаление тем
-    $q=$db->query("SELECT `id`, `id_razdel`, `id_user` FROM `forum_t`");
-    while ($them=$q->row()) {
-        if (!$db->query("SELECT COUNT(*) FROM `forum_r` WHERE `id` = '$them[id_razdel]'")->el()
-    || !$db->query("SELECT COUNT(*) FROM `user` WHERE `id` = '$them[id_user]'")->el()) {
-            $db->query("DELETE FROM `forum_t` WHERE `id` = '$them[id]' LIMIT 1");
-            $d_t++;
-        }
+    $list_id_them = $db->query("SELECT `id` FROM `forum_t`
+WHERE `id_razdel` NOT IN(SELECT `id` FROM `forum_r`) OR `id_user` NOT IN (SELECT `id` FROM `user`)")->col();
+    if (!empty($list_id_them)) {
+        $d_t = $db->query("DELETE FROM `forum_t` WHERE `id` IN(?li)",
+                   [$list_id_them])->ar();
     }
     // удаление постов
-    $q=$db->query("SELECT `id`, `id_them`, `id_user` FROM `forum_p`");
-    while ($post=$q->row()) {
-        if (!$db->query("SELECT COUNT(*) FROM `forum_t` WHERE `id` = '$post[id_them]'")->el()
-    || !$db->query("SELECT COUNT(*) FROM `user` WHERE `id` = '$post[id_user]'")->el()) {
-            $db->query("DELETE FROM `forum_p` WHERE `id` = '$post[id]' LIMIT 1");
-            $d_p++;
-        }
+    $list_id_post = $db->query("SELECT `id` FROM `forum_p`
+WHERE `id_them` NOT IN(SELECT `id` FROM `forum_t`) OR `id_user` NOT IN(SELECT `id` FROM `user`)")->col();
+    if (!empty($list_id_post)) {
+        $d_p = $db->query("DELETE FROM `forum_p` WHERE `id` IN(?li)",
+                          [$list_id_post])->ar();
     }
     msg("Удалено разделов: $d_r, тем: $d_t, постов: $d_p");
 }
-echo "<form method=\"post\" action=\"?ok\">\n";
-echo "<input value=\"Начать\" name='accept' type=\"submit\" />\n";
-echo "</form>\n";
-echo "* В зависимости от количества сообщений и тем, данное действие может занять длительное время.<br />\n";
-echo "** Рекомендуется использовать только в случах расхождений счетчиков форума с реальными данными<br />\n";
+?>
+<form class="foot" method="post" action="?ok">
+    <p><input value="Начать" name="accept" type="submit" /></p>
+</form>
+<div class="mess">
+    * В зависимости от количества сообщений и тем, данное действие может занять длительное время.
+</div>
+<div class="mess">
+    ** Рекомендуется использовать только в случах расхождений счетчиков форума с реальными данными
+</div>
+<?php
 if (user_access('adm_panel_show')) {
-    echo "<div class='foot'>\n";
-    echo "&laquo;<a href='/adm_panel/'>В админку</a><br />\n";
-    echo "</div>\n";
+?>
+<div class="foot">
+    &laquo;<a href="/adm_panel/">В админку</a>
+</div>
+<?php
 }
 include_once '../sys/inc/tfoot.php';
