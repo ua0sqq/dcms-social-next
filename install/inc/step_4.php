@@ -60,7 +60,8 @@ if (isset($_SESSION['adm_reg_ok']) && $_SESSION['adm_reg_ok']==true) {
             $err[]='Ник короче 3-х символов';
         } elseif (strlen2($_POST['nick'])>16) {
             $err[]='Ник длиннее 16-ти символов';
-        } elseif ($db->query("SELECT COUNT(*) FROM `user` WHERE `nick` = ?", [$_POST['nick']])->el()) {
+        } elseif ($db->query("SELECT COUNT(*) FROM `user` WHERE `nick` = ?",
+                             [$_POST['nick']])->el()) {
             $err[]='Выбранный ник уже занят другим пользователем';
         } else {
             $nick=$_POST['nick'];
@@ -102,10 +103,14 @@ VALUES(?, ?, ?i, ?i, ?i, ?, ?, ?i, ?i, ?i)",
         Создание настроек юзера
         ========================================
         */
-        $db->query("INSERT INTO `user_set` (`id_user`) VALUES ('$user[id]')");
-        $db->query("INSERT INTO `discussions_set` (`id_user`) VALUES ('$user[id]')");
-        $db->query("INSERT INTO `tape_set` (`id_user`) VALUES ('$user[id]')");
-        $db->query("INSERT INTO `notification_set` (`id_user`) VALUES ('$user[id]')");
+        $db->query("INSERT INTO `user_set` (`id_user`) VALUES (?i)",
+                   [$user['id']]);
+        $db->query("INSERT INTO `discussions_set` (`id_user`) VALUES (?i)",
+                   [$user['id']]);
+        $db->query("INSERT INTO `tape_set` (`id_user`) VALUES (?i)",
+                   [$user['id']]);
+        $db->query("INSERT INTO `notification_set` (`id_user`) VALUES (?i)",
+                   [$user['id']]);
 
         $_SESSION['id_user']=$user['id'];
         setcookie('id_user', $user['id'], time()+60*60*24*365, '/', $_SERVER['HTTP_HOST']);

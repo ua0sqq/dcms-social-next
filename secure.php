@@ -16,16 +16,24 @@ $set['title']='Безопасность';
 include_once 'sys/inc/thead.php';
 title();
 
-if (isset($_POST['save'])) {
-    if (isset($_POST['pass']) && $db->query(
-    "SELECT COUNT(*) FROM `user` WHERE `id`=?i AND `pass`=?",
-                                        [$user['id'], shif($_POST['pass'])])->el()) {
-        if (isset($_POST['pass1']) && isset($_POST['pass2'])) {
-            if ($_POST['pass1']==$_POST['pass2']) {
-                if (strlen2($_POST['pass1'])<6) {
+$args = [
+         'save' => FILTER_DEFAULT,
+         'pass' => FILTER_DEFAULT,
+         'pass1' => FILTER_DEFAULT,
+         'pass2' => FILTER_DEFAULT
+         ];
+$input_post = filter_input_array(INPUT_POST, $args);
+unset($args);
+
+if (isset($input_post['save'])) {
+    if (isset($input_post['pass']) && $db->query("SELECT COUNT( * ) FROM `user` WHERE `id`=?i AND `pass`=?",
+                                                 [$user['id'], shif($input_post['pass'])])->el()) {
+        if (isset($input_post['pass1']) && isset($input_post['pass2'])) {
+            if ($input_post['pass1']==$input_post['pass2']) {
+                if (strlen2($input_post['pass1'])<6) {
                     $err='По соображениям безопасности новый пароль не может быть короче 6-ти символов';
                 }
-                if (strlen2($_POST['pass1'])>32) {
+                if (strlen2($input_post['pass1'])>32) {
                     $err='Длина пароля превышает 32 символа';
                 }
             } else {
@@ -38,16 +46,19 @@ if (isset($_POST['save'])) {
         $err='Старый пароль неверен';
     }
     if (!isset($err)) {
-        $db->query(
-    "UPDATE `user` SET `pass`=? WHERE `id`=?i",
-           [shif($_POST['pass1']), $user['id']]);
-        setcookie('pass', cookie_encrypt($_POST['pass1'], $user['id']), time()+60*60*24*365);
-        msg('Пароль успешно изменен');
+        $db->query("UPDATE `user` SET `pass`=? WHERE `id`=?i",
+                   [shif($input_post['pass1']), $user['id']]);
+        setcookie('pass', cookie_encrypt($input_post['pass1'], $user['id']), time()+60*60*24*365);
+        $_SESSION['message'] = 'Пароль успешно изменен';
+        header("Location: ?");
+        exit;
     }
 }
+
 err();
 aut();
-echo "<form method='post' action='?$passgen'>\n";
+
+echo "<form class=\"mess\" method='post' action='?$passgen'>\n";
 echo "Старый пароль:<br />\n<input type='text' name='pass' value='' /><br />\n";
 echo "Новый пароль:<br />\n<input type='password' name='pass1' value='' /><br />\n";
 echo "Подтверждение:<br />\n<input type='password' name='pass2' value='' /><br />\n";

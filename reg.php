@@ -16,7 +16,7 @@ only_unreg();
 $set['title']='Регистрация';
 include_once 'sys/inc/thead.php';
 title();
-$db->setDebug('mydebug');
+
 if ($set['guest_select']=='1') {
     msg("Доступ к сайту разрешен только авторизованым пользователям");
 }
@@ -30,7 +30,7 @@ if ($set['reg_select']=='close') {
     echo "<a href='/aut.php'>Авторизация</a><br />\n";
     include_once 'sys/inc/tfoot.php';
 } elseif ($set['reg_select']=='open_mail' && isset($_GET['id']) && isset($_GET['activation']) && $_GET['activation']!=null) {
-    if ($db->query("SELECT COUNT(*) FROM `user` WHERE `id`=?i AND `activation`=?",
+    if ($db->query("SELECT COUNT( * ) FROM `user` WHERE `id`=?i AND `activation`=?",
                    [$_GET['id'], $_GET['activation']])->el()) {
         $db->query("UPDATE `user` SET `activation`=?n WHERE `id`=?i",
                    [null, $_GET['id']]);
@@ -44,7 +44,7 @@ if ($set['reg_select']=='close') {
         include_once 'sys/inc/tfoot.php';
     }
 }
-if (isset($_SESSION['step']) && $_SESSION['step']==1 && !$db->query("SELECT COUNT(*) FROM `user` WHERE `nick`=?",
+if (isset($_SESSION['step']) && $_SESSION['step']==1 && !$db->query("SELECT COUNT( * ) FROM `user` WHERE `nick`=?",
                                                                     [$_SESSION['reg_nick']])->el()
     && isset($_POST['pass1']) && $_POST['pass1']!=null && $_POST['pass2'] && $_POST['pass2']!=null) {
     if ($set['reg_select']=='open_mail') {
@@ -52,7 +52,7 @@ if (isset($_SESSION['step']) && $_SESSION['step']==1 && !$db->query("SELECT COUN
             $err[]='Неоходимо ввести Email';
         } elseif (!preg_match('#^[A-z0-9-\._]+@[A-z0-9]{2,}\.[A-z]{2,4}$#ui', $_POST['ank_mail'])) {
             $err[]='Неверный формат Email';
-        } elseif ($db->query("SELECT COUNT(*) FROM `reg_mail` WHERE `mail`=?",
+        } elseif ($db->query("SELECT COUNT( * ) FROM `reg_mail` WHERE `mail`=?",
                              [$_POST['ank_mail']])->el()) {
             $err[]="Пользователь с этим E-mail уже зарегистрирован";
         }
@@ -131,7 +131,7 @@ if (isset($_SESSION['step']) && $_SESSION['step']==1 && !$db->query("SELECT COUN
     }
 } elseif (isset($_POST['nick']) && !empty($_POST['nick'])) {
     $nick = trim($_POST['nick']);
-    if (!$db->query("SELECT COUNT(*) FROM `user` WHERE `nick`=?",
+    if (!$db->query("SELECT COUNT( * ) FROM `user` WHERE `nick`=?",
                     [$nick])->el()) {
         
         if (!preg_match("#^([A-zА-я0-9\-\_\ ])+$#ui", $nick)) {

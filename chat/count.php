@@ -1,8 +1,10 @@
 <?php
-
-if (isset($user)) {
-    $db->query("DELETE FROM `chat_who` WHERE `id_user` = '$user[id]'");
+$cnt = $db->query("SELECT * FROM (
+SELECT COUNT( * ) user FROM `chat_who`)q1, (
+SELECT COUNT( * ) post FROM `chat_post` )q2")->row();
+if (isset($user) && $cnt['user'] > 0) {
+    $db->query(
+        "DELETE FROM `chat_who` WHERE `id_user`=?i OR `time`<?i",
+                [$user['id'], (time() - 120)]);
 }
-
-$db->query("DELETE FROM `chat_who` WHERE `time` < '".($time-120)."'");
-echo '('.$db->query("SELECT COUNT(*) FROM `chat_who`")->el().' человек)';
+echo '(' . $cnt['post'] . '/' . $cnt['user'] . ') человек';

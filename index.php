@@ -50,7 +50,7 @@ if (!$set['web']) {
     include_once 'sys/inc/news_main.php';
     // главное меню
     include_once 'sys/inc/main_menu.php';
-    include_once H.'sys/inc/main_notes.php';
+    include_once 'sys/inc/main_notes.php';
 } else {
     // главная web темы
     include_once 'style/themes/' . $set['set_them'] . '/index.php';

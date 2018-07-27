@@ -43,7 +43,8 @@ if (isset($_POST['nick']) && isset($_POST['mail']) && $_POST['nick']!=null && $_
         //$adds .= "X-sender: <$set[reg_mail]>\n";
         $adds .= "Content-Type: text/html; charset=utf-8\n";
         mail($user2['ank_mail'], '=?utf-8?B?'.base64_encode($subject).'?=', $regmail, $adds);
-        $db->query("UPDATE `user` SET `sess` = '$new_sess' WHERE `id` = '$user2[id]' LIMIT 1");
+        $db->query("UPDATE `user` SET `sess`=? WHERE `id`=?i",
+                   [$new_sess, $user2['id']]);
         msg("Ссылка для установки нового пароля отправлена на e-mail \"$user2[ank_mail]\"");
     }
 }
