@@ -1,94 +1,61 @@
 <?php 
 
 if (isset($user)) {
-    /*
-    =================================
-    Страничка
-    =================================
-    */
+    //Страничка
     echo '<a href="/info.php?"><span class="link_title"><img src="/style/themes/web/images/user.png" alt=""/>
 <br />Моя стр</span></a>';
-    /*
-    =================================
-    Почта
-    =================================
-    */
-    $k_new=$db->query("SELECT COUNT(`mail`.`id`) FROM `mail`
-LEFT JOIN `users_konts` ON `mail`.`id_user` = `users_konts`.`id_kont` AND `users_konts`.`id_user` = '$user[id]'
-WHERE `mail`.`id_kont` = '$user[id]' AND (`users_konts`.`type` IS NULL OR `users_konts`.`type` = 'common' OR `users_konts`.`type` = 'favorite') AND `mail`.`read` = '0'")->el();
+    // Почта
+    $cnt_mail=$db->query(
+        'SELECT (
+SELECT COUNT(`mail`.`id`) FROM `mail`
+LEFT JOIN `users_konts` ON `mail`.`id_user` = `users_konts`.`id_kont` AND `users_konts`.`id_user`=?i
+WHERE `mail`.`id_kont`=?i AND (`users_konts`.`type` IS NULL OR `users_konts`.`type`="common" OR `users_konts`.`type`="favorite") AND `mail`.`read`="0") new, (
+SELECT COUNT(`mail`.`id`) FROM `mail`
+LEFT JOIN `users_konts` ON `mail`.`id_user` = `users_konts`.`id_kont` AND `users_konts`.`id_user`=?i
+WHERE `mail`.`id_kont`=?i AND (`users_konts`.`type`="favorite") AND `mail`.`read`="0") new_fav, (
+SELECT COUNT(*) FROM `tape` WHERE `id_user`=?i AND `read`="0") lenta, (
+SELECT COUNT( * ) FROM `discussions` WHERE `id_user`=?i AND `count`>0) discus, (
+SELECT COUNT( * ) FROM `notification` WHERE `id_user`=?i AND `read`="0") nitific, (
+SELECT COUNT( * ) FROM `frends_new` WHERE `to`=?i) new_frend',
+            [$user['id'], $user['id'], $user['id'], $user['id'], $user['id'], $user['id'], $user['id'], $user['id']])->row();
 
-    $k_new_fav=$db->query("SELECT COUNT(`mail`.`id`) FROM `mail`
-LEFT JOIN `users_konts` ON `mail`.`id_user` = `users_konts`.`id_kont` AND `users_konts`.`id_user` = '$user[id]'
-WHERE `mail`.`id_kont` = '$user[id]' AND (`users_konts`.`type` = 'favorite') AND `mail`.`read` = '0'")->el();
-
-    if ($k_new!=0 && $k_new_fav==0) {
-        echo "<a href='/new_mess.php'><span class='link_title'><img src='/style/themes/web/images/mail.png' alt=''/>  <b class='count'>+$k_new</b>
+    if ($cnt_mail['new'] && $cnt_mail['new_fav'] == 0) {
+        echo "<a href='/new_mess.php'><span class='link_title'><img src='/style/themes/web/images/mail.png' alt=''/>  <b class='count'>+{$cnt_mail['new']}</b>
 <br /> Почта </span></a>";
     } else {
         echo "<a href='/konts.php'><span class='link_title'><img src='/style/themes/web/images/mail.png' alt=''/>
 <br />Почта</span></a>";
     }
-    /*
-    ================================
-    Lента
-    ================================
-    */
-    $lenta = $db->query("SELECT COUNT(*) FROM `tape` WHERE `id_user` = '$user[id]' AND `read` = '0' ")->el();
-
-    echo "<a href='/user/tape/index.php'><span class='link_title'><img src='/style/themes/web/images/lenta.png' alt=''/>";
-    $k_l = $lenta;
-    if ($k_l>0) {
-        echo " <b class='count'>+$k_l</b>";
+    // Lента
+echo "<a href='/user/tape/index.php'><span class='link_title'><img src='/style/themes/web/images/lenta.png' alt=''/>";
+    if ($cnt_mail['discus']) {
+        echo " <b class='count'>+{$cnt_mail['discus']}</b>";
     }
     echo "<br />Лента";
     echo "</span></a>";
-    /*
-    ================================
-    Обсуждения
-    ================================
-    */
-    $discuss = $db->query("SELECT COUNT(`count`) FROM `discussions` WHERE `id_user` = '$user[id]' AND `count` > '0' ")->el();
-    $k_l = $discuss;
-
+    // Обсуждения
     echo "<a href='/user/discussions/index.php'><span class='link_title'><img src='/style/themes/web/images/disc.png' alt=''/>";
-    if ($k_l > 0) {
-        echo " <b class='count'>+$k_l</b>";
+    if ($cnt_mail['discus']) {
+        echo " <b class='count'>+{$cnt_mail['discus']}</b>";
     }
 
     echo "<br />Обсуждения";
     echo "</span></a>";
-    /*
-    ================================
-    Уведомления
-    ================================
-    */
-    $k_notif = $db->query("SELECT COUNT(`read`) FROM `notification` WHERE `id_user` = '$user[id]' AND `read` = '0'")->el();
-    $k_l = $k_notif;
-
-    if ($k_l > 0) {
-        echo "<a href='/user/notification/index.php'><span class='link_title'><img src='/style/themes/web/images/notif2.png' alt=''/><b class='count'>+$k_l</b>
+    // Уведомления
+    if ($cnt_mail['nitific']) {
+        echo "<a href='/user/notification/index.php'><span class='link_title'><img src='/style/themes/web/images/notif2.png' alt=''/><b class='count'>+{$cnt_mail['nitific']}</b>
 <br />Уведомления";
         echo "</span></a>";
     }
-    /*
-    =================================
-    Друзья
-    =================================
-    */
-    $k_f = $db->query("SELECT COUNT(id) FROM `frends_new` WHERE `to` = '$user[id]' LIMIT 1")->el();
-
-    if ($k_f > 0) {
-        echo "<a href='/user/frends/new.php'><span class='link_title'><img src='/style/themes/web/images/frend.png' alt=''/><b class='count'>+$k_f</b>
+    // Друзья
+    if ($cnt_mail['new_frend']) {
+        echo "<a href='/user/frends/new.php'><span class='link_title'><img src='/style/themes/web/images/frend.png' alt=''/><b class='count'>+{$cnt_mail['new_frend']}</b>
 <br />Друзья </span></a>";
     } else {
         echo '<a href="/user/frends/?id='.$user['id'].'"><span class="link_title"><img src="/style/themes/web/images/frend.png" alt=""/>
 <br />Друзья</span></a>';
     }
-    /*
-    =================================
-    Обновить
-    =================================
-    */
+    //Обновить
     echo '<a href="'.htmlspecialchars($_SERVER['REQUEST_URI']).'"><span class="link_title"><img src="/style/themes/web/images/refresh.png"/>
 <br />Обновить</span></a>';
 } elseif ($_SERVER['PHP_SELF'] != '/aut.php' && $_SERVER['PHP_SELF'] != '/reg.php') {
