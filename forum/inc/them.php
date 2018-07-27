@@ -40,7 +40,7 @@ if (isset($user) && isset($input_get['f_del']) && /*is_numeric($input_get['f_del
 }
 if (isset($user) && isset($input_get['zakl']) && $input_get['zakl'] == 1) {
     if ($db->query(
-        "SELECT COUNT(*) FROM `bookmarks` WHERE `id_user`=?i AND `type`=? AND `id_object`=?i",
+        "SELECT COUNT( * ) FROM `bookmarks` WHERE `id_user`=?i AND `type`=? AND `id_object`=?i",
                    [$user['id'], 'forum', $them['id']]
     )->el()) {
         $err[] = 'Тема уже есть в ваших закладках';
@@ -89,7 +89,7 @@ if (isset($user) && ($them['close'] == 0 || $them['close'] == 1 && user_access('
         $err[] = 'В тексте сообщения обнаружен мат: ' . $mat;
     }
     if ($db->query(
-        'SELECT COUNT(*) FROM `forum_p` WHERE `id_them`=?i AND `id_forum`=?i AND `id_razdel`=?i AND `id_user`=?i AND `msg`=?',
+        'SELECT COUNT( * ) FROM `forum_p` WHERE `id_them`=?i AND `id_forum`=?i AND `id_razdel`=?i AND `id_user`=?i AND `msg`=?',
                    [$them['id'], $forum['id'], $razdel['id'], $user['id'], $msg]
     )->el()) {
         $err = 'Ваше сообщение повторяет предыдущее';
@@ -97,7 +97,7 @@ if (isset($user) && ($them['close'] == 0 || $them['close'] == 1 && user_access('
     if (!isset($err)) {
         if (isset($_POST['cit']) && is_numeric($_POST['cit'])
             && $db->query(
-                "SELECT COUNT(*) FROM `forum_p` WHERE `id`=?i AND `id_them`=?i AND `id_razdel`=?i AND `id_forum`=?i",
+                "SELECT COUNT( * ) FROM `forum_p` WHERE `id`=?i AND `id_them`=?i AND `id_razdel`=?i AND `id_forum`=?i",
                           [$_POST['cit'], $input_get['id_them'], $input_get['id_razdel'], $input_get['id_forum']]
             )->el()) {
             $cit = $_POST['cit'];
@@ -149,7 +149,7 @@ JOIN `discussions_set` `dsc` ON `dsc`.`id_user`=`u`.`id` WHERE `frn`.`user`=?i A
                 // друзьям автора
                 if ($them['id_user'] != $frend['id']/* || $frend['id'] != $user['id']*/) {
                     if (!$db->query(
-                    "SELECT COUNT(*) FROM `discussions` WHERE `id_user`=?i AND `type`=? AND `id_sim`=?i",
+                    "SELECT COUNT( * ) FROM `discussions` WHERE `id_user`=?i AND `type`=? AND `id_sim`=?i",
                                 [$frend['id'], 'them', $them['id']]
                 )->el()) {
                         $db->query(
@@ -167,7 +167,7 @@ JOIN `discussions_set` `dsc` ON `dsc`.`id_user`=`u`.`id` WHERE `frn`.`user`=?i A
         }
         // отправляем автору
         if (!$db->query(
-            "SELECT COUNT(*) FROM `discussions` WHERE `id_user`=?i AND `type`=? AND `id_sim`=?i",
+            "SELECT COUNT( * ) FROM `discussions` WHERE `id_user`=?i AND `type`=? AND `id_sim`=?i",
                         [$them['id_user'], 'them', $them['id']]
         )->el()) {
             if ($them['id_user'] != $user['id'] && $them['id_user'] != $ank_reply['id']) {
@@ -195,7 +195,7 @@ JOIN `discussions_set` `dsc` ON `dsc`.`id_user`=`u`.`id` WHERE `frn`.`user`=?i A
             }
         
             if ($db->query(
-                "SELECT COUNT(*) FROM `notification_set` WHERE `komm`=1 AND `id_user`=?i",
+                "SELECT COUNT( * ) FROM `notification_set` WHERE `komm`=1 AND `id_user`=?i",
                            [$ank_reply['id']]
             )->el()) {
                 $db->query(
@@ -224,7 +224,7 @@ JOIN `user` u ON u.id=pst.id_user WHERE `pst`.`id`=?i",
                        [$input_get['spam']]
     )->row();
     if (!$db->query(
-        "SELECT COUNT(*) FROM `spamus` WHERE `id_user`=?i AND `id_spam`=?i AND `razdel`=? AND `spam`=?",
+        "SELECT COUNT( * ) FROM `spamus` WHERE `id_user`=?i AND `id_spam`=?i AND `razdel`=? AND `spam`=?",
                     [$user['id'], $mess['id_user'], 'forum', $mess['msg']]
     )->el()) {
         if (isset($_POST['spamus'])) {
@@ -260,7 +260,7 @@ JOIN `user` u ON u.id=pst.id_user WHERE `pst`.`id`=?i",
     aut();
     err();
     if (!$db->query(
-        'SELECT COUNT(*) FROM `spamus` WHERE `id_user`=?i AND `id_spam`=?i AND `razdel`=?',
+        'SELECT COUNT( * ) FROM `spamus` WHERE `id_user`=?i AND `id_spam`=?i AND `razdel`=?',
                     [$user['id'], $mess['id_user'], 'forum']
     )->el()) {
         echo "<div class='mess'>Ложная информация может привести к блокировке ника. 
@@ -296,7 +296,7 @@ if ($them['close']==1) {
 // rating files
 if (isset($input_get['rating']) && isset($user) &&  $user['balls']>=50 && $user['rating']>=0
     && !$db->query(
-        "SELECT COUNT(*) FROM `forum_files_rating` WHERE `id_user`=?i AND `id_file`=?i",
+        "SELECT COUNT( * ) FROM `forum_files_rating` WHERE `id_user`=?i AND `id_file`=?i",
                    [$user['id'], $input_get['id_file']]
     )->el()) {
     if ($input_get['rating'] == 'down') {
@@ -316,7 +316,7 @@ if (isset($input_get['rating']) && isset($user) &&  $user['balls']>=50 && $user[
 // BODY THEM
 $k_post = $db->query(
     
-    "SELECT COUNT(*) FROM `forum_p` WHERE `id_them`=?i AND `id_forum`=?i AND `id_razdel`=?i",
+    "SELECT COUNT( * ) FROM `forum_p` WHERE `id_them`=?i AND `id_forum`=?i AND `id_razdel`=?i",
                      [$them['id'], $forum['id'], $razdel['id']]
     
 )->el();
@@ -461,7 +461,7 @@ if (isset($input_get['act']) && $input_get['act']=='del' && user_access('forum_t
 if (isset($input_get['act']) && $input_get['act'] == 'vote' && (user_access('forum_them_edit') || $ank2['id'] == $user['id'])) {
     if ($db->query("SELECT COUNT(`id`) FROM `votes_forum` WHERE `them`=?i", [$them['id']])->el()) {
         if (isset($_POST['del']) && isset($user)) {
-            $db->query('UPDATE `forum_t` SET `vote`="", `vote_time`="", `vote_close`="0" WHERE `id`=?i', [$them['id']]);
+            $db->query('UPDATE `forum_t` SET `vote`="", `vote_close`="0" WHERE `id`=?i', [$them['id']]);
             $db->query('DELETE FROM `votes_forum` WHERE `them`=?i', [$them['id']]);
             $db->query('DELETE FROM `votes_user` WHERE `them`=?i', [$them['id']]);
             
@@ -602,7 +602,7 @@ if (isset($input_get['act']) && $input_get['act'] == 'vote' && (user_access('for
     exit;
 }
 if (isset($input_get['vote_user']) && $db->query(
-    "SELECT COUNT(*) FROM `votes_user` WHERE `var`=?i AND `them`=?i",
+    "SELECT COUNT( * ) FROM `votes_user` WHERE `var`=?i AND `them`=?i",
                                                  [$input_get['vote_user'], $them['id']]
 )->el()) {
     $us = $input_get['vote_user'];
@@ -646,7 +646,7 @@ include_once '../sys/inc/tfoot.php';
  if (isset($_POST['go']) && isset($_POST['vote']) && isset($user)) {
      $vote=abs($_POST['vote']);
      if (!$db->query(
-         "SELECT COUNT(*) FROM `votes_user` WHERE `them`=?i  AND `id_user`=?i",
+         "SELECT COUNT( * ) FROM `votes_user` WHERE `them`=?i  AND `id_user`=?i",
                      [$them['id'], $user['id']]
      )->el()  && $them['vote_close'] != '1' && $them['close']=='0') {
          $db->query(
@@ -676,7 +676,7 @@ echo "<div class='nav2'>".output_text($them['text'])." ";
 ==========
 */
 $vote_c = $db->query(
-    'SELECT COUNT(*) FROM `votes_forum` WHERE `them`=?i',
+    'SELECT COUNT( * ) FROM `votes_forum` WHERE `them`=?i',
                      [$them['id']]
 )->el();
  if ($vote_c != 0 && !isset($input_get['act'])) {
@@ -687,9 +687,9 @@ $vote_c = $db->query(
     </div><?php
 $q = $db->query(
          "SELECT vtf.*, (
-SELECT COUNT(*) FROM `votes_user` WHERE `them`=vtf.them) vote_sum, (
-SELECT COUNT(*) FROM `votes_user` WHERE `them`=vtf.them AND `var`=vtf.num) votec_var, (
-SELECT COUNT(*) FROM `votes_user` WHERE `them`=?i  AND `id_user`=?i) vote_user
+SELECT COUNT( * ) FROM `votes_user` WHERE `them`=vtf.them) vote_sum, (
+SELECT COUNT( * ) FROM `votes_user` WHERE `them`=vtf.them AND `var`=vtf.num) votec_var, (
+SELECT COUNT( * ) FROM `votes_user` WHERE `them`=?i  AND `id_user`=?i) vote_user
 FROM `votes_forum` vtf WHERE vtf.`them`=?i AND vtf.`var`<>'' LIMIT ?i",
                 [$them['id'], $user['id'], $them['id'], 6]
      ); ?>
@@ -712,8 +712,13 @@ while ($row = $q->row()) {
 <?php
     } else {
         ?>
-<?= output_text($row['var']); ?> <a href="?vote_user=<?= $row['num']; ?>"><?= $row['votec_var']; ?></a><br />
-<img src="/forum/img.php?img=<?= $poll; ?>" alt="*"/><br /> 
+<?= output_text($row['var']);
+    if ($row['votec_var']) {
+        ?> <a href="?vote_user=<?= $row['num']; ?>"><?= $row['votec_var']; ?></a><br /><?php
+    } else {
+        echo ' 0<br />';
+    }
+?><img src="/forum/img.php?img=<?= $poll; ?>" alt="*"/><br /> 
 <?php
     }
 }
@@ -852,7 +857,7 @@ foreach ($q as $post) {
         }
         
         // Цитирование поста
-        if ($post['cit']!=null && $db->query("SELECT COUNT(*) FROM `forum_p` WHERE `id`=?i",
+        if ($post['cit']!=null && $db->query("SELECT COUNT( * ) FROM `forum_p` WHERE `id`=?i",
                                              [$post['cit']])->el()) {
             $cit=$db->query("SELECT * FROM `forum_p` WHERE `id`=?i",
                             [$post['cit']])->row();

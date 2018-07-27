@@ -1,6 +1,7 @@
 <?php
 if (user_access('forum_razd_create') && (isset($_GET['act']) && $_GET['act']=='new' || !isset($_GET['act'])
-    && !$db->query("SELECT COUNT(*) FROM `forum_r` WHERE `id_forum` = '$forum[id]'")->el())) {
+    && !$db->query("SELECT COUNT( * ) FROM `forum_r` WHERE `id_forum`=?i",
+                   [$forum['id']])->el())) {
     echo "<form method=\"post\" action=\"/forum/$forum[id]/?act=new&amp;ok\">\n";
     echo "Название раздела:<br />\n";
     echo "<input name=\"name\" type=\"text\" maxlength='32' value='' /><br />\n";

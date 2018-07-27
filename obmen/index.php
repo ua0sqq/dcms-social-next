@@ -1,20 +1,21 @@
 <?php
-
-require '../sys/inc/start.php';
-if (isset($_GET['showinfo']) || !isset($_GET['f']) || isset($_GET['komm'])) {
-    require '../sys/inc/compress.php';
+if (!defined('H')) {
+    define('H', $_SERVER['DOCUMENT_ROOT'] . '/');
 }
-require '../sys/inc/sess.php';
-require '../sys/inc/home.php';
-require '../sys/inc/settings.php';
-require '../sys/inc/db_connect.php';
-require '../sys/inc/ipua.php';
-require '../sys/inc/fnc.php';
-require '../sys/inc/obmen.php';
-require '../sys/inc/user.php';
+require H . 'sys/inc/start.php';
+if (isset($_GET['showinfo']) || !isset($_GET['f']) || isset($_GET['komm'])) {
+    require H . 'sys/inc/compress.php';
+}
+require H . 'sys/inc/sess.php';
+require H . 'sys/inc/home.php';
+require H . 'sys/inc/settings.php';
+require H . 'sys/inc/db_connect.php';
+require H . 'sys/inc/ipua.php';
+require H . 'sys/inc/fnc.php';
+require H . 'sys/inc/obmen.php';
+require H . 'sys/inc/user.php';
 
-
-/*--------------Сортировка файлов------------------*/
+// Сортировка файлов
 if (!isset($_SESSION['sort'])) {
     $_SESSION['sort'] = 0;
 }
@@ -28,7 +29,7 @@ if ($_SESSION['sort'] == 1) {
 } else {
     $sort_files = ['time' => false];
 }
-/*---------------plugins-----------------------*/
+
 if (isset($_GET['d']) && esc($_GET['d']) != null) {
     $l = preg_replace("#\.{2,}#", null, esc($_GET['d']));
     $l = preg_replace("#\./|/\.#", null, $l);
@@ -42,7 +43,7 @@ if ($l == '/') {
     $id_dir = 0;
     $l = '/';
 } elseif ($db->query(
-    "SELECT COUNT(*) FROM `obmennik_dir` WHERE `dir`=? OR `dir`=? OR `dir`=?",
+    "SELECT COUNT( * ) FROM `obmennik_dir` WHERE `dir`=? OR `dir`=? OR `dir`=?",
                      ['/' . $l, $l . '/', $l])->el()) {
     $dir_id = $db->query(
         "SELECT * FROM `obmennik_dir` WHERE `dir`=? OR `dir`=? OR `dir`=? LIMIT ?i",
@@ -79,22 +80,24 @@ WHERE fls.`id_dir`=?i AND fls.`id`=?i',
                             [$sql_music, $id_dir, $_GET['f']])->row();
         
         $ras=$file_id['ras'];
-        $file=H."sys/obmen/files/$file_id[id].dat";
-        $name=$file_id['name'];
-        $size=$file_id['size'];
+        $file = H . 'sys/obmen/files/' . $file_id['id'] . '.dat';
+        $session_file_name = md5($file);
+        $name = $file_id['name'];
+        $size = $file_id['size'];
         $file_id['name'] = str_replace('_', ' _', $file_id['name']);
         
         if (!isset($_GET['showinfo']) && !isset($_GET['komm']) && is_file(H.'sys/obmen/files/'.$file_id['id'].'.dat')) {
-            // вычисляем доступность папки
-            $is_pass = $db->query('SELECT `pass` FROM `user_files` WHERE `id`=?i AND (`pass` IS NOT NULL AND `pass`<>"")', [$file_id['my_dir']])->el();
+            // TODO: ??? вычисляем доступность папки
+            $is_pass = $db->query('SELECT `pass` FROM `user_files` WHERE `id`=?i AND (`pass` IS NOT NULL AND `pass`<>"")',
+                                  [$file_id['my_dir']])->el();
             if (user_access('obmen_dir_edit') && $user['id'] == $file_id['id_user']) {
                 $is_pass = false;
             }
-            if ($is_pass && !isset($_SESSION['pass']) || ($_SESSION['pass'] != $is_pass)) {
+            if ($is_pass && !isset($_SESSION['pass']) || (isset($_SESSION['pass']) && $_SESSION['pass'] != $is_pass)) {
                 $_SESSION['err'] = 'Введите пароль';
                 header('Location: /user/personalfiles/'.$file_id['id_dir'].'/'.$file_id['my_dir'].'/');
                 exit;
-            }            
+            }
             
             if ($ras == 'jar' && strtolower(preg_replace('#^.*.#', null, $f)) == 'jad') {
                 require H.'sys/inc/zip.php';
@@ -111,17 +114,19 @@ WHERE fls.`id_dir`=?i AND fls.`id`=?i',
                 echo $jad;
                 exit;
             }
-            
-            if (isset($user) && $_SESSION['file_'.$file['id'].''] == 0) {
-                $db->query("
-                    UPDATE `user` SET `rating_tmp`=`rating_tmp`+1 WHERE `id`=?i",
+
+            if (isset($user) && isset($_SESSION[$session_file_name]) && $_SESSION[$session_file_name] == 0) {
+                $db->query(
+                    "UPDATE `user` SET `rating_tmp`=`rating_tmp`+1 WHERE `id`=?i",
                                 [$file_id['id_user']]);
             }
-            $_SESSION['file_'.$file['id'].''] = 1;
-            $db->query("
-                UPDATE `obmennik_files` SET `k_loads`=`k_loads`+1 WHERE `id`=?i",
+            
+            $_SESSION[$session_file_name] = 1;
+            $db->query(
+                "UPDATE `obmennik_files` SET `k_loads`=`k_loads`+1 WHERE `id`=?i",
                             [$file_id['id']]);
-            require '../sys/inc/downloadfile.php'; 
+            
+            require H . 'sys/inc/downloadfile.php';
             downloadfile(H.'sys/obmen/files/'.$file_id['id'].'.dat', retranslit($file_id['name']).'_'.$_SERVER['HTTP_HOST'].'.'.$ras, ras_to_mime($ras));
             exit;
         }
@@ -154,14 +159,14 @@ WHERE fls.`id_dir`=?i AND fls.`id`=?i',
         /*------------------------------------------------------------*/
         if (isset($_GET['fav']) && isset($user)) {
             if ($_GET['fav']  ==  1 && !$db->query(
-                "SELECT COUNT(*) FROM `bookmarks` WHERE `id_user`=?i AND `id_object`=?i AND `type`=?",
+                "SELECT COUNT( * ) FROM `bookmarks` WHERE `id_user`=?i AND `id_object`=?i AND `type`=?",
                             [$user['id'], $file_id['id'], 'file'])->el()) {
                 $db->query(
                     "INSERT INTO `bookmarks` (`type`,`id_object`, `id_user`, `time`) VALUES (?, ?i, ?i, ?i)",
-                           ['file', $file_id['id'], $user['id'], $time]);
+                           ['file', $file_id['id'], $user['id'], time()]);
                 $_SESSION['message'] = text($file_id['name']) . ' добавлен в закладки';
             } elseif ($_GET['fav']  ==  0 && $db->query(
-                "SELECT COUNT(*) FROM `bookmarks` WHERE `id_user`=?i AND `id_object`=?i AND `type`=?",
+                "SELECT COUNT( * ) FROM `bookmarks` WHERE `id_user`=?i AND `id_object`=?i AND `type`=?",
                             [$user['id'], $file_id['id'], 'file'])->el()) {
                 $db->query(
                     "DELETE FROM `bookmarks` WHERE `id_user`=?i AND  `id_object`=?i AND `type`=?",
@@ -172,7 +177,7 @@ WHERE fls.`id_dir`=?i AND fls.`id`=?i',
             header('Location: ?showinfo');
             exit;
         }
-        /*------------------------Мне нравится------------------------*/
+        // Мне нравится
         if (isset($user) && $file_id['id_user']!=$user['id'] && isset($_GET['like']) && ($_GET['like'] == 1 || $_GET['like'] == 0)
             && !$db->query(
                 "SELECT COUNT( * ) FROM `like_object` WHERE `id_object`=?i AND `type`=? AND `id_user`=?i",
@@ -186,9 +191,9 @@ WHERE fls.`id_dir`=?i AND fls.`id`=?i',
             header('Location: ?showinfo');
             exit;
         }
-        /*------------------------------------------------------------*/
+
         $set['title']='Обменник - ' . text(str_replace('_', ' _', $file_id['name'])); // заголовок страницы
-        require '../sys/inc/thead.php';
+        require H . 'sys/inc/thead.php';
         title();
         if (isset($_GET['spam'])  && isset($user)) {
             $mess = $db->query("SELECT obk.*, u.id AS id_user, u.nick FROM `obmennik_komm` obk
@@ -196,7 +201,7 @@ JOIN `user` u ON u.id=obk.id_user
 WHERE obk.`id`=?i", [$_GET['spam']])->row();
             
             if (!$db->query(
-                "SELECT COUNT(*) FROM `spamus` WHERE `id_user`=?i AND `id_spam`=?i AND `razdel`=? AND `spam`=?",
+                "SELECT COUNT( * ) FROM `spamus` WHERE `id_user`=?i AND `id_spam`=?i AND `razdel`=? AND `spam`=?",
                             [$user['id'], $mess['id_user'], 'obmen_komm', $mess['msg']])->el()) {
                 if (isset($_POST['msg'])) {
                     if ($mess['id_user'] != $user['id']) {
@@ -216,7 +221,8 @@ WHERE obk.`id`=?i", [$_GET['spam']])->row();
                             $db->query(
                                 "INSERT INTO `spamus` (`id_object`, `id_user`, `msg`, `id_spam`, `time`, `types`, `razdel`, `spam`)
 VALUES(?i, ?i, ?, ?i, ?i, ?i, ?, ?)",
-                                       [$file_id['id'], $user['id'], $msg, $mess['id_user'], $time, $types, 'obmen_komm', $mess['msg']]);
+                                        [$file_id['id'], $user['id'], $msg, $mess['id_user'], time(), $types, 'obmen_komm', $mess['msg']]);
+                            
                             $_SESSION['message'] = 'Заявка на рассмотрение отправлена';
                             header("Location: /obmen$dir_id[dir]$file_id[id].$file_id[ras]?showinfo&spam=$mess[id]&page=".intval($_GET['page'])."");
                             exit;
@@ -227,7 +233,7 @@ VALUES(?i, ?i, ?, ?i, ?i, ?i, ?, ?)",
             aut();
             err();
             if (!$db->query(
-                "SELECT COUNT(*) FROM `spamus` WHERE `id_user`=?i AND `id_spam`=?i AND `razdel`=?",
+                "SELECT COUNT( * ) FROM `spamus` WHERE `id_user`=?i AND `id_spam`=?i AND `razdel`=?",
                             [$user['id'], $mess['id_user'], 'obmen_komm'])->el()) {
                 echo "<div class='mess'>Ложная информация может привести к блокировке ника.  
     Если вас постоянно достает один человек - пишет всякие гадости, вы можете добавить его в черный список.</div>";
@@ -250,9 +256,9 @@ VALUES(?i, ?i, ?, ?i, ?i, ?i, ?, ?)",
                 echo "<div class='mess'>Жалоба на <font color='green'>$mess[nick]</font> будет рассмотрена в ближайшее время.</div>";
             }
             echo "<div class='foot'>\n";
-            echo "<img src='/style/icons/str2.gif' alt='*'> <a href='/obmen$dir_id[dir]$file_id[id].$file_id[ras]?showinfo&page=".intval($_GET['page'])."'>Назад</a>\n";
+            echo "<img src='/style/icons/str2.gif' alt='*'> <a href='/obmen$dir_id[dir]$file_id[id].$file_id[ras]?showinfo&amp;page=".intval($_GET['page'])."'>Назад</a>\n";
             echo "</div>\n";
-            require '../sys/inc/tfoot.php';
+            require H . 'sys/inc/tfoot.php';
             exit;
         }
         if (isset($user)) {
@@ -278,7 +284,6 @@ VALUES(?i, ?i, ?, ?i, ?i, ?i, ?, ?)",
                                  [$file_id['id'], $user['id'], $msg])->el()) {
                 $err='Ваше сообщение повторяет предыдущее';
             } elseif (!isset($err)) {
-
                 if (isset($user) && $respons == true) {
                     $notifiacation=$db->query(
                         "SELECT * FROM `notification_set` WHERE `id_user`=?i LIMIT ?i",
@@ -287,56 +292,58 @@ VALUES(?i, ?i, ?, ?i, ?i, ?i, ?, ?)",
                     if ($notifiacation['komm']  ==  1 && $ank_reply['id'] != $user['id']) {
                         $db->query(
                             "INSERT INTO `notification` (`avtor`, `id_user`, `id_object`, `type`, `time`) VALUES (?i, ?i, ?i, ?, ?i)",
-                                   [$user['id'], $ank_reply['id'], $file_id['id'], 'obmen_komm', $time]
-                        );
+                                   [$user['id'], $ank_reply['id'], $file_id['id'], 'obmen_komm', time()]);
                     }
                 }
-                $q = $db->query(
-                    "SELECT fr.user, fr.disc_obmen, dsc.disc_files FROM `frends` fr 
+                $res = $db->query(
+                    "SELECT fr.user, fr.disc_obmen, dsc.disc_files, (
+SELECT COUNT( * ) FROM `discussions` WHERE `id_user`=fr.`user` AND `type`='obmen' AND `id_sim`=?i) is_discus
+FROM `frends` fr 
 JOIN discussions_set dsc ON dsc.id_user=fr.user
-WHERE fr.`frend`=?i AND fr.`disc_foto`=?i AND `i`=?i",
-                        [$file_id['id_user'], 1, 1]);             
-                
-                while ($frend = $q->row()) {
-
+WHERE fr.`frend`=?i AND fr.`disc_foto`=1 AND fr.`user`<>?i AND `i`=1 AND dsc.disc_files=1",
+                        [$file_id['id'], $file_id['id_user'], $user['id']])->assoc();
+             
+                foreach ($res as $frend) {
                     if ($frend['disc_obmen'] == 1 && $frend['disc_files'] == 1) {
-                        if (!$db->query("
-                            SELECT COUNT(*) FROM `discussions` WHERE `id_user`=?i AND `type`=? AND `id_sim`=?i",
-                                        [$frend['user'], 'obmen', $file_id['id']])->el()) {
-                            if ($file_id['id_user']!=$frend['user'] || $frend['user'] != $user['id']) {
-                                $db->query("
-                                    INSERT INTO `discussions` (`id_user`, `avtor`, `type`, `time`, `id_sim`, `count`) VALUES(?i, ?i, ?, ?i, ?i, ?i)",
-                                           [$frend['user'], $file_id['id_user'], 'obmen', $time, $file_id['id'], 1]);
-                            }
+                        if (!$frend['is_discus']) {
+                            $insert_discus[] = [(int)$frend['user'], (int)$file_id['id_user'], 'obmen', time(), (int)$file_id['id'], 1];
                         } else {
-                            if ($file_id['id_user']!=$frend['user'] || $frend['user']!= $user['id']) {
-                                $db->query("
-                                    UPDATE `discussions` SET `count`=`count`+1, `time`=?i WHERE `id_user`=?i AND `type`=? AND `id_sim`=?i LIMIT ?i",
-                                           [$time, $frend['user'], 'obmen', $file_id['id'],  1]);
-                            }
+                            $update_list = [$frend['user']];
                         }
                     }
                 }
+                if (!empty($insert_discus)) {
+                    $db->query(
+                        'INSERT INTO `discussions` (`id_user`, `avtor`, `type`, `time`, `id_sim`, `count`) VALUES ?v',
+                               [$insert_discus]);
+                }
+                if (!empty($update_list)) {
+                    $db->query(
+                        'UPDATE `discussions` SET `count`=`count`+1, `time`=?i WHERE `id_user` IN(?li) AND `type`=? AND `id_sim`=?i',
+                               [time(), $update_list, 'obmen', $file_id['id']]);
+                }
+                
                 // отправляем автору
-                if (!$db->query("SELECT COUNT(*) FROM `discussions` WHERE `id_user`=?i AND `type`=? AND `id_sim`=?i",
+                if ($file_id['id_user'] != $user['id']) {
+                    if (!$db->query(
+                    "SELECT COUNT( * ) FROM `discussions` WHERE `id_user`=?i AND `type`=? AND `id_sim`=?i",
                                 [$file_id['id_user'], 'obmen', $file_id['id']])->el()) {
-                    if ($file_id['id_user'] != $user['id']) {
-                        $db->query("INSERT INTO `discussions` (`id_user`, `avtor`, `type`, `time`, `id_sim`, `count`) VALUES(?i, ?i, ?, ?i, ?i, ?i)",
-                                   [$file_id['id_user'], $file_id['id_user'], 'obmen', $time, $file_id['id'], 1]);
-                    }
-                } else {
-                    if ($file_id['id_user'] != $user['id']) {
-                        $db->query("UPDATE `discussions` SET `count`=`count`+1, `time`=?i WHERE `id_user`=?i AND `type`=? AND `id_sim`=?i LIMIT ?i",
-                                   [$time, $file_id['id_user'], 'obmen', $file_id['id'],  1]);
+                        $db->query(
+                            "INSERT INTO `discussions` (`id_user`, `avtor`, `type`, `time`, `id_sim`, `count`) VALUES(?i, ?i, ?, ?i, ?i, ?i)",
+                                   [$file_id['id_user'], $file_id['id_user'], 'obmen', time(), $file_id['id'], 1]);
+                    } else {
+                        $db->query(
+                            "UPDATE `discussions` SET `count`=`count`+1, `time`=?i WHERE `id_user`=?i AND `type`=? AND `id_sim`=?i AND `id_user`<>?i LIMIT ?i",
+                                   [time(), $file_id['id_user'], 'obmen', $file_id['id'], $user['id'], 1]);
                     }
                 }
                 $db->query(
                     "INSERT INTO `obmennik_komm` (`id_file`, `id_user`, `time`, `msg`) VALUES(?i, ?i, ?i, ?)",
-                           [$file_id['id'], $user['id'], $time, $msg]);
+                           [$file_id['id'], $user['id'], time(), $msg]);
                 $db->query(
                     "UPDATE `user` SET `balls`=`balls`+1, `rating_tmp`=`rating_tmp`+1 WHERE `id`=?i",
                            [$user['id']]);
-                $_SESSION['message']='Сообщение успешно добавлено';
+                $_SESSION['message'] = 'Сообщение успешно добавлено';
                 header("Location: /obmen$dir_id[dir]$file_id[id].$file_id[ras]?showinfo");
                 exit;
             }
@@ -346,8 +353,7 @@ WHERE fr.`frend`=?i AND fr.`disc_foto`=?i AND `i`=?i",
         aut(); // форма авторизации
         $my_dir = $db->query(
             "SELECT id, name, pass FROM `user_files` WHERE `id`=?i",
-                             [$file_id['my_dir']]
-        )->row();
+                             [$file_id['my_dir']])->row();
         // Папка под паролем
         if ($my_dir['pass']!=null) {
             if (isset($_POST['password'])) {
@@ -365,7 +371,7 @@ WHERE fr.`frend`=?i AND fr.`disc_foto`=?i AND `i`=?i",
                 echo '<form action="?showinfo" method="POST">Пароль:  
         <input type="pass" name="password" value="" /> 
         <input type="submit" value="Войти"/></form>';
-                require '../sys/inc/tfoot.php';
+                require H . 'sys/inc/tfoot.php';
                 exit;
             }
         }
@@ -380,7 +386,7 @@ WHERE fr.`frend`=?i AND fr.`disc_foto`=?i AND `i`=?i",
         }
         echo '</div>';
         // Метка 18+
-        if (($user['abuld']  ==  1 || $file_id['metka']  ==  0 || $file_id['id_user']  ==  $user['id'])) { 
+        if (($user['abuld']  ==  1 || $file_id['metka']  ==  0 || $file_id['id_user']  ==  $user['id'])) {
             echo '<div class="main">';
             if (is_file("inc/file/$ras.php")) {
                 include "inc/file/$ras.php";
@@ -405,12 +411,13 @@ WHERE fr.`frend`=?i AND fr.`disc_foto`=?i AND `i`=?i",
         }
         // листинг
         $listing = $db->query('SELECT tbl2.id as start_id, tbl2.ras, tbl3.id as end_id, tbl3.ras as end_ras, (
-SELECT COUNT(*)+1 FROM obmennik_files WHERE id>tbl1.id AND id_dir=tbl1.id_dir) AS cnt, (
-SELECT COUNT(*) FROM obmennik_files WHERE id_dir=tbl1.id_dir) AS all_cnt
+SELECT COUNT( * )+1 FROM obmennik_files WHERE id>tbl1.id AND id_dir=tbl1.id_dir) AS cnt, (
+SELECT COUNT( * ) FROM obmennik_files WHERE id_dir=tbl1.id_dir) AS all_cnt
 FROM `obmennik_files` tbl1
 LEFT JOIN `obmennik_files` tbl2 ON (tbl1.id > tbl2.id AND tbl2.id_dir=tbl1.id_dir)
 LEFT JOIN `obmennik_files` tbl3 ON (tbl1.id < tbl3.id AND tbl3.id_dir=tbl1.id_dir)
-WHERE tbl1.`id_dir`=?i AND tbl1.`id`=?i ORDER BY tbl2.`id` DESC, tbl3.id LIMIT ?i', [$dir_id['id'], $file_id['id'], 1])->row();
+WHERE tbl1.`id_dir`=?i AND tbl1.`id`=?i ORDER BY tbl2.`id` DESC, tbl3.id LIMIT ?i',
+                    [$dir_id['id'], $file_id['id'], 1])->row();
 
         echo '<div class="c2" style="text-align: center;">';
         echo '<span class="page">'.($listing['end_id']?'<a href="/obmen'.$dir_id['dir'] . $listing['end_id'].'.'.$listing['end_ras'].'?showinfo">&laquo; Пред.</a> ':'&laquo; Пред. ').'</span>';
@@ -440,12 +447,12 @@ WHERE tbl1.`id_dir`=?i AND tbl1.`id`=?i ORDER BY tbl2.`id` DESC, tbl3.id LIMIT ?
             echo '</div>';
             if (isset($user)) {
                 $markinfo=$db->query(
-                "SELECT COUNT(*) FROM `bookmarks` WHERE `id_object`=?i AND `type`=?",
+                "SELECT COUNT( * ) FROM `bookmarks` WHERE `id_object`=?i AND `type`=?",
                                  [$file_id['id'], 'file'])->el();
                 echo "<div class='main'>";
                 echo "<img src='/style/icons/add_fav.gif' alt='*' /> ";
                 if (!$db->query(
-                "SELECT COUNT(*) FROM `bookmarks` WHERE `id_user`=?i AND `id_object`=?i AND `type`=?",
+                "SELECT COUNT( * ) FROM `bookmarks` WHERE `id_user`=?i AND `id_object`=?i AND `type`=?",
                             [$user['id'], $file_id['id'], 'file'])->el()) {
                     echo "<a href='?showinfo&fav=1'>Добавить в закладки</a>\n";
                 } else {
@@ -483,14 +490,14 @@ WHERE tbl1.`id_dir`=?i AND tbl1.`id`=?i ORDER BY tbl2.`id` DESC, tbl3.id LIMIT ?
         }
 
         $_SESSION['page']=1;
-        //require '../sys/inc/thead.php';
+        
         require 'inc/komm.php';
         echo '<div class="foot">';
         echo '<img src="/style/icons/str2.gif" alt="*"> <a href="/obmen'.$dir_id['dir'].'">В папку</a>';
         echo '</div>';
-        require '../sys/inc/tfoot.php';
+        require H . 'sys/inc/tfoot.php';
     }
 }
 
 require 'inc/dir.php';
-require '../sys/inc/tfoot.php';
+require H . 'sys/inc/tfoot.php';

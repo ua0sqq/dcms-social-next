@@ -53,6 +53,7 @@ $args = [
         'id_file' => FILTER_VALIDATE_INT,
         'zakl' => FILTER_VALIDATE_INT,
         'spam' => FILTER_VALIDATE_INT,
+        'vote_user' => FILTER_VALIDATE_INT,
         'page' => FILTER_VALIDATE_INT,
         'del' => FILTER_VALIDATE_INT,
     ];

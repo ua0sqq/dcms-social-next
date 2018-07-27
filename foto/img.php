@@ -121,5 +121,8 @@ WHERE glf.`id`=?i ', [$in_get['id']])->row();
             downloadfile(H.'sys/gallery/foto/'.$in_get['id'].'.jpg', 'foto_'.$in_get['id'].'.jpg', ras_to_mime('jpg'));
             exit;
         }
-    }
+    }downloadfile(H.'style/user/avatar.gif', ras_to_mime('gif'));
+	http_response_code(404);
+} else {
+	http_response_code(403);
 }

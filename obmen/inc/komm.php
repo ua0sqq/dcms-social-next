@@ -60,7 +60,7 @@ while ($post = $q->row()) {
         if ($post['id_user'] != $user['id']) {
             echo "<a href=\"?showinfo&amp;page=$page&amp;spam=$post[id]\"><img src='/style/icons/blicon.gif' alt='*' title='Это спам'></a> ";
         }
-        if (user_access('obmen_komm_del') || $avtor['id'] == $user['id']) {
+        if (user_access('obmen_komm_del') || $file_id['id_user'] == $user['id']) {
             echo '<a href="?showinfo&amp;page=' . $page . '&amp;del_post=' . $post['id'] . '"><img src="/style/icons/delete.gif" alt="*"></a>';
         }
         echo "   </div>\n";

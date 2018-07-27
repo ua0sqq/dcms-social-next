@@ -13,7 +13,7 @@ $set['title']='Поиск файлов'; // заголовок страницы
 include_once '../sys/inc/thead.php';
 title();
 aut();
-$db->setDebug('mydebug');
+
 echo "<div class='foot'>";echo '<img src="/style/icons/up_dir.gif" alt="*"> <a href="/obmen/">Обменник</a><br />';
 echo "</div>\n";
 $search=null;

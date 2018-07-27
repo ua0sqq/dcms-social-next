@@ -2,20 +2,20 @@
 $get_trans = filter_input(INPUT_GET, 'trans', FILTER_VALIDATE_INT);
 $list=null;
 if ($l=='/') {
+     // заголовок страницы
     $set['title']='Файловый обменник';
-} // заголовок страницы
-else {
+} else {
     $set['title']='Обменник - '.$dir_id['name'];
-} // заголовок страницы
+}
 $_SESSION['page']=1;
 include_once '../sys/inc/thead.php';
 title();
+
  // Файл который перемещаем
 if ($get_trans) {
     $trans = $db->query(
         "SELECT * FROM `obmennik_files` WHERE `id`=?i AND `id_user`=?i",
-                        [$get_trans, $user['id']]
-    )->row();
+                        [$get_trans, $user['id']])->row();
 }
  // Загрузка файла
 include 'inc/upload_act.php';
@@ -24,6 +24,7 @@ include 'inc/admin_act.php';
 // форма авторизации
 err();
 aut();
+
 if ($l!='/') {
     echo '<div class="foot">';
     echo '<img src="/style/icons/up_dir.gif" alt="*"> <a href="/obmen/">Обменник</a> &gt; '.obmen_path($l).'<br />';
@@ -40,7 +41,7 @@ if (!isset($_GET['act']) && !$get_trans) {
     
     echo '</div>';
 }
-echo '<table class="post">';
+
 $parent = 'SELECT of.*, (
     SELECT COUNT( * ) FROM `obmennik_files` WHERE `id_dir` =  of.id) AS cnt3, (
     SELECT COUNT( * ) FROM `obmennik_files` WHERE `id_dir` =  of.id AND `time` >?i) AS cnt4
@@ -62,10 +63,9 @@ while ($post = $q->row()) {
 }
 $q=$db->query(
     "SELECT of.*, (
-SELECT COUNT(*) FROM `obmennik_komm` WHERE `id_file` = of.id) komm_cnt
+SELECT COUNT( * ) FROM `obmennik_komm` WHERE `id_file` = of.id) komm_cnt
 FROM `obmennik_files` of WHERE of.`id_dir`=?i ORDER BY ?o;",
-              [$id_dir, $sort_files]
-);
+              [$id_dir, $sort_files]);
 while ($post = $q->row()) {
     $list[]=['dir'=>0,'post'=>$post];
 }
@@ -137,7 +137,8 @@ WHERE t1.`dir_osn` LIKE "?e%"', [$ftime, $post['dir']]);
         echo '</div>';
     } elseif (!$get_trans) {
         $post=$list[$i]['post'];
-        $k_p=$db->query("SELECT COUNT(*) FROM `obmennik_komm` WHERE `id_file` = '$post[id]'")->el();
+        $k_p=$db->query("SELECT COUNT( * ) FROM `obmennik_komm` WHERE `id_file`=?i",
+                        [$post['id']])->el();
         $ras=$post['ras'];
         $file=H."sys/obmen/files/$post[id].dat";
         $name=$post['name'];
@@ -175,8 +176,6 @@ WHERE t1.`dir_osn` LIKE "?e%"', [$ftime, $post['dir']]);
         echo '</div>';
     }
 }
-
-echo '</table>';
 // Вывод страниц
 if ($k_page > 1 && !$get_trans) {
     str('?', $k_page, $page);

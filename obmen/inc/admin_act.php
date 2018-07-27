@@ -12,16 +12,18 @@ if (user_access('obmen_dir_delete') && isset($_GET['act']) && $_GET['act']=='del
                 }
             }
             $db->query('DELETE FROM `obmennik_dir` WHERE `id` = ?i', [$post_id]);
-            $db->query('DELETE FROM `obmennik_files` WHERE `id_dir` NOT IN (
-                   SELECT `id` FROM `obmennik_dir`)');
+            $db->query('DELETE FROM `user_files` WHERE `id_dir`=?i AND `id_dir` IS NOT NULL', [$post_id]);
+            $db->query('DELETE FROM `tape` WHERE `id_file`=?i AND `type`="obmen"', [$post_id]);
+            $db->query('DELETE FROM `obmennik_files` WHERE `id_dir`=?i', [$post_id]);
+            $db->query('DELETE FROM `user_music` WHERE `id_file`=?i AND `dir`="obmen"', [$post_id]);
             $db->query('DELETE FROM `obmennik_komm` WHERE `id_file` NOT IN (
                    SELECT `id` FROM `obmennik_files`)');
-            $db->query('DELETE FROM `user_music` WHERE `id_file` NOT IN (
-                   SELECT `id` FROM `obmennik_files`) AND `dir`="obmen"');
-            $db->query('OPTIMIZE TABLE `obmennik_dir` ,`obmennik_files` ,`obmennik_komm`, `user_music`;');
+
+            $db->query('OPTIMIZE TABLE `obmennik_dir` ,`obmennik_files` ,`obmennik_komm`, `user_files`, `tape`, `user_music`;');
         }
     }
     $res = $db->query('SELECT `id` FROM `obmennik_files` WHERE `id_dir` = ?i', [$dir_id['id']])->col();
+    if (count($res)) {
     foreach ($res as $post_id) {
         if (is_file(H.'sys/obmen/files/'.$post_id.'.dat')) {
             unlink(H.'sys/obmen/files/'.$post_id.'.dat');
@@ -29,21 +31,22 @@ if (user_access('obmen_dir_delete') && isset($_GET['act']) && $_GET['act']=='del
         array_map('unlink', glob(H . 'sys/obmen/screens/*/' . $post_id . '.*'));
     }
     $db->query('DELETE FROM `obmennik_dir` WHERE `id` = ?i', [$dir_id['id']]);
-    $db->query('DELETE FROM `obmennik_files` WHERE `id_dir` NOT IN (
-                   SELECT `id` FROM `obmennik_dir`)');
+    $db->query('DELETE FROM `user_files` WHERE `id_dir`=?i AND `id_dir` IS NOT NULL', [$dir_id['id']]);
+    $db->query('DELETE FROM `tape` WHERE `id_file`=?i AND `type`="obmen"', [$dir_id['id']]);
+    $db->query('DELETE FROM `obmennik_files` WHERE `id_dir`=?i', [$dir_id['id']]);
+    $db->query('DELETE FROM `user_music` WHERE `id_file`=?i AND `dir`="obmen"', [$dir_id['id']]);
     $db->query('DELETE FROM `obmennik_komm` WHERE `id_file` NOT IN (
                    SELECT `id` FROM `obmennik_files`)');
-    $db->query('DELETE FROM `user_music` WHERE `id_file` NOT IN (
-                   SELECT `id` FROM `obmennik_files`) AND `dir`="obmen"');
     $db->query('DELETE FROM `bookmarks` WHERE `id_object` NOT IN (
                    SELECT `id` FROM `obmennik_files`) AND `type`="file"');
-    $db->query('OPTIMIZE TABLE `obmennik_dir` ,`obmennik_files` ,`obmennik_komm`, `user_music`, `bookmarks`;');
+    
+    $db->query('OPTIMIZE TABLE `obmennik_dir` ,`obmennik_files` ,`obmennik_komm`, `user_files`, `tape`, `user_music`, `bookmarks`;');
 
     $l = $dir_id['dir_osn'];
     unset($_SESSION['obmen_dir']);
     msg('Папка успешно удалена');
     admin_log('Обменник', 'Удаление папки', 'Папка [b]' . $dir_id['name'] . '[/b] удалена');
-
+    }
     $dir_id = $db->query(
         'SELECT * FROM `obmennik_dir` WHERE `dir` = ? OR `dir` = ? OR `dir` = ? LIMIT ?i',
                        ['/' . $l, $l . '/', $l, 1])->row();
