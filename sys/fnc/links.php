@@ -1,8 +1,22 @@
 <?php
 function img_preg($arr)
 {
-    if (@imagecreatefromstring(file_get_contents($arr[1]))) {
-        return '<a href="http://' . $_SERVER['HTTP_HOST'] . '/go.php?go='.base64_encode(html_entity_decode($arr[1])) . '"><img style="max-width:240px;" src="http://' . $_SERVER['HTTP_HOST'] . '/go.php?go=' . base64_encode(html_entity_decode($arr[1])) . '" alt="img" /></a>';
+    $scheme_url = [
+        'scheme' => (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on' ? 'https' : 'http'),
+        'host' => $_SERVER['HTTP_HOST'],
+        'path' => '/style/no_image.png',
+        'query' => '',
+        ];
+    $scheme = parse_url($arr[1]);
+    if (!is_array($scheme)) {
+        return '<img style="max-width:240px;" src="/style/no_image.png" alt="No Image" />';
+    }
+    $scheme = array_merge($scheme_url, parse_url($arr[1]));
+    if (@imagecreatefromstring(copy_remote_file($scheme['scheme'] . '://' . $scheme['host'] . $scheme['path']))) {
+        return '<a href="' . $scheme['scheme'] . '://' . $_SERVER['HTTP_HOST'] . '/go.php?go=' .
+        base64_encode(html_entity_decode($scheme['scheme'] . '://' . $scheme['host'] . $scheme['path'])) . '">
+        <img style="max-width:240px;" src="' . $scheme['scheme'] . '://' . $_SERVER['HTTP_HOST'] . '/go.php?go=' .
+        base64_encode(html_entity_decode($scheme['scheme'] . '://' . $scheme['host'] . $scheme['path'])) . '" alt="img" /></a>';
     } else {
         return '<img style="max-width:240px;" src="/style/no_image.png" alt="No Image" />';
     }

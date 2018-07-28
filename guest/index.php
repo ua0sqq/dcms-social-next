@@ -30,7 +30,7 @@ if (isset($_POST['msg']) && isset($user)) {
     } elseif (strlen2($msg) < 2) {
         $err[] = 'Короткое сообщение';
     } elseif ($db->query(
-        "SELECT COUNT(*) FROM `guest` WHERE `id_user`=?i AND `msg`=?",
+        "SELECT COUNT( * ) FROM `guest` WHERE `id_user`=?i AND `msg`=?",
                        [$user['id'], $msg]
     )->el()) {
         $err = 'Ваше сообщение повторяет предыдущее';
@@ -77,7 +77,7 @@ if (isset($_POST['msg']) && isset($user)) {
     } elseif (strlen2($msg) < 2) {
         $err = 'Короткое сообщение';
     } elseif ($db->query(
-        "SELECT COUNT(*) FROM `guest` WHERE `id_user`=?i AND `msg`=?",
+        "SELECT COUNT( * ) FROM `guest` WHERE `id_user`=?i AND `msg`=?",
                          [0, $msg]
     )->el()) {
         $err = 'Ваше сообщение повторяет предыдущее';
@@ -100,7 +100,7 @@ title();
 aut();
 err();
 
-$k_post = $db->query("SELECT COUNT(*) FROM `guest`")->el();
+$k_post = $db->query("SELECT COUNT( * ) FROM `guest`")->el();
 $k_page = k_page($k_post, $set['p_str']);
 $page = page($k_page);
 $start = $set['p_str'] * $page - $set['p_str'];
@@ -125,7 +125,7 @@ if (isset($user) || (isset($set['write_guest']) && $set['write_guest'] == 1 && (
 } elseif (!isset($user) && isset($set['write_guest']) && $set['write_guest'] == 1) {
     ?><div class="mess">Вы сможете писать через <span class="on"><?= abs($time - $_SESSION['antiflood'] - 300)?> сек.</span></div><?php
 }
-echo '<table class="post">';
+
 if ($k_post == 0) {
     echo '<div class="mess" id="no_object">';
     echo 'Нет сообщений';
@@ -148,19 +148,19 @@ while ($post = $q->row()) {
     echo output_text($post['msg']) . '<br />';
     if (isset($user) && ($user['level'] > $post['level'] || $user['level'] != 0 && $user['id'] == $post['id_user']) && user_access('guest_delete')) {
         echo '<div class="right">';
-        echo '<a href="delete.php?id=' . $post['id'] . '"><img src="/style/icons/delete.gif" alt="*"></a>';
+        echo '<a href="./delete.php?id=' . $post['id'] . '"><img src="/style/icons/delete.gif" alt="*"></a>';
         echo '</div>';
     }
     echo '</div>';
 }
-echo '</table>';
+
 if ($k_page > 1) {
     str('index.php?', $k_page, $page); // Вывод страниц
 }
 echo '<div class="foot">';
 echo '<img src="/style/icons/str.gif" alt="*"> <a href="/chat/who.php">В гостевой (' .
 $db->query(
-    'SELECT COUNT(*) FROM `user` WHERE `date_last`>?i AND `url` LIKE "?e%"',
+    'SELECT COUNT( * ) FROM `user` WHERE `date_last`>?i AND `url` LIKE "?e%"',
            [(time()-100), '/guest/']
 )->el() . ' чел.)</a><br />';
 echo '</div>';

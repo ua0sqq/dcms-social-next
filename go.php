@@ -13,28 +13,25 @@ $set['title']='Перенаправление';
 include_once 'sys/inc/thead.php';
 title();
 
-$go = filter_input(INPUT_GET, 'go', FILTER_VALIDATE_INT);
-if (!$go || (!$db->query(
-    "SELECT COUNT( * ) FROM `rekl` WHERE `id`=?i",
-                                        [$go])->el() && !preg_match('#^https?://#', @base64_decode($_GET['go'])))) {// TODO: ???
+$go = filter_input(INPUT_GET, 'go', FILTER_DEFAULT);
+if (!$go || (!$db->query('SELECT COUNT( * ) FROM `rekl` WHERE `id` = ?i',
+                                        [$go])->el() && !preg_match('#^https?://#', base64_decode($go)))) {
     header('Location: index.php?' . SID);
     exit;
 }
-if (preg_match('#^(ht|f)tps?://#', base64_decode($_GET['go']))) {
+if (preg_match('#^(ht|f)tps?://#', base64_decode($go))) {
     if (isset($_SESSION['adm_auth'])) {
         unset($_SESSION['adm_auth']);
     }
-    header('Location: ' . base64_decode($_GET['go']));
+    header("Location: " . base64_decode($go));
     exit;
 } else {
-    $rekl = $db->query("SELECT `link`, `count` FROM `rekl` WHERE `id`=?i", [$go])->row();
-    $db->query(
-        'UPDATE `rekl` SET `count`=`count`+1 WHERE `id`=?i',
-                [$go]);
+    $rekl = $db->query('SELECT `id`, `link`, `count` FROM `rekl` WHERE `id`=?i', [$go])->row();
+    $db->query('UPDATE `rekl` SET `count`=`count`+?i WHERE `id` =?i', [1, $rekl['id']]);
     if (isset($_SESSION['adm_auth'])) {
         unset($_SESSION['adm_auth']);
     }
-    header('Refresh: 5; url=' . $rekl['link']);
+    header('Refresh: 10; url=' . $rekl['link']);
     echo "<div class=\"mess\"><p>За содержание рекламируемого ресурса\n";
     echo "<p>администрация сайта ".strtoupper($_SERVER['HTTP_HOST'])." ответственности не несёт.\n";
     echo "<p><b><a href=\"$rekl[link]\">Переход</a></b>\n";
