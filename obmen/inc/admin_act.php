@@ -24,11 +24,12 @@ if (user_access('obmen_dir_delete') && isset($_GET['act']) && $_GET['act']=='del
     }
     $res = $db->query('SELECT `id` FROM `obmennik_files` WHERE `id_dir` = ?i', [$dir_id['id']])->col();
     if (count($res)) {
-    foreach ($res as $post_id) {
-        if (is_file(H.'sys/obmen/files/'.$post_id.'.dat')) {
-            unlink(H.'sys/obmen/files/'.$post_id.'.dat');
+        foreach ($res as $post_id) {
+            if (is_file(H.'sys/obmen/files/'.$post_id.'.dat')) {
+                unlink(H.'sys/obmen/files/'.$post_id.'.dat');
+            }
+            array_map('unlink', glob(H . 'sys/obmen/screens/*/' . $post_id . '.*'));
         }
-        array_map('unlink', glob(H . 'sys/obmen/screens/*/' . $post_id . '.*'));
     }
     $db->query('DELETE FROM `obmennik_dir` WHERE `id` = ?i', [$dir_id['id']]);
     $db->query('DELETE FROM `user_files` WHERE `id_dir`=?i AND `id_dir` IS NOT NULL', [$dir_id['id']]);
@@ -46,7 +47,7 @@ if (user_access('obmen_dir_delete') && isset($_GET['act']) && $_GET['act']=='del
     unset($_SESSION['obmen_dir']);
     msg('Папка успешно удалена');
     admin_log('Обменник', 'Удаление папки', 'Папка [b]' . $dir_id['name'] . '[/b] удалена');
-    }
+
     $dir_id = $db->query(
         'SELECT * FROM `obmennik_dir` WHERE `dir` = ? OR `dir` = ? OR `dir` = ? LIMIT ?i',
                        ['/' . $l, $l . '/', $l, 1])->row();
