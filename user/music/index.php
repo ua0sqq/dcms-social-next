@@ -15,17 +15,16 @@ http://dcms-social.ru
 =======================================
 */
 include_once '../../sys/inc/start.php';
-include_once '../../sys/inc/compress.php';
-include_once '../../sys/inc/sess.php';
-include_once '../../sys/inc/home.php';
-include_once '../../sys/inc/settings.php';
-include_once '../../sys/inc/db_connect.php';
-include_once '../../sys/inc/ipua.php';
-include_once '../../sys/inc/fnc.php';
-include_once '../../sys/inc/user.php';
-include_once '../../sys/inc/files.php';
+include_once H . 'sys/inc/compress.php';
+include_once H . 'sys/inc/sess.php';
+include_once H . 'sys/inc/settings.php';
+include_once H . 'sys/inc/db_connect.php';
+include_once H . 'sys/inc/ipua.php';
+include_once H . 'sys/inc/fnc.php';
+include_once H . 'sys/inc/user.php';
+include_once H . 'sys/inc/files.php';
 
-include_once '../../sys/inc/thead.php';
+include_once H . 'sys/inc/thead.php';
 
 if (isset($user)) {
     $ank['id'] = $user['id'];
@@ -44,7 +43,7 @@ if (!$ank) {
     $set['title'] = 'Error!';
     title();
     echo '<div class="mess">Ошибка! Пользователь не найден</div>';
-    include_once '../../sys/inc/tfoot.php';
+    include_once H . 'sys/inc/tfoot.php';
     exit;
 }
 
@@ -154,6 +153,6 @@ echo '<strong>Музыка</strong>';
 echo '</div>'."\n";
 ?><script type="text/javascript" src="/ajax/js/jquery-1.5.1.min.js"></script>
 <script type="text/javascript" src="/ajax/js/user-music.js"></script><?php
-include_once '../../sys/inc/tfoot.php';
+include_once H . 'sys/inc/tfoot.php';
 
 ?>

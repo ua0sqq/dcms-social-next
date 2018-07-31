@@ -15,14 +15,13 @@ http://dcms-social.ru
 =======================================
 */
 include_once '../../sys/inc/start.php';
-include_once '../../sys/inc/compress.php';
-include_once '../../sys/inc/sess.php';
-include_once '../../sys/inc/home.php';
-include_once '../../sys/inc/settings.php';
-include_once '../../sys/inc/db_connect.php';
-include_once '../../sys/inc/ipua.php';
-include_once '../../sys/inc/fnc.php';
-include_once '../../sys/inc/user.php';
+include_once H . 'sys/inc/compress.php';
+include_once H . 'sys/inc/sess.php';
+include_once H . 'sys/inc/settings.php';
+include_once H . 'sys/inc/db_connect.php';
+include_once H . 'sys/inc/ipua.php';
+include_once H . 'sys/inc/fnc.php';
+include_once H . 'sys/inc/user.php';
 
 only_reg();
 
@@ -40,7 +39,7 @@ $width = ($webbrowser == 'web' ? '100' : '70'); // Размер подарков
     }
     $set['title'] = 'Подарки ' . $ank['nick'];
     
-    include_once '../../sys/inc/thead.php';
+    include_once H . 'sys/inc/thead.php';
     title();
     aut();   
 /*
@@ -99,4 +98,4 @@ WHERE t1.`id_user`=?i;?q ORDER BY t1.`time` DESC LIMIT ?i OFFSET ?i",
     echo '<img src="/style/icons/str2.gif" alt="*" /> <a href="/info.php?id=' . $ank['id'] . '">' . $ank['nick'] . '</a> | <b>Подарки</b>';
     echo '</div>';
 	
-include_once '../../sys/inc/tfoot.php';
+include_once H . 'sys/inc/tfoot.php';

@@ -53,5 +53,7 @@ if (isset($_SESSION['err']))
 	echo '<div class="err">' . $_SESSION['err'] . '</div>';
 	$_SESSION['err'] = NULL;
 }
+if ($set['web']) {
 ?>
-<link rel="stylesheet" href="/style/system.css" type="text/css" />
+<link rel="stylesheet" href="/style/system.css" type="text/css" /><?php
+}

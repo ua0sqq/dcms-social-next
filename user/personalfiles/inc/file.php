@@ -32,10 +32,10 @@ JOIN `obmennik_dir` b ON b.id=a.id_dir WHERE a.`id`=?i',
 )->row();
 
 if ($file_id['id_user'] != $ank['id']) {
-    include_once '../../sys/inc/thead.php';
+    include_once H . 'sys/inc/thead.php';
     title();
     echo '<div class="err">Ошибка!</div>';
-    include_once '../../sys/inc/tfoot.php';
+    include_once H . 'sys/inc/tfoot.php';
     exit;
 }
 $dir_id = [
@@ -116,7 +116,7 @@ VALUES(?i, ?i, ?, ?i, ?i, ?i, ?, ?)",
             echo "<div class='foot'>\n";
             echo "<img src='/style/icons/str2.gif' alt='*'> <a href='/obmen$dir_id[dir]$file_id[id].$file_id[ras]?showinfo&page=".intval($_GET['page'])."'>Назад</a>\n";
             echo "</div>\n";
-            require '../../sys/inc/tfoot.php';
+            require H . 'sys/inc/tfoot.php';
             exit;
         }
 
@@ -168,7 +168,7 @@ if (isset($user) && isset($_GET['play']) && ($_GET['play']==1 || $_GET['play']==
  
 // заголовок страницы
 $set['title']= htmlspecialchars($file_id['name']); 
-include_once '../../sys/inc/thead.php';
+include_once H . 'sys/inc/thead.php';
 title();
 if ((user_access('obmen_komm_del') || $ank['id'] == $user['id']) && isset($_GET['del_post'])
     && $db->query(
@@ -291,7 +291,7 @@ if ($dir['pass']!=null) {
         echo "<div class='foot'>";
         echo "<img src='/style/icons/up_dir.gif' alt='*'> ".($dir['osn']==1?'Файлы':'')." ".user_files($dir['id_dires'])." ".($dir['osn']==1?'':'&gt; '.htmlspecialchars($dir['name']))."\n";
         echo "</div>";
-        include_once '../../sys/inc/tfoot.php';
+        include_once H . 'sys/inc/tfoot.php';
         exit;
     }
 }

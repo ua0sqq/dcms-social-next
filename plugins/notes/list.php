@@ -1,13 +1,12 @@
 <?php
 include_once '../../sys/inc/start.php';
-include_once '../../sys/inc/compress.php';
-include_once '../../sys/inc/sess.php';
-include_once '../../sys/inc/home.php';
-include_once '../../sys/inc/settings.php';
-include_once '../../sys/inc/db_connect.php';
-include_once '../../sys/inc/ipua.php';
-include_once '../../sys/inc/fnc.php';
-include_once '../../sys/inc/user.php';
+include_once H . 'sys/inc/compress.php';
+include_once H . 'sys/inc/sess.php';
+include_once H . 'sys/inc/settings.php';
+include_once H . 'sys/inc/db_connect.php';
+include_once H . 'sys/inc/ipua.php';
+include_once H . 'sys/inc/fnc.php';
+include_once H . 'sys/inc/user.php';
 
 $input_get = filter_input_array(INPUT_GET, FILTER_VALIDATE_INT);
 if (!isset($input_get['id'])) {
@@ -89,7 +88,7 @@ JOIN `user` u ON u.id=nk.id_user WHERE nk.`id`=?i',
         }
     }
     $set['title']='Дневник ' . text($notes['name']) . '';
-    include_once '../../sys/inc/thead.php';
+    include_once H . 'sys/inc/thead.php';
     title();
     aut();
     err();
@@ -119,7 +118,7 @@ JOIN `user` u ON u.id=nk.id_user WHERE nk.`id`=?i',
     echo "<div class='foot'>\n";
     echo "<img src='/style/icons/str2.gif' alt='*'> <a href='?id=$notes[id]&amp;page=".intval($input_get['page'])."'>Назад</a><br />\n";
     echo "</div>\n";
-    include_once '../../sys/inc/tfoot.php';
+    include_once H . 'sys/inc/tfoot.php';
     exit;
 }
 
@@ -141,7 +140,7 @@ if (isset($user) && $notes['discut_not_read']) {
 
 $set['title']='Дневник - ' . text($notes['name']) . '';
 $set['meta_description'] = text($notes['msg']);
-include_once '../../sys/inc/thead.php';
+include_once H . 'sys/inc/thead.php';
 if (isset($_POST['msg']) && isset($user)) {
     $msg=$_POST['msg'];
     if (strlen2($msg)>1024) {
@@ -241,7 +240,7 @@ if ((!isset($user) && $notes['private'] == 1)
     echo '<div class="foot">'."\n";
     echo '  <a href="index.php">Назад</a>'."\n";
     echo '</div>'."\n";
-    include_once '../../sys/inc/tfoot.php';
+    include_once H . 'sys/inc/tfoot.php';
     exit;
 }
 if ((!isset($user) && $notes['private'] == 2)
@@ -253,7 +252,7 @@ if ((!isset($user) && $notes['private'] == 2)
     echo '<div class="foot">'."\n";
     echo '  <a href="index.php">Назад</a>'."\n";
     echo '</div>'."\n";
-    include_once '../../sys/inc/tfoot.php';
+    include_once H . 'sys/inc/tfoot.php';
     exit;
 }
 if (isset($input_get['delete']) && ($user['id']==$avtor['id'] || user_access('notes_delete'))) {
@@ -261,7 +260,7 @@ if (isset($input_get['delete']) && ($user['id']==$avtor['id'] || user_access('no
     echo '<p>Вы действительно хотите удалить дневник ' . output_text($notes['name']) . '?</p>';
     echo "[<a href='./delete.php?id=$notes[id]'><img src='/style/icons/ok.gif'> удалить</a>] [<a href='/plugins/notes/list.php?id=$notes[id]'><img src='/style/icons/delete.gif'> отмена</a>] \n";
     echo "</div>";
-    include_once '../../sys/inc/tfoot.php';
+    include_once H . 'sys/inc/tfoot.php';
 }
 if (isset($user)) {
     if (isset($input_get['like']) && $input_get['like'] == 1) {
@@ -369,7 +368,7 @@ SELECT COUNT( * ) FROM `notes` WHERE `share_id`=?i AND `share_type`="notes") is_
 SELECT COUNT( * ) FROM `notes_like` WHERE `like`="1" AND `id_notes`=?i) - (
 SELECT COUNT( * ) FROM `notes_like` WHERE `like`="0" AND `id_notes`=?i)) like_notes', [$notes['id'], $sql, $notes['id'], $notes['id']])->row();
 
-echo "<div class='main2'>";
+echo "<div class='main_menu'>";
 
 if (isset($user) && !$cnt['is_user_share'] && $user['id'] != $notes['id_user']) {
     echo " <a href='share.php?id=".$notes['id']."'><img src='/style/icons/action_share_color.gif'> Поделиться: (".$cnt['is_share'].")</a>";
@@ -487,7 +486,7 @@ if ($notes['private_komm']==1 && $user['id']!=$avtor['id'] && $notes['is_frend']
     echo "  <div class='foot'>\n";
     echo "<a href='index.php'>Назад</a><br />\n";
     echo "   </div>\n";
-    include_once '../../sys/inc/tfoot.php';
+    include_once H . 'sys/inc/tfoot.php';
     exit;
 }
 if ($notes['private_komm']==2 && $user['id']!=$avtor['id'] && !user_access('notes_delete')) {
@@ -497,7 +496,7 @@ if ($notes['private_komm']==2 && $user['id']!=$avtor['id'] && !user_access('note
     echo " <div class='foot'>\n";
     echo "   <a href='index.php'>Назад</a>\n";
     echo "</div>\n";
-    include_once '../../sys/inc/tfoot.php';
+    include_once H . 'sys/inc/tfoot.php';
     exit;
 }
 if (isset($user)) {
@@ -515,4 +514,4 @@ echo "<img src='/style/icons/str2.gif' alt='*'> <a href='index.php'>Дневни
 echo ' | <b>' . output_text($notes['name']) . '</b>';
 echo "</div>\n";
 
-include_once '../../sys/inc/tfoot.php';
+include_once H . 'sys/inc/tfoot.php';

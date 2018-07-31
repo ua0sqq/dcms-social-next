@@ -32,7 +32,7 @@ $set['title'] = $ank['nick'] . ' - Фотоальбомы';
 if (isset($user)) {
     include 'inc/gallery_act.php';
 }
-include_once '../sys/inc/thead.php';
+include_once H . 'sys/inc/thead.php';
 title();
 aut();
 err();
@@ -100,5 +100,5 @@ echo '<div class="foot">';
 echo '<img src="/style/icons/str2.gif" alt="*"> ' . user::nick($ank['id']) . ' | <b>Альбомы</b>';
 echo '</div>';
 
-include_once '../sys/inc/tfoot.php';
+include_once H . 'sys/inc/tfoot.php';
 exit;

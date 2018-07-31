@@ -1,16 +1,15 @@
 <?php
 include_once '../sys/inc/start.php';
-include_once '../sys/inc/compress.php';
-include_once '../sys/inc/sess.php';
-include_once '../sys/inc/home.php';
-include_once '../sys/inc/settings.php';
-include_once '../sys/inc/db_connect.php';
-include_once '../sys/inc/ipua.php';
-include_once '../sys/inc/fnc.php';
-include_once '../sys/inc/user.php';
+include_once H . 'sys/inc/compress.php';
+include_once H . 'sys/inc/sess.php';
+include_once H . 'sys/inc/settings.php';
+include_once H . 'sys/inc/db_connect.php';
+include_once H . 'sys/inc/ipua.php';
+include_once H . 'sys/inc/fnc.php';
+include_once H . 'sys/inc/user.php';
 
 $set['title']='Поиск файлов'; // заголовок страницы
-include_once '../sys/inc/thead.php';
+include_once H . 'sys/inc/thead.php';
 title();
 aut();
 
@@ -98,4 +97,4 @@ echo "</form>\n";
 echo "<div class='foot'>";
 echo '<img src="/style/icons/up_dir.gif" alt="*"> <a href="/obmen/">Обменник</a><br />';
 echo "</div>\n";
-include_once '../sys/inc/tfoot.php';
+include_once H . 'sys/inc/tfoot.php';

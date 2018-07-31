@@ -15,14 +15,13 @@ http://dcms-social.ru
 =======================================
 */
 include_once '../../sys/inc/start.php';
-include_once '../../sys/inc/compress.php';
-include_once '../../sys/inc/sess.php';
-include_once '../../sys/inc/home.php';
-include_once '../../sys/inc/settings.php';
-include_once '../../sys/inc/db_connect.php';
-include_once '../../sys/inc/ipua.php';
-include_once '../../sys/inc/fnc.php';
-include_once '../../sys/inc/user.php';
+include_once H . 'sys/inc/compress.php';
+include_once H . 'sys/inc/sess.php';
+include_once H . 'sys/inc/settings.php';
+include_once H . 'sys/inc/db_connect.php';
+include_once H . 'sys/inc/ipua.php';
+include_once H . 'sys/inc/fnc.php';
+include_once H . 'sys/inc/user.php';
 
 only_reg();
     // Размер подарков при выводе в браузер
@@ -99,7 +98,7 @@ only_reg();
     
      // Заголовок страницы
     $set['title'] = 'Подарок ' . $ank['nick'] . ' ' . htmlspecialchars($gift['name']);
-    include_once '../../sys/inc/thead.php';
+    include_once H . 'sys/inc/thead.php';
     title();
     aut();
 /*
@@ -140,4 +139,4 @@ if ($ank['id'] == $user['id']) {
     echo '<div class="foot">';
     echo '<img src="/style/icons/str2.gif" alt="*" /> <a href="/info.php?id=' . $ank['id'] . '">' . $ank['nick'] . '</a> | <a href="/user/gift/index.php?id=' . $ank['id'] . '">Подарки</a> | <b>' . htmlspecialchars($gift['name']) . '</b>';
     echo '</div>';
-include_once '../../sys/inc/tfoot.php';
+include_once H . 'sys/inc/tfoot.php';

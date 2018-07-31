@@ -145,7 +145,7 @@ WHERE fr.`frend`=?i AND fr.`lenta_obmen`=?i AND `i`=?i',
 }
 if ($dir_id['upload'] == 1 && isset($user)) {
     $set['title'] = 'Загрузка файла';
-    include_once '../../sys/inc/thead.php';
+    include_once H . 'sys/inc/thead.php';
     title();
     aut();
     err();

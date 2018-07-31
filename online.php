@@ -2,7 +2,6 @@
 include_once 'sys/inc/start.php';
 include_once 'sys/inc/compress.php';
 include_once 'sys/inc/sess.php';
-include_once 'sys/inc/home.php';
 include_once 'sys/inc/settings.php';
 include_once 'sys/inc/db_connect.php';
 include_once 'sys/inc/ipua.php';
@@ -26,7 +25,7 @@ $k_post = $db->query(
                     'SELECT (
 SELECT COUNT( * ) FROM `user` WHERE `date_last` > ?i) k_post, (
 SELECT COUNT( * ) FROM `liders` WHERE `time` > ?i) k_lider',
-                            [(time()-600), $time])->row();
+                            [TIME_600, $time])->row();
 /*
 ==============================================
 Этот скрипт выводит 1 случайного "Лидера" и
@@ -56,7 +55,7 @@ $page = page($k_page);
 $start = $set['p_str']*$page-$set['p_str'];
 $q = $db->query(
             'SELECT id, ank_city, pol, ank_d_r, ank_m_r, ank_g_r, ank_o_sebe, url, level, ip, ip_xff, ip_cl, ua, date_last FROM `user` WHERE `date_last` > ?i ORDER BY `date_last` DESC LIMIT ?i OFFSET ?i',
-                    [(time()-600), $set['p_str'], $start]);
+                    [TIME_600, $set['p_str'], $start]);
 while ($ank = $q->row()) {
     $ank['ank_age'] = null;
         

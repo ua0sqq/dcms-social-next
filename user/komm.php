@@ -1,13 +1,12 @@
 <?php
 include_once '../sys/inc/start.php';
-include_once '../sys/inc/compress.php';
-include_once '../sys/inc/sess.php';
-include_once '../sys/inc/home.php';
-include_once '../sys/inc/settings.php';
-include_once '../sys/inc/db_connect.php';
-include_once '../sys/inc/ipua.php';
-include_once '../sys/inc/fnc.php';
-include_once '../sys/inc/user.php';
+include_once H . 'sys/inc/compress.php';
+include_once H . 'sys/inc/sess.php';
+include_once H . 'sys/inc/settings.php';
+include_once H . 'sys/inc/db_connect.php';
+include_once H . 'sys/inc/ipua.php';
+include_once H . 'sys/inc/fnc.php';
+include_once H . 'sys/inc/user.php';
 
 $get_id = filter_input_array(INPUT_GET, FILTER_VALIDATE_INT);
 $post_msg = filter_input(INPUT_POST, 'msg', FILTER_DEFAULT);
@@ -17,7 +16,7 @@ if (isset($get_id['id']) && $db->query(
 )->el()) {
     $post=$db->query("SELECT * FROM `stena` WHERE `id`=?i", [$get_id['id']])->row();
     $set['title']=' Комментарии к записи';
-    include_once '../sys/inc/thead.php';
+    include_once H . 'sys/inc/thead.php';
     title();
     if (isset($post_msg) && isset($user)) {
         $msg = esc($post_msg);
@@ -127,4 +126,4 @@ if (isset($get_id['id']) && $db->query(
 } else {
     header('Location: /index.php');
 }
-include_once '../sys/inc/tfoot.php';
+include_once H . 'sys/inc/tfoot.php';

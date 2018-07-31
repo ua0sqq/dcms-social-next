@@ -1,13 +1,9 @@
 <?php
-if (!defined('H')) {
-    define('H', $_SERVER['DOCUMENT_ROOT'] . '/');
-}
-require H . 'sys/inc/start.php';
+require '../sys/inc/start.php';
 if (isset($_GET['showinfo']) || !isset($_GET['f']) || isset($_GET['komm'])) {
     require H . 'sys/inc/compress.php';
 }
 require H . 'sys/inc/sess.php';
-require H . 'sys/inc/home.php';
 require H . 'sys/inc/settings.php';
 require H . 'sys/inc/db_connect.php';
 require H . 'sys/inc/ipua.php';

@@ -1,13 +1,12 @@
 <?php
 include_once '../sys/inc/start.php';
-include_once '../sys/inc/compress.php';
-include_once '../sys/inc/sess.php';
-include_once '../sys/inc/home.php';
-include_once '../sys/inc/settings.php';
-include_once '../sys/inc/db_connect.php';
-include_once '../sys/inc/ipua.php';
-include_once '../sys/inc/fnc.php';
-include_once '../sys/inc/user.php';
+include_once H . 'sys/inc/compress.php';
+include_once H . 'sys/inc/sess.php';
+include_once H . 'sys/inc/settings.php';
+include_once H . 'sys/inc/db_connect.php';
+include_once H . 'sys/inc/ipua.php';
+include_once H . 'sys/inc/fnc.php';
+include_once H . 'sys/inc/user.php';
 
 user_access('adm_news', null, 'index.php?'.SID);
 $args = [
@@ -100,13 +99,13 @@ if (isset($input_post['title']) && isset($input_post['msg']) && isset($input_pos
 }
 
 $set['title'] = 'Создание новости';
-include_once '../sys/inc/thead.php';
+include_once H . 'sys/inc/thead.php';
 title();
 err();
 aut(); // форма авторизации
 
 if (isset($input_post['view']) && !isset($err)) {
-    echo '<div class="main2">';
+    echo '<div class="main_menu">';
     echo text($news['title']);
     echo '</div>';
     echo'<div class="mess">';
@@ -146,4 +145,4 @@ echo '<div class="foot">';
 echo '<img src="/style/icons/str.gif" alt="*"> <a href="index.php">Новости</a><br />';
 echo '</div>';
 
-include_once '../sys/inc/tfoot.php';
+include_once H . 'sys/inc/tfoot.php';

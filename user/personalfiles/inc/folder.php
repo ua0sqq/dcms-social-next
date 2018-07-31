@@ -64,7 +64,7 @@ if ($dir['pass'] != null) {
         echo "<div class='foot'>";
         echo "<img src='/style/icons/up_dir.gif' alt='*'> ".($dir['osn'] == 1 ? 'Файлы' : '')." ".user_files($dir['id_dires'])." ".($dir['osn'] == 1 ? '' : '&gt; '.text($dir['name']))."\n";
         echo "</div>";
-        include_once '../../sys/inc/tfoot.php';
+        include_once H . 'sys/inc/tfoot.php';
         exit;
     }
 }

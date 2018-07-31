@@ -2,7 +2,6 @@
 include_once 'sys/inc/start.php';
 include_once 'sys/inc/compress.php';
 include_once 'sys/inc/sess.php';
-include_once 'sys/inc/home.php';
 include_once 'sys/inc/settings.php';
 include_once 'sys/inc/db_connect.php';
 include_once 'sys/inc/ipua.php';
@@ -118,7 +117,7 @@ if ($ua) {
 $collision_q = $db->query("SELECT `u`.`id`, (
 SELECT COUNT(*) FROM `user_collision` WHERE `id_user`=?i AND `id_user2`=`u`.`id` OR `id_user2`=?i AND `id_user`=`u`.`id`) cnt
 FROM `user` u WHERE `ip`=?i AND `ua`=? AND `date_last`>?i AND `u`.`id`<>?i",
-						  [$user['id'], $user['id'], $iplong, $ua, time()-600, $user['id']]);
+						  [$user['id'], $user['id'], $iplong, $ua, TIME_600, $user['id']]);
 while ($collision = $collision_q->row()) {
     if (!$collision['cnt']) {
         $db->query("INSERT INTO `user_collision` (`id_user`, `id_user2`, `type`) VALUES(?i, ?i, ?)",

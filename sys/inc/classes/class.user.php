@@ -41,7 +41,7 @@ class user
         }
         
         // Вывод значка онлайн
-        if ($user != 0 && $ank['date_last'] > time()-600 && $on == true) {
+        if ($user != 0 && $ank['date_last'] > TIME_600 && $on == true) {
             if ($ank['browser'] == 'wap') {
                 $online = ' <img src="/style/icons/online.gif" alt="WAP" /> ';
             } else {
@@ -197,7 +197,7 @@ class user
         }
         
         // Вывод значка онлайн
-        if ($ID != 0 && $ank['date_last'] > time()-600) {
+        if ($ID != 0 && $ank['date_last'] > TIME_600) {
             if ($ank['browser'] == 'wap') {
                 $ank['online'] = ' <img src="/style/icons/online.gif" alt="WAP" /> ';
             } else {

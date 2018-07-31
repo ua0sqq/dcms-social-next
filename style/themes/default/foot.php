@@ -16,7 +16,7 @@ if ($_SERVER['PHP_SELF'] != '/index.php') {
 $cnt = $db->query("SELECT * FROM (
 				  SELECT COUNT( * ) on_user FROM `user` WHERE `date_last`>?i) q1, (
 				  SELECT COUNT( * ) on_guest FROM `guests` WHERE `date_last`>?i AND `pereh`>?i) q2",
-				  [(time()-600), (time()-600), 0])->row();
+				  [TIME_600, TIME_600, 0])->row();
 ?><a href="/online.php"><?= $cnt['on_user'];?></a> &amp; <a href="/online_g.php"><?= $cnt['on_guest'];?></a> <?php
 if (!$set['web']) {
     echo ' | <a href="/?t=web">Версия для компьютера</a>';

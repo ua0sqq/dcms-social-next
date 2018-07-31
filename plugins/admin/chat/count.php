@@ -1,10 +1,12 @@
 <?php
+$cnt = $db->query("SELECT (
+SELECT COUNT( * ) FROM `adm_chat`) k_p, (
+SELECT COUNT( * ) FROM `adm_chat` WHERE `time`>?i) k_n",
+            [START_DAY])->row();
 
-$k_p=$db->query("SELECT COUNT(*) FROM `adm_chat`")->el();
-$k_n= $db->query("SELECT COUNT(*) FROM `adm_chat` WHERE `time` > '".(time()-86400)."'")->el();
-if ($k_n==0) {
-    $k_n=null;
+if (!$cnt['k_n']) {
+    $cnt['k_n'] = null;
 } else {
-    $k_n='+'.$k_n;
+    $cnt['k_n'] = ' <span class="off">+'.$cnt['k_n'] . '</span>';
 }
-echo '(' . $k_p . ') <span class="off">' . $k_n . '</span>';
+echo '(' . $cnt['k_p'] . ')' . $cnt['k_n'];

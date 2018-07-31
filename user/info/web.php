@@ -38,7 +38,7 @@ if ($ank['group_access']>1) {
 // друзья онлайн
 $online_frend = $db->query("SELECT COUNT( * ) FROM `frends` f
 JOIN `user` u ON `f`.`frend`=`u`.`id` WHERE `f`.`user`=?i AND `f`.`i`=1 AND `u`.`date_last`>?i",
-                [$ank['id'], (time()-600)])->el();
+                [$ank['id'], TIME_600])->el();
 
 $private_photo = false;
 if (isset($user) && $user['id'] != $ank['id']) {
@@ -178,7 +178,7 @@ echo "<b>ID номер: $ank[id]</b>";
 echo "</div>";
 
 // анкета
-echo "<div class='main2'>";
+echo "<div class='main_menu'>";
 echo "<img src='/style/icons/anketa.gif' alt='*' /> <a href='/user/info/anketa.php?id=$ank[id]'>Анкета</a> ";
 if (isset($user) && $user['id'] == $ank['id']) {
     echo "[<img src='/style/icons/edit.gif' alt='*' /> <a href='/user/info/edit.php'>ред</a>]";
@@ -241,7 +241,7 @@ SELECT COUNT( * ) tape FROM `tape` WHERE `id_user`=?i  AND  `read`=?string) q4',
     echo "</div>";
 }
 
-echo "<div class='main2'>";
+echo "<div class='main_menu'>";
 echo "<img src='/style/my_menu/who_rating.png' alt='*' /> <a href='/user/info/who_rating.php?id=$ank[id]'><b>Отзывы</b></a> (".
 $cnt3['user_voice'].")<br />\n";
 echo "</div>";
@@ -265,18 +265,18 @@ if (isset($user) && $user['id'] != $ank['id']) {
     echo "</div>";
 
     // Монеты перевод
-    echo "<div class='main2'>";
+    echo "<div class='main_menu'>";
     echo "<img src='/style/icons/many.gif' alt='*' /> <a href=\"/user/money/translate.php?id=$ank[id]\">Перевести $sMonet[0]</a> \n";
     echo "</div>";
     
     //Сделать подарок
-    echo "<div class='main2'>";
+    echo "<div class='main_menu'>";
     echo "<img src='/style/icons/present.gif' alt='*' /> <a href=\"/user/gift/categories.php?id=$ank[id]\">Сделать подарок</a><br />\n";
     echo "</div>";
 }
 // настройки
 if (isset($user) && $ank['id'] == $user['id']) {
-    echo "<div class='main2'>";
+    echo "<div class='main_menu'>";
     echo "<img src='/style/icons/uslugi.gif' alt='*' /> <a href=\"/user/money/index.php\">Дополнительные услуги</a><br /> \n";
     echo "<img src='/style/icons/settings.png' alt='*' /> <a href=\"/user/info/settings.php\">Мои настройки</a> | <a href=\"/umenu.php\">Меню</a>\n";
     echo "</div>";
@@ -291,7 +291,7 @@ $q = $db->query("SELECT u.id, u.nick, u.pol FROM `frends` f
 JOIN `user` u ON `f`.`frend`=`u`.`id`
 WHERE `f`.`user`=?i AND `f`.`i`=1 AND `u`.`date_last`>?i
 ORDER BY `u`.`date_last` DESC LIMIT ?i",
-                [$ank['id'], (time()-600), $set['p_str']]);
+                [$ank['id'], TIME_600, $set['p_str']]);
 
 while ($post3 = $q->row()) {
     if ($num==0) {
@@ -369,7 +369,7 @@ SELECT COUNT( * ) FROM `status` WHERE `id_user`=?i) all_status ?q',
     
     // Общее колличество статусов
     if ($cnt_status['all_status']) {
-        echo "<div class='main2'>"; // пишем свой див
+        echo "<div class='main_menu'>"; // пишем свой див
         echo " &rarr; <a href='/user/status/index.php?id=$ank[id]'>Все статусы</a> (" . $cnt_status['all_status'] . ")\n";
         echo "</div>";
     }

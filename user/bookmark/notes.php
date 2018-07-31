@@ -1,13 +1,12 @@
 <?php
 include_once '../../sys/inc/start.php';
-include_once '../../sys/inc/compress.php';
-include_once '../../sys/inc/sess.php';
-include_once '../../sys/inc/home.php';
-include_once '../../sys/inc/settings.php';
-include_once '../../sys/inc/db_connect.php';
-include_once '../../sys/inc/ipua.php';
-include_once '../../sys/inc/fnc.php';
-include_once '../../sys/inc/user.php';
+include_once H . 'sys/inc/compress.php';
+include_once H . 'sys/inc/sess.php';
+include_once H . 'sys/inc/settings.php';
+include_once H . 'sys/inc/db_connect.php';
+include_once H . 'sys/inc/ipua.php';
+include_once H . 'sys/inc/fnc.php';
+include_once H . 'sys/inc/user.php';
 
 if (isset($user)) {
     $ank['id'] = $user['id'];
@@ -36,7 +35,7 @@ if (isset($user) && isset($_GET['delete']) && $user['id'] == $ank['id']) {
 }
 
 $set['title']='Закладки - Дневники - '. $ank['nick'] .''; // заголовок страницы
-include_once '../../sys/inc/thead.php';
+include_once H . 'sys/inc/thead.php';
 title();
 err();
 aut();
@@ -94,4 +93,4 @@ echo '<div class="foot">'."\n";
 echo '<img src="/style/icons/str2.gif" alt="*" /> <a href="/user/bookmark/index.php?id=' . $ank['id'] . '">Закладки</a> | <b>Дневники</b>'."\n";
 echo '</div>'."\n";
 
-include_once '../../sys/inc/tfoot.php';
+include_once H . 'sys/inc/tfoot.php';

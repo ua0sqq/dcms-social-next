@@ -212,7 +212,7 @@ if ((user_access('foto_komm_del') || $ank['id'] == $user['id']) && isset($input_
 }
 
 $set['title'] = text($gallery_foto['name_gallery']) . ' - ' . text($gallery_foto['name']); // заголовок страницы
-include_once '../sys/inc/thead.php';
+include_once H . 'sys/inc/thead.php';
 title();
 err();
 aut();
@@ -259,7 +259,7 @@ if ($user['id'] != $ank['id'] && $gallery_foto['pass'] != null) {
         echo '<div class="foot">';
         echo '<img src="/style/icons/str2.gif" alt="*"> ' . user::nick($ank['id']) . ' | <a href="/foto/' . $ank['id'] . '/">Альбомы</a> | <strong>' . text($gallery_foto['name_gallery']) . '</strong>';
         echo '</div>';
-        include_once '../sys/inc/tfoot.php';
+        include_once H . 'sys/inc/tfoot.php';
         exit;
     }
 }
@@ -471,5 +471,5 @@ if ($gallery_foto['metka'] == 1) {
     echo ' <span class="off">(18+)</span>'."\n";
 }
 echo '</div>'."\n";
-include_once '../sys/inc/tfoot.php';
+include_once H . 'sys/inc/tfoot.php';
 exit;

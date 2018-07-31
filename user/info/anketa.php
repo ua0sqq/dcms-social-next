@@ -1,13 +1,12 @@
 <?php
-include_once '../../sys//inc/start.php';
-include_once '../../sys//inc/compress.php';
-include_once '../../sys//inc/sess.php';
-include_once '../../sys//inc/home.php';
-include_once '../../sys//inc/settings.php';
-include_once '../../sys//inc/db_connect.php';
-include_once '../../sys//inc/ipua.php';
-include_once '../../sys//inc/fnc.php';
-include_once '../../sys//inc/user.php';
+include_once '../../sys/inc/start.php';
+include_once H . 'sys/inc/compress.php';
+include_once H . 'sys/inc/sess.php';
+include_once H . 'sys/inc/settings.php';
+include_once H . 'sys/inc/db_connect.php';
+include_once H . 'sys/inc/ipua.php';
+include_once H . 'sys/inc/fnc.php';
+include_once H . 'sys/inc/user.php';
 
 $ank['id'] = isset($user) ? $user['id'] : 0;
 
@@ -23,7 +22,7 @@ if ($ank['id'] == 0) {
                 'ank_o_sebe' => 'Создан для уведомлений',
                 );
     $set['title']=$ank['nick'].' - анкета '; // заголовок страницы
-    require '../../sys/inc/thead.php';
+    require H . 'sys/inc/thead.php';
     title();
     aut();
     
@@ -34,7 +33,7 @@ if ($ank['id'] == 0) {
     if (isset($_SESSION['refer']) && $_SESSION['refer']!=null && otkuda($_SESSION['refer'])) {
         echo "<div class='foot'>&laquo;<a href='$_SESSION[refer]'>".otkuda($_SESSION['refer'])."</a><br />\n</div>\n";
     }
-    require '../../sys//inc/tfoot.php';
+    require H . 'sys/inc/tfoot.php';
     exit;
 }
 $ank=get_user($ank['id']);
@@ -44,7 +43,7 @@ if (!$ank) {
 }
 
 $set['title'] = $ank['nick'].' - анкета '; // заголовок страницы
-require '../../sys/inc/thead.php';
+require H . 'sys/inc/thead.php';
 title();aut();
         echo '<div class="err">' . ($ank['group_access'] < 1 ? 'Пользователь' : $ank['group_name']) . '</div>' . "\n";
         echo '<div class="mess" style="margin: 0; border: 0;"><span class="ank_n">Посл. посещение:</span> <span class="ank_d">' .
@@ -95,7 +94,7 @@ $uSet = $db->query($pattern, $data)->row();
                 }
                 echo "</div>\n";
             }
-            require '../../sys/inc/tfoot.php';
+            require H . 'sys/inc/tfoot.php';
             exit;
         }
     
@@ -104,7 +103,7 @@ $uSet = $db->query($pattern, $data)->row();
             echo 'Пользователь запретил просматривать его страничку!'."\n";
             echo '</div>'."\n";
         
-            require '../../sys/inc/tfoot.php';
+            require H . 'sys/inc/tfoot.php';
             exit;
         }
     }
@@ -850,4 +849,4 @@ if (user_access('adm_log_read') && $ank['level']!=0 && ($ank['id']==$user['id'] 
     echo "<img src='/style/icons/str.gif' alt='*' /> <a href='/adm_panel/adm_log.php?id=$ank[id]'>Отчет по администрированию</a><br />\n";
 }
 echo "</div>\n";
-require '../../sys//inc/tfoot.php';
+require H . 'sys/inc/tfoot.php';

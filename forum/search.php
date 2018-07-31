@@ -1,13 +1,12 @@
 <?php
 include_once '../sys/inc/start.php';
-include_once '../sys/inc/compress.php';
-include_once '../sys/inc/sess.php';
-include_once '../sys/inc/home.php';
-include_once '../sys/inc/settings.php';
-include_once '../sys/inc/db_connect.php';
-include_once '../sys/inc/ipua.php';
-include_once '../sys/inc/fnc.php';
-include_once '../sys/inc/user.php';
+include_once H . 'sys/inc/compress.php';
+include_once H . 'sys/inc/sess.php';
+include_once H . 'sys/inc/settings.php';
+include_once H . 'sys/inc/db_connect.php';
+include_once H . 'sys/inc/ipua.php';
+include_once H . 'sys/inc/fnc.php';
+include_once H . 'sys/inc/user.php';
 
 $searched = &$_SESSION['searched'];
 if (!isset($searched) || isset($_GET['newsearch']) || isset($_GET['null'])) {
@@ -24,7 +23,7 @@ if (isset($_GET['newsearch'])) {
 }
 // Заголовок страницы
 $set['title']='Форум - Поиск';
-include_once '../sys/inc/thead.php';
+include_once H . 'sys/inc/thead.php';
 title();
 aut(); // форма авторизации
 err();
@@ -117,4 +116,4 @@ if (count($searched['result']) != 0) {
 echo '<img src="/style/icons/str2.gif" /> <a href="/forum/">Форум</a> | <b>Поиск по форуму</b>';
 echo '</div>';
 
-include_once '../sys/inc/tfoot.php';
+include_once H . 'sys/inc/tfoot.php';

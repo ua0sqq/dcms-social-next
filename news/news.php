@@ -1,13 +1,12 @@
 <?php
 include_once '../sys/inc/start.php';
-include_once '../sys/inc/compress.php';
-include_once '../sys/inc/sess.php';
-include_once '../sys/inc/home.php';
-include_once '../sys/inc/settings.php';
-include_once '../sys/inc/db_connect.php';
-include_once '../sys/inc/ipua.php';
-include_once '../sys/inc/fnc.php';
-include_once '../sys/inc/user.php';
+include_once H . 'sys/inc/compress.php';
+include_once H . 'sys/inc/sess.php';
+include_once H . 'sys/inc/settings.php';
+include_once H . 'sys/inc/db_connect.php';
+include_once H . 'sys/inc/ipua.php';
+include_once H . 'sys/inc/fnc.php';
+include_once H . 'sys/inc/user.php';
 
 $input_get = filter_input_array(INPUT_GET, FILTER_VALIDATE_INT);
 $input_post = filter_input(INPUT_POST, 'msg', FILTER_DEFAULT);
@@ -100,7 +99,7 @@ if (isset($input_post) && isset($user)) {
     }
 }
 $set['title'] = 'Новости - ' . text($news['title']);
-include_once '../sys/inc/thead.php';
+include_once H . 'sys/inc/thead.php';
 title();
 aut();
 err();
@@ -143,7 +142,7 @@ echo '</div>';
 if (user_access('adm_news')) {
     echo '<div class="nav1" id="news_edit">';
     echo '[<img src="/style/icons/edit.gif" alt="*"> <a href="edit.php?id=' . $news['id'] . '">ред</a>] ';
-    echo '[<img src="/style/icons/delete.gif" alt="*"> <a href="delete.php?news_id=' . $news['id'] . '">удл</a>] ';
+    echo '[<img src="/style/icons/delete.gif" alt="*"> <a href="./delete.php?news_id=' . $news['id'] . '">удл</a>] ';
     echo '</div>';
 }
 
@@ -212,7 +211,7 @@ while ($post = $q->row()) {
     if (isset($user)) {
         echo '<div class="right">';
         if (isset($user) && ($user['level'] > $post['level'] || $user['level'] > 0 && $user['id'] == $post['id_user'])) {
-            echo '<a href="delete.php?id=' . $post['id'] . '"><img src="/style/icons/delete.gif" alt="*"></a>';
+            echo '<a href="./delete.php?id=' . $post['id'] . '"><img src="/style/icons/delete.gif" alt="*"></a>';
         }
         echo '</div>';
     }
@@ -238,4 +237,4 @@ echo '<div class="foot">';
 echo '<img src="/style/icons/str2.gif" alt="*"> <a href="index.php">К новостям</a><br />';
 echo '</div>';
 
-include_once '../sys/inc/tfoot.php';
+include_once H . 'sys/inc/tfoot.php';

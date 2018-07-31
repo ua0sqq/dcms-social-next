@@ -38,7 +38,7 @@ if (isset($user) && $user['id'] == $ank['id'])
 		<b>Создать</b>
 		</div>
 		<?php
-		include_once '../sys/inc/tfoot.php';
+		include_once H . 'sys/inc/tfoot.php';
 		exit;
 	}
 }

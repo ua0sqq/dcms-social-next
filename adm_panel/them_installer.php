@@ -1,19 +1,18 @@
 <?php
 include_once '../sys/inc/start.php';
-include_once '../sys/inc/compress.php';
-include_once '../sys/inc/sess.php';
-include_once '../sys/inc/home.php';
-include_once '../sys/inc/settings.php';
-include_once '../sys/inc/db_connect.php';
-include_once '../sys/inc/ipua.php';
-include_once '../sys/inc/fnc.php';
-include_once '../sys/inc/adm_check.php';
-include_once '../sys/inc/user.php';
+include_once H . 'sys/inc/compress.php';
+include_once H . 'sys/inc/sess.php';
+include_once H . 'sys/inc/settings.php';
+include_once H . 'sys/inc/db_connect.php';
+include_once H . 'sys/inc/ipua.php';
+include_once H . 'sys/inc/fnc.php';
+include_once H . 'sys/inc/adm_check.php';
+include_once H . 'sys/inc/user.php';
 user_access('adm_themes',null,'index.php?'.SID);
 adm_check();
-include_once '../sys/inc/zip.php';
+include_once H . 'sys/inc/zip.php';
 $set['title']='Установка тем';
-include_once '../sys/inc/thead.php';
+include_once H . 'sys/inc/thead.php';
 title();
 if (isset($_FILES['file']) && filesize($_FILES['file']['tmp_name'])!=0)
 {
@@ -74,5 +73,5 @@ echo "&laquo;<a href='themes.php'>Темы оформления</a><br />\n";
 if (user_access('adm_panel_show'))
 echo "&laquo;<a href='/adm_panel/'>В админку</a><br />\n";
 echo "</div>\n";
-include_once '../sys/inc/tfoot.php';
+include_once H . 'sys/inc/tfoot.php';
 ?>

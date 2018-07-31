@@ -1,7 +1,7 @@
 <?php
 
 $set['title']='Форум - '.text($forum['name']).' - '.text($razdel['name']).' - Новая тема'; // заголовок страницы
-include_once '../sys/inc/thead.php';
+include_once H . 'sys/inc/thead.php';
 title();
 if (isset($_POST['name']) && isset($_POST['msg'])) {
     if (isset($_SESSION['time_c_t_forum']) && $_SESSION['time_c_t_forum']>$time-600 && $user['level']==0) {

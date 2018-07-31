@@ -1,29 +1,28 @@
 <?php
 
 include_once '../sys/inc/start.php';
-include_once '../sys/inc/compress.php';
-include_once '../sys/inc/sess.php';
-include_once '../sys/inc/home.php';
-include_once '../sys/inc/settings.php';
-include_once '../sys/inc/db_connect.php';
-include_once '../sys/inc/ipua.php';
-include_once '../sys/inc/fnc.php';
-include_once '../sys/inc/user.php';
+include_once H . 'sys/inc/compress.php';
+include_once H . 'sys/inc/sess.php';
+include_once H . 'sys/inc/settings.php';
+include_once H . 'sys/inc/db_connect.php';
+include_once H . 'sys/inc/ipua.php';
+include_once H . 'sys/inc/fnc.php';
+include_once H . 'sys/inc/user.php';
 
 $set['title']='Кто на форуме?'; // заголовок страницы
-include_once '../sys/inc/thead.php';
+include_once H . 'sys/inc/thead.php';
 title();
 aut();
 
 $k_post=$db->query(
     'SELECT COUNT(*) FROM `user` WHERE `date_last`>?i AND `url` LIKE "?e%"',
-                   [(time()-600), '/forum/'])->el();
+                   [TIME_600, '/forum/'])->el();
 $k_page=k_page($k_post, $set['p_str']);
 $page=page($k_page);
 $start=$set['p_str']*$page-$set['p_str'];
 $q = $db->query(
     'SELECT * FROM `user` WHERE `date_last`>?i AND `url` LIKE "?e%" ORDER BY `date_last` DESC LIMIT ?i OFFSET ?i',
-                [(time()-600), '/forum/', $set['p_str'], $start]);
+                [TIME_600, '/forum/', $set['p_str'], $start]);
 
 if (!$k_post) {
     echo "<div class='mess'>\n";
@@ -44,4 +43,4 @@ if ($k_page>1) {
 } // Вывод страниц
 echo "<div class='foot'>\n&laquo;<a href='/forum/'>Назад в форум</a>\n</div>\n";
       
-include_once '../sys/inc/tfoot.php';
+include_once H . 'sys/inc/tfoot.php';

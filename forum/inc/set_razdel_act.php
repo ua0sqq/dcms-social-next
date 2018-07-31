@@ -56,5 +56,5 @@ if (isset($input_get['act']) && isset($input_get['ok']) && $input_get['act'] == 
     echo "<a href=\"/forum/$forum[id]/\">В Подфорум</a><br />\n";
     echo "<a href=\"/forum/\">В форум</a><br />\n";
 
-    include_once '../sys/inc/tfoot.php';
+    include_once H . 'sys/inc/tfoot.php';
 }

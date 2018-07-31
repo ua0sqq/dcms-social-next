@@ -1,16 +1,15 @@
 <?php
 include_once '../../sys/inc/start.php';
-include_once '../../sys/inc/compress.php';
-include_once '../../sys/inc/sess.php';
-include_once '../../sys/inc/home.php';
-include_once '../../sys/inc/settings.php';
-include_once '../../sys/inc/db_connect.php';
-include_once '../../sys/inc/ipua.php';
-include_once '../../sys/inc/fnc.php';
-include_once '../../sys/inc/user.php';
+include_once H . 'sys/inc/compress.php';
+include_once H . 'sys/inc/sess.php';
+include_once H . 'sys/inc/settings.php';
+include_once H . 'sys/inc/db_connect.php';
+include_once H . 'sys/inc/ipua.php';
+include_once H . 'sys/inc/fnc.php';
+include_once H . 'sys/inc/user.php';
 
 $set['title']='Дневники';
-include_once '../../sys/inc/thead.php';
+include_once H . 'sys/inc/thead.php';
 title();
 aut(); // форма авторизации
 err();
@@ -63,7 +62,7 @@ if (isset($_GET['go']) && !empty($usearch)) {
         $start=$set['p_str']*$page-$set['p_str'];
         $q=$db->query(
                 'SELECT n.*, (
-SELECT COUNT(*) FROM `notes` WHERE `id`=n.id AND `time` > '.$ftime.') new_note
+SELECT COUNT(*) FROM `notes` WHERE `id`=n.id AND `time` > '.START_DAY.') new_note
 FROM `notes` n WHERE n.`name` LIKE "%?e%" ORDER BY n.`time` DESC LIMIT ?i OFFSET ?i',
                         [$usearch, $set['p_str'], $start]);
         $num=0;
@@ -94,4 +93,4 @@ FROM `notes` n WHERE n.`name` LIKE "%?e%" ORDER BY n.`time` DESC LIMIT ?i OFFSET
 } else {
     $err = 'Пустой запрос!';
 }
-include_once '../../sys/inc/tfoot.php';
+include_once H . 'sys/inc/tfoot.php';

@@ -25,6 +25,6 @@ SELECT COUNT( * ) themes FROM `forum_t`?q)q2', [$adm_add, $adm_add])->row();
 } else {
     echo $db->query(
         'SELECT COUNT(*) FROM `user` WHERE `date_last`>?i AND `url` LIKE "?e%"',
-                    [(time()-600), '/forum/']
+                    [TIME_600, '/forum/']
     )->el().' человек';
 }

@@ -1,15 +1,14 @@
 <?php
 include_once '../sys/inc/start.php';
-include_once '../sys/inc/compress.php';
-include_once '../sys/inc/sess.php';
-include_once '../sys/inc/home.php';
-include_once '../sys/inc/settings.php';
-include_once '../sys/inc/db_connect.php';
-include_once '../sys/inc/ipua.php';
-include_once '../sys/inc/fnc.php';
-include_once '../sys/inc/shif.php';
-include_once '../sys/inc/adm_check.php';
-include_once '../sys/inc/user.php';
+include_once H . 'sys/inc/compress.php';
+include_once H . 'sys/inc/sess.php';
+include_once H . 'sys/inc/settings.php';
+include_once H . 'sys/inc/db_connect.php';
+include_once H . 'sys/inc/ipua.php';
+include_once H . 'sys/inc/fnc.php';
+include_once H . 'sys/inc/shif.php';
+include_once H . 'sys/inc/adm_check.php';
+include_once H . 'sys/inc/user.php';
 
 user_access('user_prof_edit', null, 'index.php?'.SID);
 adm_check();
@@ -30,7 +29,7 @@ if ($user['level']<=$ank['level']) {
     exit;
 }
 $set['title']='Профиль пользователя '.$ank['nick'];
-include_once '../sys/inc/thead.php';
+include_once H . 'sys/inc/thead.php';
 title();
 if (isset($_POST['save'])) {
     $set_data_user = [];
@@ -92,6 +91,10 @@ if (isset($_POST['save'])) {
         $set_data_user += ['ank_name' => $ank['ank_name']];
     } else {
         $err='Вы ошиблись в поле имя';
+    }
+    if (isset($_POST['pol'])) {
+        $ank['pol'] = (int)$_POST['pol'] ? '1' : '0';
+        $set_data_user += ['pol' => $ank['pol']];
     }
     if (isset($_POST['ank_d_r']) && (is_numeric($_POST['ank_d_r']) && $_POST['ank_d_r']>0 && $_POST['ank_d_r']<=31 || $_POST['ank_d_r']==null)) {
         $ank['ank_d_r']=$_POST['ank_d_r'];
@@ -221,7 +224,8 @@ echo "<form method='post' action='user.php?id=$ank[id]'>
 	Ник:<br />\n<input".(user_access('user_change_nick')?null:' disabled="disabled"')." type='text' name='nick' value='$ank[nick]' maxlength='32' /><br />
 	
 	Имя в реале:<br />\n<input type='text' name='ank_name' value='$ank[ank_name]' maxlength='32' /><br />";
-    
+        echo "Пол:<br /> <input name='pol' type='radio' ".($ank['pol']==1?' checked="checked"':null)." value='1' />Муж.<br />
+	<input name='pol' type='radio' ".($ank['pol']==0?' checked="checked"':null)." value='0' />Жен.<br />";    
     echo 'Дата рождения:<br />
 	<select name="ank_d_r">
 	<option selected="'.$ank['ank_d_r'].'" value="'.$ank['ank_d_r'].'" >'.$ank['ank_d_r'].'<option>
@@ -356,4 +360,4 @@ if (user_access('adm_panel_show')) {
     echo "&laquo;<a href='/adm_panel/'>В админку</a><br />\n";
 }
 echo "</div>\n";
-include_once '../sys/inc/tfoot.php';
+include_once H . 'sys/inc/tfoot.php';

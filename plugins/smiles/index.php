@@ -5,8 +5,7 @@
  * & Contacts :: ICQ 587863132
  * & Site     :: http://dcms-social.ru
  */
-include_once '../../sys/inc/home.php';
-include_once H . 'sys/inc/start.php';
+include_once '../../sys/inc/start.php';
 include_once H . 'sys/inc/compress.php';
 include_once H . 'sys/inc/sess.php';
 include_once H . 'sys/inc/settings.php';

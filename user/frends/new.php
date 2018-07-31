@@ -1,18 +1,17 @@
 <?php
 include_once '../../sys/inc/start.php';
-include_once '../../sys/inc/compress.php';
-include_once '../../sys/inc/sess.php';
-include_once '../../sys/inc/home.php';
-include_once '../../sys/inc/settings.php';
-include_once '../../sys/inc/db_connect.php';
-include_once '../../sys/inc/ipua.php';
-include_once '../../sys/inc/fnc.php';
-include_once '../../sys/inc/user.php';
+include_once H . 'sys/inc/compress.php';
+include_once H . 'sys/inc/sess.php';
+include_once H . 'sys/inc/settings.php';
+include_once H . 'sys/inc/db_connect.php';
+include_once H . 'sys/inc/ipua.php';
+include_once H . 'sys/inc/fnc.php';
+include_once H . 'sys/inc/user.php';
 
 only_reg('/');
 
 $set['title'] = "Заявки"; // заголовок страницы
-include_once '../../sys/inc/thead.php';
+include_once H . 'sys/inc/thead.php';
 title();
 aut();
 err();
@@ -25,7 +24,7 @@ $cnt = $db->query(
     JOIN `user` ON `frends`.`frend`=`user`.`id`
     WHERE `frends`.`user`=?i AND `frends`.`i`=?i AND `user`.`date_last`>?i)q2, (
     SELECT COUNT( * ) new_frends FROM `frends_new` WHERE `to` =?i)q3",
-                  [$user['id'], 1, $user['id'], 1, (time()-600), $user['id']])->row();
+                  [$user['id'], 1, $user['id'], 1, TIME_600, $user['id']])->row();
 
 echo "<div id='comments' class='menus'>";
 echo "<div class='webmenu'>";
@@ -83,4 +82,4 @@ if ($k_page>1) {
     str("?id=".$user['id']."&amp;", $k_page, $page);
 } // Вывод страниц
 
-include_once '../../sys/inc/tfoot.php';
+include_once H . 'sys/inc/tfoot.php';

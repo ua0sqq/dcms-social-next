@@ -1,16 +1,15 @@
 <?php
 include_once '../../sys/inc/start.php';
-include_once '../../sys/inc/compress.php';
-include_once '../../sys/inc/sess.php';
-include_once '../../sys/inc/home.php';
-include_once '../../sys/inc/settings.php';
-include_once '../../sys/inc/db_connect.php';
-include_once '../../sys/inc/ipua.php';
-include_once '../../sys/inc/fnc.php';
-include_once '../../sys/inc/user.php';
+include_once H . 'sys/inc/compress.php';
+include_once H . 'sys/inc/sess.php';
+include_once H . 'sys/inc/settings.php';
+include_once H . 'sys/inc/db_connect.php';
+include_once H . 'sys/inc/ipua.php';
+include_once H . 'sys/inc/fnc.php';
+include_once H . 'sys/inc/user.php';
 
 $set['title'] = 'Лидеры'; // заголовок страницы
-include_once '../../sys/inc/thead.php';
+include_once H . 'sys/inc/thead.php';
 title();
 aut();
 err();
@@ -52,7 +51,7 @@ WHERE ldr.`time` > ?i ORDER BY ldr.stav DESC LIMIT ?i OFFSET ?i',
         echo 'Ставка: <b class="off">' . $post['stav'] . '</b> <b class="on">' . $sMonet[0] . '</b><br />';
         echo output_text($post['msg']) . '<br />';
         if (isset($user) && $user['level'] > 2) {
-            echo '<div style="text-align:right;"><a href="delete.php?id=' . $post['id_user'] . '"><img src="/style/icons/delete.gif" alt="*"/></a></div>';
+            echo '<div style="text-align:right;"><a href="./delete.php?id=' . $post['id_user'] . '"><img src="/style/icons/delete.gif" alt="*"/></a></div>';
         }
         echo '</div>';
     }
@@ -65,4 +64,4 @@ echo '<div class="foot">';
 echo '<img src="/style/icons/lider.gif" alt="S"/> <a href="/user/money/liders.php">Стать лидером</a>';
 echo '</div>';
 
-include_once '../../sys/inc/tfoot.php';
+include_once H . 'sys/inc/tfoot.php';

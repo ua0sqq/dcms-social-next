@@ -1,14 +1,13 @@
 <?php
 include_once '../sys/inc/start.php';
-include_once '../sys/inc/compress.php';
-include_once '../sys/inc/sess.php';
-include_once '../sys/inc/home.php';
-include_once '../sys/inc/settings.php';
-include_once '../sys/inc/db_connect.php';
-include_once '../sys/inc/ipua.php';
-include_once '../sys/inc/fnc.php';
-include_once '../sys/inc/adm_check.php';
-include_once '../sys/inc/user.php';
+include_once H . 'sys/inc/compress.php';
+include_once H . 'sys/inc/sess.php';
+include_once H . 'sys/inc/settings.php';
+include_once H . 'sys/inc/db_connect.php';
+include_once H . 'sys/inc/ipua.php';
+include_once H . 'sys/inc/fnc.php';
+include_once H . 'sys/inc/adm_check.php';
+include_once H . 'sys/inc/user.php';
 
 user_access('user_delete', null, 'index.php?'.SID);
 adm_check();
@@ -30,7 +29,7 @@ if ($user['level'] <= $ank['level']) {
     exit;
 }
 $set['title'] = 'Удаление пользователя ' . $ank['nick'];
-include_once '../sys/inc/thead.php';
+include_once H . 'sys/inc/thead.php';
 title();
 if (isset($_POST['delete'])) {
     if (function_exists('set_time_limit')) {
@@ -195,7 +194,7 @@ if (isset($_POST['delete'])) {
     echo '<div class="foot">'."\n\t";
     echo '&laquo;<a href="/user/users.php">Пользователи</a>'."\n";
     echo '</div>'."\n";
-    include_once '../sys/inc/tfoot.php';
+    include_once H . 'sys/inc/tfoot.php';
 }
 $mass[0] = $ank['id'];
 $collisions = user_collision($mass, 1);
@@ -358,4 +357,4 @@ echo "<div class='foot'>\n";
 echo "&laquo;<a href='/info.php?id=$ank[id]'>В анкету</a><br />\n";
 echo "&laquo;<a href='/user/users.php'>Пользователи</a><br />\n";
 echo "</div>\n";
-include_once '../sys/inc/tfoot.php';
+include_once H . 'sys/inc/tfoot.php';

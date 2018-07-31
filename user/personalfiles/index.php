@@ -1,16 +1,15 @@
 <?php
 include_once '../../sys/inc/start.php';
-include_once '../../sys/inc/compress.php';
-include_once '../../sys/inc/sess.php';
-include_once '../../sys/inc/home.php';
-include_once '../../sys/inc/settings.php';
-include_once '../../sys/inc/db_connect.php';
-include_once '../../sys/inc/ipua.php';
-include_once '../../sys/inc/fnc.php';
-include_once '../../sys/inc/user.php';
-include_once '../../sys/inc/files.php';
+include_once H . 'sys/inc/compress.php';
+include_once H . 'sys/inc/sess.php';
+include_once H . 'sys/inc/settings.php';
+include_once H . 'sys/inc/db_connect.php';
+include_once H . 'sys/inc/ipua.php';
+include_once H . 'sys/inc/fnc.php';
+include_once H . 'sys/inc/user.php';
+include_once H . 'sys/inc/files.php';
 
-include_once '../../sys/inc/thead.php';
+include_once H . 'sys/inc/thead.php';
 if (isset($user)) {
     $ank['id'] = $user['id'];
 }
@@ -47,7 +46,7 @@ if ($dir['id_user'] != $ank_id) {
     $set['title'] = '404 Not Found';
     title() . aut();
     echo '<div class="mess">'."\n".'Ошибка! Возможно папка была удалена, проверьте правильность адреса!'."\n".'</div>'."\n";
-    include_once '../../sys/inc/tfoot.php';
+    include_once H . 'sys/inc/tfoot.php';
 }
 
 $get_string = filter_input_array(INPUT_GET, FILTER_DEFAULT);
@@ -67,4 +66,4 @@ if (isset($get_id['id']) && isset($get_id['dir'])  && !isset($get_string['add'])
     include_once 'inc/file.php';
 }
  // (c) Искатель
-include_once '../../sys/inc/tfoot.php';
+include_once H . 'sys/inc/tfoot.php';

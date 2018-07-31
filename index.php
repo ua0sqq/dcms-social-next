@@ -1,24 +1,23 @@
 <?php
-include_once 'sys/inc/start.php';
-include_once 'sys/inc/sess.php';
-include_once 'sys/inc/home.php';
-include_once 'sys/inc/settings.php';
-include_once 'sys/inc/db_connect.php';
-include_once 'sys/inc/ipua.php';
-include_once 'sys/inc/fnc.php';
-include_once 'sys/inc/user.php';
-include_once 'sys/inc/icons.php'; // Иконки главного меню
+require 'sys/inc/start.php';
+require 'sys/inc/sess.php';
+require 'sys/inc/settings.php';
+require 'sys/inc/db_connect.php';
+require 'sys/inc/ipua.php';
+require 'sys/inc/fnc.php';
+require 'sys/inc/user.php';
+require 'sys/inc/icons.php'; // Иконки главного меню
 
-include_once 'sys/inc/thead.php';
+require 'sys/inc/thead.php';
 title();
 err();
 
 if (!$set['web']) {
     $cnt = $db->query(
                     'SELECT * FROM (
-		SELECT COUNT(*) online_user FROM `user` WHERE `date_last` > ?i)q, (
-		SELECT COUNT(*) online_guest FROM `guests` WHERE `date_last` > ?i AND `pereh` >0)q2',
-                            [(time()-600),(time()-600)])->row(); ?>
+		SELECT COUNT( * ) online_user FROM `user` WHERE `date_last` > ?i)q, (
+		SELECT COUNT( * ) online_guest FROM `guests` WHERE `date_last` > ?i AND `pereh` >0)q2',
+                            [TIME_600,TIME_600])->row(); ?>
 	<div class="title">
 	<center>
 	<a href="/online.php" title="онлайн" style="color:#cdcecf; text-decoration: none">
@@ -47,13 +46,13 @@ if (!$set['web']) {
 		<?php
     } ?></div><?php
     // новости
-    include_once 'sys/inc/news_main.php';
+    require 'sys/inc/news_main.php';
     // главное меню
-    include_once 'sys/inc/main_menu.php';
-    include_once 'sys/inc/main_notes.php';
+    require 'sys/inc/main_menu.php';
+    require 'sys/inc/main_notes.php';
 } else {
     // главная web темы
-    include_once 'style/themes/' . $set['set_them'] . '/index.php';
+    require 'style/themes/' . $set['set_them'] . '/index.php';
 }
-include_once 'sys/inc/tfoot.php';
+require 'sys/inc/tfoot.php';
 ?>

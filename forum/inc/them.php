@@ -286,7 +286,7 @@ JOIN `user` u ON u.id=pst.id_user WHERE `pst`.`id`=?i",
     echo "<div class='foot'>\n";
     echo "<img src='/style/icons/str2.gif' alt='*'> <a href='?page=".$input_get['page']."'>Назад</a><br />\n";
     echo "</div>\n";
-    include_once '../sys/inc/tfoot.php';
+    include_once H . 'sys/inc/tfoot.php';
     exit;
 }
 
@@ -372,7 +372,7 @@ if (isset($input_get['act']) && $input_get['act'] == 'mesto' && (user_access('fo
     echo "<div class='foot'>";
     echo "<img src='/style/icons/str2.gif' alt='*'> <a href='/forum/$forum[id]/$razdel[id]/$them[id]/?'>В тему</a><br />\n";
     echo "</div>";
-    include_once '../sys/inc/tfoot.php';
+    include_once H . 'sys/inc/tfoot.php';
     exit;
 }
 /*
@@ -413,7 +413,7 @@ if (isset($input_get['act']) && $input_get['act']=='set' && (user_access('forum_
     echo "<div class='foot'>";
     echo "<img src='/style/icons/str2.gif' alt='*'> <a href='/forum/$forum[id]/$razdel[id]/$them[id]/?'>В тему</a><br />\n";
     echo "</div>";
-    include_once '../sys/inc/tfoot.php';
+    include_once H . 'sys/inc/tfoot.php';
     exit;
 }
 // удаление поста
@@ -450,7 +450,7 @@ if (isset($input_get['act']) && $input_get['act']=='del' && user_access('forum_t
     echo "<div class='foot'>";
     echo "<img src='/style/icons/fav.gif' alt='*'> <a href='/forum/$forum[id]/$razdel[id]/$them[id]/?'>В тему</a><br />\n";
     echo "</div>";
-    include_once '../sys/inc/tfoot.php';
+    include_once H . 'sys/inc/tfoot.php';
     exit;
 }
 /*
@@ -598,7 +598,7 @@ if (isset($input_get['act']) && $input_get['act'] == 'vote' && (user_access('for
     echo "<div class='foot'>";
     echo "<img src='/style/icons/str2.gif' alt='*'> <a href='/forum/$forum[id]/$razdel[id]/$them[id]/?'>В тему</a>";
     echo "</div>";
-    include_once '../sys/inc/tfoot.php';
+    include_once H . 'sys/inc/tfoot.php';
     exit;
 }
 if (isset($input_get['vote_user']) && $db->query(
@@ -638,7 +638,7 @@ $num=0;
     } ?><div class="foot">
 <img src="/style/icons/fav.gif" alt="*"> <a href="/forum/<?=$forum['id']; ?>/<?=$razdel['id']; ?>/<?=$them['id']; ?>/?">В тему</a>
 </div><?php
-include_once '../sys/inc/tfoot.php';
+include_once H . 'sys/inc/tfoot.php';
     exit;
 }
 /* End Vote */
@@ -887,7 +887,7 @@ foreach ($q as $post) {
         if ($them['close']==0) { // если тема закрыта, то скрываем кнопки
             if (user_access('forum_post_ed') && ($post['level']<=$user['level'] || $post['level']==$user['level'] &&  $post['id_user']==$user['id'])) {
                 echo "<a href=\"/forum/$forum[id]/$razdel[id]/$them[id]/$post[id]/edit\" title='Изменить пост {$post['nick']}'  class='link_s'><img src='/style/icons/edit.gif' alt='*'> </a> \n";
-            } elseif ($user['id']==$post['id_user'] && $post['time']>time()-600) {
+            } elseif ($user['id']==$post['id_user'] && $post['time']>TIME_600) {
                 echo "<a href=\"/forum/$forum[id]/$razdel[id]/$them[id]/$post[id]/edit\" title='Изменить мой пост'  class='link_s'><img src='/style/icons/edit.gif' alt='*'> (".($post['time']+600-time())." сек)</a> \n";
             }
             

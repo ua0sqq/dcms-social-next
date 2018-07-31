@@ -1,13 +1,12 @@
 <?php
 include_once '../../sys/inc/start.php';
-include_once '../../sys/inc/compress.php';
-include_once '../../sys/inc/sess.php';
-include_once '../../sys/inc/home.php';
-include_once '../../sys/inc/settings.php';
-include_once '../../sys/inc/db_connect.php';
-include_once '../../sys/inc/ipua.php';
-include_once '../../sys/inc/fnc.php';
-include_once '../../sys/inc/user.php';
+include_once H . 'sys/inc/compress.php';
+include_once H . 'sys/inc/sess.php';
+include_once H . 'sys/inc/settings.php';
+include_once H . 'sys/inc/db_connect.php';
+include_once H . 'sys/inc/ipua.php';
+include_once H . 'sys/inc/fnc.php';
+include_once H . 'sys/inc/user.php';
 
 only_reg('/aut.php');
 
@@ -46,7 +45,7 @@ if (filter_input(INPUT_POST, 'save', FILTER_DEFAULT)) {
     exit;
 }
 $set['title']='Настройка ленты для '.$ank['nick'];
-include_once '../../sys/inc/thead.php';
+include_once H . 'sys/inc/thead.php';
 title();
 err();
 aut();
@@ -128,4 +127,4 @@ echo "<input type='submit' name='save' value='Сохранить' />";
 echo "</div>";
 echo "</form>";
     
-include_once '../../sys/inc/tfoot.php';
+include_once H . 'sys/inc/tfoot.php';

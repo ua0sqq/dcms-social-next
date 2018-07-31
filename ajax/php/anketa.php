@@ -2,13 +2,12 @@
 if (isset($_GET['id'])) {
 include_once '../../sys/inc/start.php';
     //include_once '../../sys/inc/compress.php';
-include_once '../../sys/inc/sess.php';
-include_once '../../sys/inc/home.php';
-include_once '../../sys/inc/settings.php';
-include_once '../../sys/inc/db_connect.php';
-include_once '../../sys/inc/ipua.php';
-include_once '../../sys/inc/fnc.php';
-include_once '../../sys/inc/user.php';
+include_once H . 'sys/inc/sess.php';
+include_once H . 'sys/inc/settings.php';
+include_once H . 'sys/inc/db_connect.php';
+include_once H . 'sys/inc/ipua.php';
+include_once H . 'sys/inc/fnc.php';
+include_once H . 'sys/inc/user.php';
     $ank = go\DB\query('SELECT * FROM `user` WHERE `id`=?i', [$_GET['id']])->row();
     echo ' <a onclick="anketaClose.submit()" name="myForm"><div class="form_info">Скрыть подробную информацию</div></a>';
 // Анкета пользователя,

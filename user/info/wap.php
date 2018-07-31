@@ -144,7 +144,7 @@ SELECT COUNT( * ) FROM `frends_new` WHERE `to`=?i) new_frend, (
 SELECT COUNT( * ) FROM `frends` WHERE `user`=?i AND `i`=1) all_frend, (
 SELECT COUNT( * ) FROM `frends` WHERE `user`=?i AND `i`=1 AND `frend` IN(
 SELECT `id` FROM `user` WHERE `date_last`>?i)) online_frend",
-            [$ank['id'], $ank['id'], $ank['id'], (time()-600)])->row();
+            [$ank['id'], $ank['id'], $ank['id'], TIME_600])->row();
 
 echo '<div class="nav2">';
 echo '<img src="/style/icons/druzya.png" alt="*" /> ';

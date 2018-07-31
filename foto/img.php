@@ -1,14 +1,13 @@
 <?php
 
 include_once '../sys/inc/start.php';
-include_once '../sys/inc/sess.php';
-include_once '../sys/inc/home.php';
-include_once '../sys/inc/settings.php';
-include_once '../sys/inc/db_connect.php';
-include_once '../sys/inc/ipua.php';
-include_once '../sys/inc/fnc.php';
-include_once '../sys/inc/downloadfile.php';
-//include_once '../sys/inc/user.php';
+include_once H . 'sys/inc/sess.php';
+include_once H . 'sys/inc/settings.php';
+include_once H . 'sys/inc/db_connect.php';
+include_once H . 'sys/inc/ipua.php';
+include_once H . 'sys/inc/fnc.php';
+include_once H . 'sys/inc/downloadfile.php';
+//include_once H . 'sys/inc/user.php';
 //header("Last-Modified: ".gmdate("D, d M Y H:i:s", filemtime($time))." GMT");
 //header("Expires: ".gmdate("D, d M Y H:i:s", time() + 3600)." GMT");
 //if (!isset($_GET['id']) || !isset($_GET['size'])) {

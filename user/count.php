@@ -1,11 +1,12 @@
 <?php
+$cnt = $db->query("SELECT (
+SELECT COUNT( * ) FROM `user`) koll, (
+SELECT COUNT( * ) FROM `user` WHERE `date_reg`>?i) k_new",
+                    [START_DAY])->row();
 
-$koll = $db->query("SELECT COUNT(*) FROM `user`")->el();
-$k_new = $db->query("SELECT COUNT(*) FROM `user` WHERE `date_reg` > '$ftime' ")->el();
-
-if ($k_new > 0) {
-    $k_new = '<span class="off">+' . $k_new . '</span>';
+if ($cnt['k_new']) {
+    $cnt['k_new'] = '<span class="off">+' . $cnt['k_new'] . '</span>';
 } else {
-    $k_new = null;
+    $cnt['k_new'] = null;
 }
-echo '(' . $koll . ') ' . $k_new;
+echo '(' . $cnt['koll'] . ') ' . $cnt['k_new'];

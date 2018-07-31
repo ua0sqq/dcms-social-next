@@ -44,6 +44,6 @@ if (isset($_GET['delete'])) {
     echo '[<a href="?page='.intval($_GET['page']).'&amp;id_file='.$file_id['id'].'&amp;delete&amp;ok"><img src="/style/icons/ok.gif" alt="*"> Да</a>] ';
     echo '[<a href="?page='.intval($_GET['page']).'&amp;id_file='.$file_id['id'].'"><img src="/style/icons/delete.gif" alt="*"> Нет</a>]';
     echo '</div>';
-    include_once '../../sys/inc/tfoot.php';
+    include_once H . 'sys/inc/tfoot.php';
     exit;
 }

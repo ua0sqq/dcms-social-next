@@ -8,7 +8,6 @@
 include_once 'sys/inc/start.php';
 include_once 'sys/inc/compress.php';
 include_once 'sys/inc/sess.php';
-include_once 'sys/inc/home.php';
 include_once 'sys/inc/settings.php';
 include_once 'sys/inc/db_connect.php';
 include_once 'sys/inc/ipua.php';
@@ -29,7 +28,7 @@ if (isset($_GET['login']) && isset($_GET['pass'])) {
     echo '</div>'."\n";
 }
 ?>
-<div class="main2" id="umenu_razd">
+<div class="main_menu" id="umenu_razd">
 	Мой профиль
 </div>
 <div class="main" id="umenu">
@@ -52,7 +51,7 @@ while ($filebase = readdir($opdirbase)) {
     }
 }
 ?>
-<div class="main2" id="umenu_razd">
+<div class="main_menu" id="umenu_razd">
 	Мои настройки
 </div>
 <div class="main" id="umenu">
@@ -67,7 +66,7 @@ while ($filebase = readdir($opdirbase)) {
 <?php
 // Админ права
 if (user_access('adm_panel_show')) {
-    echo '<div class="main2" id="umenu_razd">'."\n".'Админ-Панель'."\n".'</div>'."\n";
+    echo '<div class="main_menu" id="umenu_razd">'."\n".'Админ-Панель'."\n".'</div>'."\n";
     
     echo '<div class="main" id="umenu">'."\n";
     echo '<img src="/style/my_menu/adm_panel.png" alt="" /> <a href="/adm_panel/">Админка</a><br />'."\n";

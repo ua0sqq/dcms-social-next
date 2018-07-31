@@ -1,7 +1,7 @@
 <?php
 $cnt = $db->query('SELECT * FROM (
 SELECT COUNT(*) all_news FROM `news`)q, (
-SELECT COUNT(*) new_news FROM `news` WHERE `time`>?i)q2', [$ftime])->row();
+SELECT COUNT(*) new_news FROM `news` WHERE `time`>?i)q2', [START_DAY])->row();
 if (!$cnt['new_news']) {
     $cnt['new_news'] = null;
 } else {

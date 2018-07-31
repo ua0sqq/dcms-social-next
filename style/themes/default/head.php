@@ -21,7 +21,7 @@ if (isset($_SESSION['message'])) {
 }
 if ($_SERVER['PHP_SELF'] == '/index.php') {
     ?>
-	<div style="text-align: center;" class="logo">
+	<div class="logo">
 	<img src="/style/themes/<?=$set['set_them']?>/logo.png" alt="logo" /><br />
 	<?=$set['title']?>
 	</div>

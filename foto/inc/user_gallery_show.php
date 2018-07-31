@@ -49,7 +49,7 @@ if (isset($user)) {
     include 'inc/gallery_show_act.php';
 }
 
-include_once '../sys/inc/thead.php';
+include_once H . 'sys/inc/thead.php';
 title();
 aut();
 err();
@@ -96,7 +96,7 @@ if ($user['id'] != $ank['id'] && $gallery['pass'] != null) {
         echo '<div class="foot">';
         echo '<img src="/style/icons/str2.gif" alt="*"> ' . user::nick($ank['id']) . ' | <a href="/foto/' . $ank['id'] . '/">Альбомы</a> | <b>' . text($gallery['name']) . '</b>';
         echo '</div>';
-        include_once '../sys/inc/tfoot.php';
+        include_once H . 'sys/inc/tfoot.php';
         exit;
     }
 }
@@ -164,5 +164,5 @@ if (isset($user) && (user_access('foto_alb_del') || $ank['id'] == $user['id'])) 
 echo '<div class="foot">';
 echo '<img src="/style/icons/str2.gif" alt="*"> ' . user::nick($ank['id']) . ' | <a href="/foto/' . $ank['id'] . '/">Альбомы</a> | <b>' . text($gallery['name']) . '</b>';
 echo '</div>';
-include_once '../sys/inc/tfoot.php';
+include_once H . 'sys/inc/tfoot.php';
 exit;

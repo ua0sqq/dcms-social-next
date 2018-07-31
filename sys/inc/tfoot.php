@@ -9,7 +9,7 @@ if (file_exists(H."style/themes/$set[set_them]/foot.php")) {
 					  SELECT COUNT(*) all_user FROM `user`)q, (
 					  SELECT COUNT(*) online FROM `user` WHERE `date_last` > ?i)q2, (
 					  SELECT COUNT(*) guest FROM `guests` WHERE `date_last` > ?i AND `pereh` > 0',
-                      [time()-600, time()-600]
+                      [TIME_600, TIME_600]
     )->row();
     echo '<a href="/">На главную</a><br />' . "\n";
     echo '<a href="/user/users.php">Регистраций: ' . $cnt['all_user'] . '</a><br />' . "\n";

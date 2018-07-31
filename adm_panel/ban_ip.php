@@ -1,18 +1,17 @@
 <?php
 include_once '../sys/inc/start.php';
-include_once '../sys/inc/compress.php';
-include_once '../sys/inc/sess.php';
-include_once '../sys/inc/home.php';
-include_once '../sys/inc/settings.php';
-include_once '../sys/inc/db_connect.php';
-include_once '../sys/inc/ipua.php';
-include_once '../sys/inc/fnc.php';
-include_once '../sys/inc/adm_check.php';
-include_once '../sys/inc/user.php';
+include_once H . 'sys/inc/compress.php';
+include_once H . 'sys/inc/sess.php';
+include_once H . 'sys/inc/settings.php';
+include_once H . 'sys/inc/db_connect.php';
+include_once H . 'sys/inc/ipua.php';
+include_once H . 'sys/inc/fnc.php';
+include_once H . 'sys/inc/adm_check.php';
+include_once H . 'sys/inc/user.php';
 user_access('adm_ban_ip',null,'index.php?'.SID);
 $opsos=NULL;
 $set['title']='Бан по IP';
-include_once '../sys/inc/thead.php';
+include_once H . 'sys/inc/thead.php';
 title();
 if (isset($_POST['min']) && isset($_POST['max']))
 {
@@ -85,5 +84,5 @@ echo "<div class='foot'>\n";
 echo "&laquo;<a href='/adm_panel/'>В админку</a><br />\n";
 echo "</div>\n";
 }
-include_once '../sys/inc/tfoot.php';
+include_once H . 'sys/inc/tfoot.php';
 ?>

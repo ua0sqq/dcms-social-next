@@ -1,20 +1,19 @@
 <?php
 include_once '../../sys/inc/start.php';
-include_once '../../sys/inc/compress.php';
-include_once '../../sys/inc/sess.php';
-include_once '../../sys/inc/home.php';
-include_once '../../sys/inc/settings.php';
-include_once '../../sys/inc/db_connect.php';
-include_once '../../sys/inc/ipua.php';
-include_once '../../sys/inc/fnc.php';
-include_once '../../sys/inc/adm_check.php';
-include_once '../../sys/inc/user.php';
+include_once H . 'sys/inc/compress.php';
+include_once H . 'sys/inc/sess.php';
+include_once H . 'sys/inc/settings.php';
+include_once H . 'sys/inc/db_connect.php';
+include_once H . 'sys/inc/ipua.php';
+include_once H . 'sys/inc/fnc.php';
+include_once H . 'sys/inc/adm_check.php';
+include_once H . 'sys/inc/user.php';
 
 if (isset($user) && $user['level'] < 3) {
     header("Location: /");
 }
 $set['title']='Добавление записи';
-include_once '../../sys/inc/thead.php';
+include_once H . 'sys/inc/thead.php';
 aut();
 title();
 
@@ -88,4 +87,4 @@ if (isset($_GET['url'])) {
 
 echo '<div class="foot"><img src="/style/icons/str2.gif" alt="*"/> <a href="index.php">Информация</a></div>';
 
-include_once '../../sys/inc/tfoot.php';
+include_once H . 'sys/inc/tfoot.php';

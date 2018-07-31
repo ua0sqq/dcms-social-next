@@ -15,18 +15,17 @@ http://dcms-social.ru
 =======================================
 */
 include_once '../../sys/inc/start.php';
-include_once '../../sys/inc/compress.php';
-include_once '../../sys/inc/sess.php';
-include_once '../../sys/inc/home.php';
-include_once '../../sys/inc/settings.php';
-include_once '../../sys/inc/db_connect.php';
-include_once '../../sys/inc/ipua.php';
-include_once '../../sys/inc/fnc.php';
-include_once '../../sys/inc/adm_check.php';
-include_once '../../sys/inc/user.php';
+include_once H . 'sys/inc/compress.php';
+include_once H . 'sys/inc/sess.php';
+include_once H . 'sys/inc/settings.php';
+include_once H . 'sys/inc/db_connect.php';
+include_once H . 'sys/inc/ipua.php';
+include_once H . 'sys/inc/fnc.php';
+include_once H . 'sys/inc/adm_check.php';
+include_once H . 'sys/inc/user.php';
 
 $set['title']='Категории';
-include_once '../../sys/inc/thead.php';
+include_once H . 'sys/inc/thead.php';
 title();
 
 if (isset($_POST['title']) && user_access('notes_edit')) {
@@ -126,7 +125,7 @@ if (isset($_GET['id']) && $kount==1) {
         "SELECT n.*, (
 SELECT COUNT(*) FROM `notes` WHERE `id` =n.id AND `time`>?i) new_notes
 FROM `notes` n WHERE n.`id_dir`=?i ORDER BY ?o LIMIT ?i OFFSET ?i",
-                  [$ftime, $id_dir, $order, $set['p_str'], $start]
+                  [START_DAY, $id_dir, $order, $set['p_str'], $start]
     );
         $num=0;
         while ($post = $q->row()) {
@@ -157,7 +156,7 @@ FROM `notes` n WHERE n.`id_dir`=?i ORDER BY ?o LIMIT ?i OFFSET ?i",
             str('?id='.$id_dir.'&amp;'.$dop.'', $k_page, $page);
         }
     }
-    include_once '../../sys/inc/tfoot.php';
+    include_once H . 'sys/inc/tfoot.php';
     exit;
 }
 /*
@@ -171,7 +170,7 @@ $q=$db->query(
 SELECT COUNT( * ) FROM `notes`  WHERE `id_dir`=dr.id) all_notes, (
 SELECT COUNT( * ) FROM `notes`  WHERE `id_dir`=dr.id AND `time` >?i) new_notes
 FROM `notes_dir` dr ORDER BY dr.`id` DESC',
-                    [$ftime]);
+                    [START_DAY]);
 
 if ($k_post==0) {
     echo "  <div class='mess'>\n";
@@ -196,7 +195,7 @@ while ($post = $q->row()) {
     }
     echo "<a href='/plugins/notes/dir.php?id=$post[id]'>" . output_text($post['name']) . "</a> (" . $post['all_notes'] . ") " . $post['new_notes'] . "\n";
     if (isset($user) && ($user['level']>3)) {
-        echo "<a href='delete.php?dir=$post[id]'><img src='/style/icons/delete.gif' alt='*'></a><br />\n";
+        echo "<a href='./delete.php?dir=$post[id]'><img src='/style/icons/delete.gif' alt='*'></a><br />\n";
     }
     echo output_text($post['msg'])."<br />\n";
     echo "   </div>\n";
@@ -218,4 +217,4 @@ if (isset($user) && user_access('notes_edit')) {
 echo "<div class='foot'>\n";
 echo "<img src='/style/icons/str2.gif' alt='*'> <a href='index.php'>Все дневники</a><br />\n";
 echo "</div>\n";
-include_once '../../sys/inc/tfoot.php';
+include_once H . 'sys/inc/tfoot.php';

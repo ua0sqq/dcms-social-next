@@ -2,7 +2,7 @@
 
 $cnt = $db->query('SELECT * FROM (
 SELECT COUNT(*)  all_cnt FROM `obmennik_files` WHERE `id_dir` NOT IN(SELECT id FROM obmennik_dir WHERE `my`=1))q, (
-SELECT COUNT(*) new_cnt FROM `obmennik_files` WHERE `id_dir` NOT IN(SELECT id FROM obmennik_dir WHERE `my`=1) AND `time` > '.$ftime.')q2')->row();
+SELECT COUNT(*) new_cnt FROM `obmennik_files` WHERE `id_dir` NOT IN(SELECT id FROM obmennik_dir WHERE `my`=1) AND `time` > '.START_DAY.')q2')->row();
 
 if ($cnt['new_cnt']==0) {
     $cnt['new_cnt']=null;

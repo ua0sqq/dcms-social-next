@@ -2,6 +2,7 @@
 
 $set['web'] = true;
 header("Content-type: text/html");
+
 ?>
 <!DOCTYPE html>
 <html>
@@ -27,7 +28,7 @@ header("Content-type: text/html");
         <link rel="alternate" title="Новости RSS" href="/news/rss.php" type="application/rss+xml" />
         <script src="/style/themes/<?php  echo $set['set_them']; ?>/js.js" type="text/javascript" language="JavaScript" charset="utf-8"></script>
         <!-- Диалоговое окно -->
-        <script src="http://code.jquery.com/jquery-1.8.3.js"></script>
+        <script src="//code.jquery.com/jquery-1.8.3.js"></script>
         <script src="/ajax/dialog.js"></script>
         <link type="text/css" href="/ajax/style/dialog.css" rel="stylesheet" />
         <script>

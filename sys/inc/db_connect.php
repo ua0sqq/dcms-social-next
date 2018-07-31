@@ -26,6 +26,12 @@ $params = [
 //        mysql_query('SET NAMES ' . $set['charset_names']);
 //    }
 //}
+// псевдонимы функций temporary
+//function my_esc($value) {
+//    $search = array("\\", "\x00", "\n", "\r", "'", '"', "\x1a", "?");
+//    $replace = array("\\\\","\\0","\\n", "\\r", "\'", '\"', "\\Z", "??");
+//    return str_replace($search, $replace, $value);
+//}
 
 $db = DB::create($params);
 go\DB\Storage::getInstance()->create($params);

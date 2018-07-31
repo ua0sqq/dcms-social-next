@@ -1,13 +1,12 @@
 <?php
 include_once '../../sys/inc/start.php';
-include_once '../../sys/inc/compress.php';
-include_once '../../sys/inc/sess.php';
-include_once '../../sys/inc/home.php';
-include_once '../../sys/inc/settings.php';
-include_once '../../sys/inc/db_connect.php';
-include_once '../../sys/inc/ipua.php';
-include_once '../../sys/inc/fnc.php';
-include_once '../../sys/inc/user.php';
+include_once H . 'sys/inc/compress.php';
+include_once H . 'sys/inc/sess.php';
+include_once H . 'sys/inc/settings.php';
+include_once H . 'sys/inc/db_connect.php';
+include_once H . 'sys/inc/ipua.php';
+include_once H . 'sys/inc/fnc.php';
+include_once H . 'sys/inc/user.php';
 
 only_reg('/aut.php');
 $get_input = filter_input_array(INPUT_GET, [
@@ -37,14 +36,14 @@ FROM `user` WHERE `id`=?i',
                          $data)->row();
 if (!$ank) {
     $set['title'] = 'Пользователь не найден!';
-    include_once '../../sys/inc/thead.php';
+    include_once H . 'sys/inc/thead.php';
     title();
     aut();
     echo '<div class="err">Ошибка! Такой пользователь несуществует.</div>';
-    include_once '../../sys/inc/tfoot.php';
+    include_once H . 'sys/inc/tfoot.php';
 }
 $set['title'] = 'Темы и комментарии '.$ank['nick'];
-include_once '../../sys/inc/thead.php';
+include_once H . 'sys/inc/thead.php';
 title();
 aut();
 
@@ -98,4 +97,4 @@ WHERE t.`id_user`=?i ORDER BY t.`time` DESC LIMIT ?i, ?i",
     } // Вывод страниц
 }
 //Конец, ёптить
-include_once '../../sys/inc/tfoot.php';
+include_once H . 'sys/inc/tfoot.php';

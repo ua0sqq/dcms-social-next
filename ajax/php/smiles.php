@@ -1,16 +1,15 @@
 <?php
 include_once '../../sys/inc/start.php';
-include_once '../../sys/inc/compress.php';
-include_once '../../sys/inc/sess.php';
-include_once '../../sys/inc/home.php';
-include_once '../../sys/inc/settings.php';
-include_once '../../sys/inc/db_connect.php';
-//include_once '../../sys/inc/ipua.php';
-//include_once '../../sys/inc/fnc.php';
-//include_once '../../sys/inc/user.php';
+include_once H . 'sys/inc/compress.php';
+include_once H . 'sys/inc/sess.php';
+include_once H . 'sys/inc/settings.php';
+include_once H . 'sys/inc/db_connect.php';
+//include_once H . 'sys/inc/ipua.php';
+//include_once H . 'sys/inc/fnc.php';
+//include_once H . 'sys/inc/user.php';
 if (isset($_SESSION['id_user'])) {
     if (!isset($_GET['dir'])) {
-        $_SESSION['category'] = 21;
+        $_SESSION['category'] = 1;
     } else {
         $_SESSION['category'] = $_GET['dir'];
     }

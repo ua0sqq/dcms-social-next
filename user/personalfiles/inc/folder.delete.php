@@ -25,7 +25,7 @@ if (isset($_GET['delete_folder'])) {
         echo "[<a href='?delete_folder=$folder[id]&amp;ok'><img src='/style/icons/ok.gif' alt='*'> Да</a>] [<a href='?'><img src='/style/icons/delete.gif' alt='*'> Нет</a>] \n";
         echo "</center></div>";
 
-        include_once '../../sys/inc/tfoot.php';
+        include_once H . 'sys/inc/tfoot.php';
     }
     $a = 0;
     $b = 0;

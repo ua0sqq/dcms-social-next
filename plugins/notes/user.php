@@ -15,14 +15,13 @@ http://dcms-social.ru
 =======================================
 */
 include_once '../../sys/inc/start.php';
-include_once '../../sys/inc/compress.php';
-include_once '../../sys/inc/sess.php';
-include_once '../../sys/inc/home.php';
-include_once '../../sys/inc/settings.php';
-include_once '../../sys/inc/db_connect.php';
-include_once '../../sys/inc/ipua.php';
-include_once '../../sys/inc/fnc.php';
-include_once '../../sys/inc/user.php';
+include_once H . 'sys/inc/compress.php';
+include_once H . 'sys/inc/sess.php';
+include_once H . 'sys/inc/settings.php';
+include_once H . 'sys/inc/db_connect.php';
+include_once H . 'sys/inc/ipua.php';
+include_once H . 'sys/inc/fnc.php';
+include_once H . 'sys/inc/user.php';
 
 $ank['id'] = isset($user) ? $user['id'] : 0;
 $input_get = filter_input_array(
@@ -37,16 +36,16 @@ if (isset($input_get['id'])) {
 }
 
 if ($ank['id'] < 1) {
-    include_once '../../sys/inc/thead.php';
+    include_once H . 'sys/inc/thead.php';
     echo "<div class=\"err\">Доступ запрещен!</div>\n";
-    include_once '../../sys/inc/tfoot.php';
+    include_once H . 'sys/inc/tfoot.php';
     exit;
 }
 
 $ank=get_user($ank['id']);
 
 $set['title']='Дневники ' . $ank['nick'] . '';
-include_once '../../sys/inc/thead.php';
+include_once H . 'sys/inc/thead.php';
 title();
 aut(); // форма авторизации
 
@@ -92,7 +91,7 @@ $q=$db->query(
     "SELECT n.*, (
 SELECT COUNT( * ) FROM `notes` WHERE `id`=n.id AND `time`>?i) new_note
 FROM `notes` n WHERE n.`id_user`=?i ORDER BY ?o LIMIT ?i OFFSET ?i",
-              [$ftime, $ank['id'], $order, $set['p_str'], $start]);
+              [START_DAY, $ank['id'], $order, $set['p_str'], $start]);
 
 $num=0;
 while ($post = $q->row()) {
@@ -124,4 +123,4 @@ if ($k_page>1) {
     str('?id=' . $ank['id'] . '&amp;'.$dop.'', $k_page, $page);
 }
 }
-include_once '../../sys/inc/tfoot.php';
+include_once H . 'sys/inc/tfoot.php';

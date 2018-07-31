@@ -5,15 +5,14 @@
  * & Contacts :: ICQ 587863132
  * & Site     :: http://dcms-social.ru
  */
-include_once '../../sys/inc/home.php';
-include_once H.'sys/inc/start.php';
-include_once H.'sys/inc/compress.php';
-include_once H.'sys/inc/sess.php';
-include_once H.'sys/inc/settings.php';
-include_once H.'sys/inc/db_connect.php';
-include_once H.'sys/inc/ipua.php';
-include_once H.'sys/inc/fnc.php';
-include_once H.'sys/inc/user.php';
+include_once '../../sys/inc/start.php';
+include_once H . 'sys/inc/compress.php';
+include_once H . 'sys/inc/sess.php';
+include_once H . 'sys/inc/settings.php';
+include_once H . 'sys/inc/db_connect.php';
+include_once H . 'sys/inc/ipua.php';
+include_once H . 'sys/inc/fnc.php';
+include_once H . 'sys/inc/user.php';
 
 $id = isset($_GET['id']) ? abs(intval($_GET['id'])) : 0;
 
@@ -26,7 +25,7 @@ if (!$dir['id']) {
     header("Location: /index.php");
 }
 $set['title'] = text($dir['name']) . ' | Список смайлов';
-include_once H.'sys/inc/thead.php';
+include_once H . 'sys/inc/thead.php';
 title();
 aut();
 ?>
@@ -68,5 +67,5 @@ if (isset($user) && $user['level'] > 3) {
 <img src="/style/icons/str2.gif" alt="*"> <a href="index.php">Категории</a> | <b><?=text($dir['name'])?></b>
 </div>
 <?php
-include_once H.'sys/inc/tfoot.php';
+include_once H . 'sys/inc/tfoot.php';
 ?>

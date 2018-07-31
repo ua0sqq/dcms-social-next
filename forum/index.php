@@ -1,13 +1,12 @@
 <?php
 require '../sys/inc/start.php';
-require '../sys/inc/compress.php';
-require '../sys/inc/sess.php';
-require '../sys/inc/home.php';
-require '../sys/inc/settings.php';
-require '../sys/inc/db_connect.php';
-require '../sys/inc/ipua.php';
-require '../sys/inc/fnc.php';
-require '../sys/inc/user.php';
+require H . 'sys/inc/compress.php';
+require H . 'sys/inc/sess.php';
+require H . 'sys/inc/settings.php';
+require H . 'sys/inc/db_connect.php';
+require H . 'sys/inc/ipua.php';
+require H . 'sys/inc/fnc.php';
+require H . 'sys/inc/user.php';
 
 $args = [
         'act' => FILTER_DEFAULT,
@@ -61,7 +60,7 @@ $args = [
     $input_get = filter_input_array(INPUT_GET, $args);
     unset($args);
     
-require '../sys/inc/thead.php';
+require H . 'sys/inc/thead.php';
 
 if ($input_get['id_forum'] && $input_get['id_razdel'] && $input_get['id_them'] && $input_get['id_post']) {
     $data = [
@@ -110,7 +109,7 @@ WHERE `pst`.`id`=?i AND `pst`.`id_them`=?i AND `pst`.`id_razdel`=?i AND `pst`.`i
     
         if (isset($user)) {
             if (isset($input_get['act']) && $input_get['act']=='edit' && isset($_POST['msg']) && isset($_POST['post']) && (user_access('forum_post_ed')
-        || (isset($user) && $user['id']==$post['id_user'] && $post['time']>time()-600 && $post['id_user']==$post2['id_user']))) {
+        || (isset($user) && $user['id']==$post['id_user'] && $post['time']>TIME_600 && $post['id_user']==$post2['id_user']))) {
                 $msg=$_POST['msg'];
                 if (isset($_POST['translit']) && $_POST['translit']==1) {
                     $msg=translit($msg);
@@ -133,10 +132,10 @@ WHERE `pst`.`id`=?i AND `pst`.`id_them`=?i AND `pst`.`id_razdel`=?i AND `pst`.`i
                 }
             } elseif (isset($input_get['act']) && $input_get['act']=='edit' && (user_access('forum_post_ed')
                 && ($ank['group_access']<$user['group_access'] || $ank['group_access']==$user['group_access'] && $ank['id']==$user['id'])
-                || isset($user) && $post['id']==$post2['id'] && $post['id_user']==$user['id'] && $post['time']>time()-600)) {
+                || isset($user) && $post['id']==$post2['id'] && $post['id_user']==$user['id'] && $post['time']>TIME_600)) {
                 // заголовок страницы
                 $set['title']='Форум - редактирование поста';
-                //require '../sys/inc/thead.php';
+                //require H . 'sys/inc/thead.php';
                 title();
                 echo "<div class='nav2'><form method='post' name='message' action='/forum/$forum[id]/$razdel[id]/$them[id]/$post[id]/edit'>\n";
                 $msg2=output_text($post['msg'], false, true, false, false, false);
@@ -153,17 +152,17 @@ WHERE `pst`.`id`=?i AND `pst`.`id_them`=?i AND `pst`.`id_razdel`=?i AND `pst`.`i
                 echo "<img src='/style/icons/str2.gif' alt='*'> <a href=\"/forum/$forum[id]/\" title='В подфорум'>" . text($forum['name']) . "</a><br />\n";
                 echo "<img src='/style/icons/str2.gif' alt='*'> <a href=\"/forum/\">Форум</a><br />\n";
                 echo "</div>\n";
-                require '../sys/inc/tfoot.php';
+                require H . 'sys/inc/tfoot.php';
             } elseif (isset($input_get['act']) && $input_get['act']=='delete' && isset($user) && $them['close']==0 && ((user_access('forum_post_ed')
             && ($ank['group_access']<=$user['group_access'] || $ank['group_access']==$user['group_access'] && $ank['id']==$user['id']))
-            || $post['id']==$post2['id'] && $post['id_user']==$user['id'] && $post['time']>time()-600)) {
+            || $post['id']==$post2['id'] && $post['id_user']==$user['id'] && $post['time']>TIME_600)) {
                 $db->query(
                     'DELETE FROM `forum_p` WHERE `id`=?i AND `id_them`=?i AND `id_razdel`=?i AND `id_forum`=?i LIMIT ?i',
                             [$input_get['id_post'], $input_get['id_them'], $input_get['id_razdel'], $input_get['id_forum'],  1]);
             } elseif (isset($input_get['act']) && $input_get['act']=='msg' && $them['close']==0 && isset($user)) {
                 // заголовок страницы
                 $set['title']='Форум - '.text($them['name']);
-                require '../sys/inc/thead.php';
+                require H . 'sys/inc/thead.php';
                 title();
                 aut();
                 echo "<div class='nav2'><form method='post' name='message' action='/forum/$forum[id]/$razdel[id]/$them[id]/new'>\n";
@@ -186,7 +185,7 @@ WHERE `pst`.`id`=?i AND `pst`.`id_them`=?i AND `pst`.`id_razdel`=?i AND `pst`.`i
                 echo "<img src='/style/icons/str2.gif' alt='*'> <a href=\"/forum/$forum[id]/\" title='В подфорум'>" . text($forum['name']) . "</a><br />\n";
                 echo "<img src='/style/icons/str2.gif' alt='*'> <a href=\"/forum/\">Форум</a><br />\n";
                 echo "</div>\n";
-                require '../sys/inc/tfoot.php';
+                require H . 'sys/inc/tfoot.php';
             } elseif (isset($input_get['act']) && $input_get['act']=='cit' && $them['close']==0 && isset($user)) {
 
                 // заголовок страницы
@@ -213,7 +212,7 @@ WHERE `pst`.`id`=?i AND `pst`.`id_them`=?i AND `pst`.`id_razdel`=?i AND `pst`.`i
                 echo "<img src='/style/icons/str2.gif' alt='*'> <a href=\"/forum/$forum[id]/\" title='В подфорум'>" . text($forum['name']) . "</a><br />\n";
                 echo "<img src='/style/icons/str2.gif' alt='*'> <a href=\"/forum/\">Форум</a><br />\n";
                 echo "</div>\n";
-                require '../sys/inc/tfoot.php';
+                require H . 'sys/inc/tfoot.php';
             }
         }
     } else {
@@ -273,7 +272,7 @@ WHERE `thm`.id=?i", [$input_get['id_them']])->row();
         echo "<div class=\"foot\">\n";
         echo "<img src='/style/icons/str2.gif' alt='*'> <a href=\"/forum/\">Форум</a> | <a href=\"/forum/$forum[id]/\" title='В подфорум'>" . text($forum['name']) . "</a> | <a href=\"/forum/$forum[id]/$razdel[id]/\" title='В раздел'>" . text($razdel['name']) . "</a><br />\n";
         echo "</div>\n";
-        require '../sys/inc/tfoot.php';
+        require H . 'sys/inc/tfoot.php';
     }
 }
 
@@ -305,7 +304,7 @@ FROM forum_r `rzd` LEFT JOIN forum_f `frm` ON `rzd`.id_forum=`frm`.id WHERE `rzd
         } else {
             // заголовок страницы
             $set['title']='Форум - '.text($razdel['name']);
-            //require '../sys/inc/thead.php';
+            //require H . 'sys/inc/thead.php';
             title();
             if (user_access('forum_razd_edit')) {
                 include 'inc/set_razdel_act.php';
@@ -319,7 +318,7 @@ FROM forum_r `rzd` LEFT JOIN forum_f `frm` ON `rzd`.id_forum=`frm`.id WHERE `rzd
             echo "<img src='/style/icons/str2.gif' alt='*'> <a href=\"/forum/\">Форум</a><br />\n";
             echo "</div>\n";
         }
-        require '../sys/inc/tfoot.php';
+        require H . 'sys/inc/tfoot.php';
     }
 }
 
@@ -337,7 +336,6 @@ if ($input_get['id_forum']) {
                           [$input_get['id_forum']])->row();
         
         $set['title']='Форум - '.text($forum['name']); // заголовок страницы
-        //require '../sys/inc/thead.php';
         title();
         // действия над подфорумом
         if (isset($user) && $user['group_access'] > 1) {
@@ -354,7 +352,7 @@ if ($input_get['id_forum']) {
         echo "<img src='/style/icons/str2.gif' alt='*'> <a href=\"/forum/\">Форум</a><br />\n";
         echo "</div>\n";
         
-        require '../sys/inc/tfoot.php';
+        require H . 'sys/inc/tfoot.php';
     }
 }
 
@@ -480,4 +478,4 @@ if (user_access('forum_for_create')) {
     echo "</div>\n";
 }
 
-require '../sys/inc/tfoot.php';
+require H . 'sys/inc/tfoot.php';

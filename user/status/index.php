@@ -1,13 +1,12 @@
 <?php
 include_once '../../sys/inc/start.php';
-include_once '../../sys/inc/compress.php';
-include_once '../../sys/inc/sess.php';
-include_once '../../sys/inc/home.php';
-include_once '../../sys/inc/settings.php';
-include_once '../../sys/inc/db_connect.php';
-include_once '../../sys/inc/ipua.php';
-include_once '../../sys/inc/fnc.php';
-include_once '../../sys/inc/user.php';
+include_once H . 'sys/inc/compress.php';
+include_once H . 'sys/inc/sess.php';
+include_once H . 'sys/inc/settings.php';
+include_once H . 'sys/inc/db_connect.php';
+include_once H . 'sys/inc/ipua.php';
+include_once H . 'sys/inc/fnc.php';
+include_once H . 'sys/inc/user.php';
 
  // Автор статусов
 if ($id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT)) {
@@ -35,7 +34,7 @@ if ($reset = filter_input(INPUT_GET, 'reset', FILTER_VALIDATE_INT)) {
     }
 }
 $set['title'] = 'Статусы ' . $anketa['nick'];
-include_once '../../sys/inc/thead.php';
+include_once H . 'sys/inc/thead.php';
 title();
 err();
 aut(); // форма авторизации
@@ -93,7 +92,7 @@ if ($anketa['id'] != $user['id'] && $user['group_access'] == 0) {
 </div>
 <?php
         }
-        include_once '../../sys/inc/tfoot.php';
+        include_once H . 'sys/inc/tfoot.php';
         exit;
     }
     
@@ -103,7 +102,7 @@ if ($anketa['id'] != $user['id'] && $user['group_access'] == 0) {
     Пользователь запретил комментировать его статусы!
 </div>
 <?php        
-        include_once '../../sys/inc/tfoot.php';
+        include_once H . 'sys/inc/tfoot.php';
         exit;
     }
 }
@@ -172,4 +171,4 @@ echo "<div class='foot'>";
 echo "<img src='/style/icons/str2.gif' alt='*'> <a href=\"/info.php?id=$anketa[id]\">$anketa[nick]</a> | <b>Статусы</b>";
 echo "</div>";
 
-include_once '../../sys/inc/tfoot.php';
+include_once H . 'sys/inc/tfoot.php';

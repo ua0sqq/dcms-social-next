@@ -1,14 +1,13 @@
 <?php
 include_once '../../sys/inc/start.php';
-include_once '../../sys/inc/compress.php';
-include_once '../../sys/inc/sess.php';
-include_once '../../sys/inc/home.php';
-include_once '../../sys/inc/settings.php';
-include_once '../../sys/inc/db_connect.php';
-include_once '../../sys/inc/ipua.php';
-include_once '../../sys/inc/fnc.php';
-include_once '../../sys/inc/adm_check.php';
-include_once '../../sys/inc/user.php';
+include_once H . 'sys/inc/compress.php';
+include_once H . 'sys/inc/sess.php';
+include_once H . 'sys/inc/settings.php';
+include_once H . 'sys/inc/db_connect.php';
+include_once H . 'sys/inc/ipua.php';
+include_once H . 'sys/inc/fnc.php';
+include_once H . 'sys/inc/adm_check.php';
+include_once H . 'sys/inc/user.php';
 $my = null;
 $frend = null;
 $all = null;
@@ -63,7 +62,7 @@ WHERE `fr`.`user`=?i AND fr.`frend`<>?i AND fr.`i`=1 AND `fr`.`lenta_status_like
     }
 }
 $set['title']='Лента';
-include_once '../../sys/inc/thead.php';
+include_once H . 'sys/inc/thead.php';
 // Очищение списка непрочитанных
 if ($input_get['read'] && $input_get['read'] == 'all') {
     if (isset($user)) {
@@ -208,4 +207,4 @@ WHERE tp.`id_user`=?i ORDER BY `read`, `time` DESC LIMIT ?i, ?i",
 <!-- ./ end lenta -->
 <?php
 
-include_once '../../sys/inc/tfoot.php';
+include_once H . 'sys/inc/tfoot.php';

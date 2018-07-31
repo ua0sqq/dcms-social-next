@@ -59,7 +59,7 @@ if (isset($_GET['act']) && isset($_GET['ok']) && $_GET['act']=='forum_delete' &&
     err();
     aut();
     echo "<a href=\"/forum/\">В форум</a><br />\n";
-    include_once '../sys/inc/tfoot.php';
+    include_once H . 'sys/inc/tfoot.php';
 }
 
 if (user_access('forum_razd_create') && (isset($_GET['act']) && isset($_GET['ok']) && $_GET['act']=='new' && isset($_POST['name']))) {

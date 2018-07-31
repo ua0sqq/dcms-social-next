@@ -49,7 +49,7 @@ if (isset($_POST['name']) && isset($user)) {
 }
 
 $set['title'] = 'Создание папки';
-include_once '../../sys/inc/thead.php';
+include_once H . 'sys/inc/thead.php';
 title();
 aut();
 err();
@@ -73,4 +73,4 @@ echo "<div class='foot'>";
 echo "<img src='/style/icons/up_dir.gif' alt='*'> ".($dir['osn']==1?'Файлы':'')." ".user_files($dir['id_dires'])." ".($dir['osn']==1?'':'&gt; '.htmlspecialchars($dir['name']))."\n";
 echo "</div>";
 
-include_once('../../sys/inc/tfoot.php');
+include_once(H . 'sys/inc/tfoot.php');

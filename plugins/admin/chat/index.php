@@ -2,7 +2,6 @@
 include_once '../../../sys/inc/start.php';
 include_once '../../../sys/inc/compress.php';
 include_once '../../../sys/inc/sess.php';
-include_once '../../../sys/inc/home.php';
 include_once '../../../sys/inc/settings.php';
 include_once '../../../sys/inc/db_connect.php';
 include_once '../../../sys/inc/ipua.php';
@@ -101,7 +100,7 @@ if (user_access('adm_panel_show')) {
         echo " ".medal($ank['id'])." ".online($ank['id'])." (".vremja($post['time']).")<br />";
         echo output_text($post['msg'])."<br />\n";
         if (user_access('guest_delete')) {
-            echo '<div style="float:right;"><a href="delete.php?id='.$post['id'].'"><img src="/style/icons/delete.gif" alt="*"></a></div><br />';
+            echo '<div style="float:right;"><a href="./delete.php?id='.$post['id'].'"><img src="/style/icons/delete.gif" alt="*"></a></div><br />';
         }
         echo "   </div>\n";
     }

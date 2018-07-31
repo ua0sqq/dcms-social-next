@@ -1,4 +1,10 @@
 <?php
+// path document root
+define('H', $_SERVER['DOCUMENT_ROOT'].'/');
+// timestamp 10 minutes ago
+define('TIME_600', time() - 600);
+// start of the day
+define('START_DAY', mktime(0, 0, 0));
 
 // отключаем показ ошибок
 if (function_exists('error_reporting')) {
@@ -27,5 +33,5 @@ if (preg_match('#([0-9]*)([a-z]*)#i', $upload_max_filesize, $varrs)) {
         $upload_max_filesize=$varrs[1]*1024*1048576;
     }
 }
- // Полночь
-$ftime = mktime(0, 0, 0);
+
+$num = 0;

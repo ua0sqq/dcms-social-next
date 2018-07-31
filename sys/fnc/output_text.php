@@ -30,6 +30,18 @@ function input_value_text($str)
     return output_text($str, 0, 1, 0, 0, 0);
 }
 
+function crop_text($string, $crop = 100)
+{
+    $string = preg_replace('/\[\/?(\w+).*?\]/is', '', $string);
+    if ($crop < mb_strlen($string))
+    {
+        $string = iconv('UTF-8', 'windows-1251//IGNORE', $string);
+        $string = implode(array_slice(explode("\s", wordwrap($string, $crop, "\s", false)), 0, 1));
+        $string = iconv('windows-1251', 'UTF-8', $string);
+        $string .= '...';
+    }
+    return output_text($string);
+} 
 function rez_text($text, $maxwords = 15, $maxchar = 100)
 {
     $sep=' ';

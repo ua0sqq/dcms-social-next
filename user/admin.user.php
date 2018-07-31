@@ -1,16 +1,15 @@
 <?php
 include_once '../sys/inc/start.php';
-include_once '../sys/inc/compress.php';
-include_once '../sys/inc/sess.php';
-include_once '../sys/inc/home.php';
-include_once '../sys/inc/settings.php';
-include_once '../sys/inc/db_connect.php';
-include_once '../sys/inc/ipua.php';
-include_once '../sys/inc/fnc.php';
-include_once '../sys/inc/user.php';
+include_once H . 'sys/inc/compress.php';
+include_once H . 'sys/inc/sess.php';
+include_once H . 'sys/inc/settings.php';
+include_once H . 'sys/inc/db_connect.php';
+include_once H . 'sys/inc/ipua.php';
+include_once H . 'sys/inc/fnc.php';
+include_once H . 'sys/inc/user.php';
 
 $set['title']='Администрация'; // заголовок страницы
-include_once '../sys/inc/thead.php';
+include_once H . 'sys/inc/thead.php';
 title();
 aut();
 
@@ -30,7 +29,7 @@ if (isset($_GET['adm'])) {
 } elseif (isset($_GET['guest'])) {
     $gr = "`group_access` = '12'";
 } else {
-    $gr = "`group_access` > '1' AND `date_last` > '".(time()-600)."'";
+    $gr = "`group_access` > '1' AND `date_last` > '".TIME_600."'";
     $s = 1;
 }
 if (!isset($_GET['adm']) && !isset($_GET['mod']) && !isset($_GET['zone']) && !isset($_GET['forum']) && !isset($_GET['chat']) && !isset($_GET['notes'])  && !isset($_GET['guest'])) {
@@ -100,4 +99,4 @@ echo "</table>\n";
 if ($k_page>1) {
     str("?", $k_page, $page);
 } // Вывод страниц
-include_once '../sys/inc/tfoot.php';
+include_once H . 'sys/inc/tfoot.php';

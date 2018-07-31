@@ -1,16 +1,15 @@
 <?php
 include_once '../../sys/inc/start.php';
-include_once '../../sys/inc/compress.php';
-include_once '../../sys/inc/sess.php';
-include_once '../../sys/inc/home.php';
-include_once '../../sys/inc/settings.php';
-include_once '../../sys/inc/db_connect.php';
-include_once '../../sys/inc/ipua.php';
-include_once '../../sys/inc/fnc.php';
-include_once '../../sys/inc/user.php';
+include_once H . 'sys/inc/compress.php';
+include_once H . 'sys/inc/sess.php';
+include_once H . 'sys/inc/settings.php';
+include_once H . 'sys/inc/db_connect.php';
+include_once H . 'sys/inc/ipua.php';
+include_once H . 'sys/inc/fnc.php';
+include_once H . 'sys/inc/user.php';
 
 $set['title']='Добавили в закладки';
-include_once '../../sys/inc/thead.php';
+include_once H . 'sys/inc/thead.php';
 title();
 aut();
 
@@ -18,7 +17,7 @@ if (!$id_notes = $db->query(
     "SELECT `id` FROM `notes` WHERE `id`=?i",
               [$_GET['id']])->el()) {
     echo '<div class="mess">'."\n".'Дневник не найден.'."\n".'</div>'."\n";
-    include_once '../../sys/inc/tfoot.php';
+    include_once H . 'sys/inc/tfoot.php';
     exit;
 } else {
     $k_post=$db->query(
@@ -43,5 +42,5 @@ if (!$id_notes = $db->query(
             str('?id='.$id_notes.'&amp;', $k_page, $page);
         } // Вывод страниц
     }
-    include_once '../../sys/inc/tfoot.php';
+    include_once H . 'sys/inc/tfoot.php';
 }

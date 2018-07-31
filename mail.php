@@ -2,7 +2,6 @@
 include_once 'sys/inc/start.php';
 include_once 'sys/inc/compress.php';
 include_once 'sys/inc/sess.php';
-include_once 'sys/inc/home.php';
 include_once 'sys/inc/settings.php';
 include_once 'sys/inc/db_connect.php';
 include_once 'sys/inc/ipua.php';
@@ -288,7 +287,7 @@ if ($cnt['add_kont']) {
 } else {
     echo "<a href='/konts.php?type=common&amp;act=add&amp;id=$ank[id]'><img src='/style/icons/lj.gif' alt='*'> Добавить в контакты</a></span><br/></div>\n";
 }
-$rt=time()-600;
+$rt=TIME_600;
 if ($ank['date_last']<$rt) {
     echo "<div class='plug'>";
     echo "Пользователь ".$ank['nick']." не в сети. Оставьте свое сообщение и он прочтет его позже.";

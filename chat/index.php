@@ -1,13 +1,12 @@
 <?php
 include_once '../sys/inc/start.php';
-include_once '../sys/inc/compress.php';
-include_once '../sys/inc/sess.php';
-include_once '../sys/inc/home.php';
-include_once '../sys/inc/settings.php';
-include_once '../sys/inc/db_connect.php';
-include_once '../sys/inc/ipua.php';
-include_once '../sys/inc/fnc.php';
-include_once '../sys/inc/user.php';
+include_once H . 'sys/inc/compress.php';
+include_once H . 'sys/inc/sess.php';
+include_once H . 'sys/inc/settings.php';
+include_once H . 'sys/inc/db_connect.php';
+include_once H . 'sys/inc/ipua.php';
+include_once H . 'sys/inc/fnc.php';
+include_once H . 'sys/inc/user.php';
 
 if (isset($user)) {
     $db->query(
@@ -43,7 +42,7 @@ if (isset($user) && isset($_GET['id'])
     $set['title']='Чат - '.$room['name'].' ('.$db->query(
     "SELECT COUNT(*) FROM `chat_who` WHERE `room`=?i",
             [$room['id']])->el().')'; // заголовок страницы
-    include_once '../sys/inc/thead.php';
+    include_once H . 'sys/inc/thead.php';
     title();
     echo "<a href='/info.php?id=$ank[id]'>Посмотреть анкету</a><br />\n";
     echo "<form method=\"post\" action=\"/chat/room/$room[id]/".rand(1000, 9999)."/\">\n";
@@ -58,7 +57,7 @@ if (isset($user) && isset($_GET['id'])
     echo " <img src='/style/icons/str2.gif' alt='*'><a href=\"/chat/room/$room[id]/".rand(1000, 9999)."/\">В комнату</a><br />\n";
     echo " <img src='/style/icons/str2.gif' alt='*'><a href=\"/chat/\">Прихожая</a><br />\n";
     echo "</div>\n";
-    include_once '../sys/inc/tfoot.php';
+    include_once H . 'sys/inc/tfoot.php';
 }
 if (isset($_GET['id']) && $db->query(
     "SELECT COUNT(*) FROM `chat_rooms` WHERE `id`=?i",
@@ -79,16 +78,16 @@ if (isset($_GET['id']) && $db->query(
         "SELECT COUNT(*) FROM `chat_who` WHERE `room`=?i",
                                                          [$room['id']])->el().')';
     // заголовок страницы
-    include_once '../sys/inc/thead.php';
+    include_once H . 'sys/inc/thead.php';
     title();
     include 'inc/room.php';
     echo "<div class=\"foot\">\n";
     echo "<img src='/style/icons/str2.gif' alt='*'> <a href=\"/chat/\">Прихожая</a><br />\n";
     echo "</div>\n";
-    include_once '../sys/inc/tfoot.php';
+    include_once H . 'sys/inc/tfoot.php';
 }
 $set['title']='Чат - прихожая'; // заголовок страницы
-include_once '../sys/inc/thead.php';
+include_once H . 'sys/inc/thead.php';
 title();
 include 'inc/admin_act.php';
 err();
@@ -129,4 +128,4 @@ echo "<img src='/style/icons/str.gif' alt='*'> <a href='/chat/who.php'>Кто в
 echo "</div>\n";
 
 include 'inc/admin_form.php';
-include_once '../sys/inc/tfoot.php';
+include_once H . 'sys/inc/tfoot.php';

@@ -1,16 +1,15 @@
 <?php
 include_once '../../sys/inc/start.php';
-include_once '../../sys/inc/compress.php';
-include_once '../../sys/inc/sess.php';
-include_once '../../sys/inc/home.php';
-include_once '../../sys/inc/settings.php';
-include_once '../../sys/inc/db_connect.php';
-include_once '../../sys/inc/ipua.php';
-include_once '../../sys/inc/fnc.php';
-include_once '../../sys/inc/user.php';
+include_once H . 'sys/inc/compress.php';
+include_once H . 'sys/inc/sess.php';
+include_once H . 'sys/inc/settings.php';
+include_once H . 'sys/inc/db_connect.php';
+include_once H . 'sys/inc/ipua.php';
+include_once H . 'sys/inc/fnc.php';
+include_once H . 'sys/inc/user.php';
 
 $set['title'] = 'Статус - комментарии';
-include_once '../../sys/inc/thead.php';
+include_once H . 'sys/inc/thead.php';
 title();
 
 if (!$id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT)) {
@@ -70,7 +69,7 @@ if ($status['id_user'] != $user['id'] && $user['group_access'] == 0) {
             }
             echo "</div>";
         }
-        include_once '../../sys/inc/tfoot.php';
+        include_once H . 'sys/inc/tfoot.php';
         exit;
     }
     
@@ -79,7 +78,7 @@ if ($status['id_user'] != $user['id'] && $user['group_access'] == 0) {
         echo 'Пользователь запретил комментировать его статусы!';
         echo '</div>';
         
-        include_once '../../sys/inc/tfoot.php';
+        include_once H . 'sys/inc/tfoot.php';
         exit;
     }
 }
@@ -145,7 +144,7 @@ if (isset($_GET['spam'])  && isset($user)) {
     echo "<div class='foot'>\n";
     echo "<img src='/style/icons/str2.gif' alt='*'> <a href='?id=$status[id]&page=".intval($_GET['page'])."'>Назад</a><br />\n";
     echo "</div>\n";
-    include_once '../../sys/inc/tfoot.php';
+    include_once H . 'sys/inc/tfoot.php';
     exit;
 }
 // The End
@@ -339,4 +338,4 @@ echo "<div class='foot'>";
 echo "<img src='/style/icons/str2.gif' alt='*'> <a href=\"/info.php?id={$status['id_user']}\">{$status['nick']}</a> | <a href='index.php?id=".$status['id_user']."'>Статусы</a> | <b>Комментарии</b>";
 echo "</div>";
 
-include_once '../../sys/inc/tfoot.php';
+include_once H . 'sys/inc/tfoot.php';

@@ -8,7 +8,7 @@ if ($l=='/') {
     $set['title']='Обменник - '.$dir_id['name'];
 }
 $_SESSION['page']=1;
-include_once '../sys/inc/thead.php';
+include_once H . 'sys/inc/thead.php';
 title();
 
  // Файл который перемещаем
@@ -47,7 +47,7 @@ $parent = 'SELECT of.*, (
     SELECT COUNT( * ) FROM `obmennik_files` WHERE `id_dir` =  of.id AND `time` >?i) AS cnt4
 FROM `obmennik_dir` of
 WHERE `dir_osn`=? OR `dir_osn`=? OR `dir_osn`=? AND `my` ="0"  ORDER BY `name`,`num` ASC';
-$data = [$ftime, '/' . $l, $l . '/', $l];
+$data = [START_DAY, '/' . $l, $l . '/', $l];
 if (user_access('obmen_dir_edit')) {
     $parent = 'SELECT of.*, (
     SELECT COUNT( * ) FROM `obmennik_files` WHERE `id_dir` =  of.id) AS cnt3, (
@@ -117,7 +117,7 @@ for ($i = $start; $i < $k_post && $i < $set['p_str']*$page; $i++) {
     SELECT COUNT( * ) FROM `obmennik_files` WHERE id_dir = t1.id ) AS cnt, (
     SELECT COUNT( * ) FROM `obmennik_files` WHERE id_dir = t1.id  AND `time`>?i) AS cnt2
 FROM `obmennik_dir` t1
-WHERE t1.`dir_osn` LIKE "?e%"', [$ftime, $post['dir']]);
+WHERE t1.`dir_osn` LIKE "?e%"', [START_DAY, $post['dir']]);
             
             while ($post2 = $q3->row()) {
                 $k_f += $post2['cnt'];

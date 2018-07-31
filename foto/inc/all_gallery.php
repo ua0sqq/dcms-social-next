@@ -1,7 +1,7 @@
 <?php
 
 $set['title'] = 'Фотоальбомы'; // заголовок страницы
-include_once '../sys/inc/thead.php';
+include_once H . 'sys/inc/thead.php';
 title();
 aut();
 
@@ -47,5 +47,5 @@ if (isset($user)) {
 </div>
 <?php
 }
-include_once '../sys/inc/tfoot.php';
+include_once H . 'sys/inc/tfoot.php';
 exit;

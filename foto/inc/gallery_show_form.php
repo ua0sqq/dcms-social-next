@@ -41,7 +41,7 @@ if ($user['level'] > $ank['level'] || $user['id'] == $ank['id'])
 		</div>
 		<?php
 	
-		include_once '../sys/inc/tfoot.php';
+		include_once H . 'sys/inc/tfoot.php';
 		exit;
 	}
 }
@@ -101,7 +101,7 @@ if (isset($user) && $user['id'] == $ank['id'] && isset($input_get['act']) && $in
 	<b>Загрузка фотографии</b>
 	</div>
 	<?php
-	include_once '../sys/inc/tfoot.php';
+	include_once H . 'sys/inc/tfoot.php';
 	exit;
 }
 ?>

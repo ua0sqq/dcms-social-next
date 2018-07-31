@@ -1,14 +1,13 @@
 <?php
 
 include_once '../../sys/inc/start.php';
-include_once '../../sys/inc/compress.php';
-include_once '../../sys/inc/sess.php';
-include_once '../../sys/inc/home.php';
-include_once '../../sys/inc/settings.php';
-include_once '../../sys/inc/db_connect.php';
-include_once '../../sys/inc/ipua.php';
-include_once '../../sys/inc/fnc.php';
-include_once '../../sys/inc/user.php';
+include_once H . 'sys/inc/compress.php';
+include_once H . 'sys/inc/sess.php';
+include_once H . 'sys/inc/settings.php';
+include_once H . 'sys/inc/db_connect.php';
+include_once H . 'sys/inc/ipua.php';
+include_once H . 'sys/inc/fnc.php';
+include_once H . 'sys/inc/user.php';
 
 only_reg();
 
@@ -45,7 +44,7 @@ if (isset($_GET['act']) && $_POST['money']) {
 }
 
 $set['title'] = 'Перевод монет'; // заголовок страницы
-include_once '../../sys/inc/thead.php';
+include_once H . 'sys/inc/thead.php';
 title();
 aut();
 err();
@@ -90,4 +89,4 @@ if ($user['money'] <= 1) {
     <img src="/style/icons/str2.gif" alt=""> <a href="/info.php?id=<?php echo $ank['id'];?>"><?php echo $ank['nick'];?></a> | Перевод
 </div><?php
 
-include_once '../../sys/inc/tfoot.php';
+include_once H . 'sys/inc/tfoot.php';

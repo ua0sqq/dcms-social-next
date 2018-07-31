@@ -5,15 +5,14 @@
  * & Contacts :: ICQ 587863132
  * & Site     :: http://dcms-social.ru
  */
-include_once '../sys/inc/home.php';
-include_once H.'sys/inc/start.php';
-include_once H.'sys/inc/compress.php';
-include_once H.'sys/inc/sess.php';
-include_once H.'sys/inc/settings.php';
-include_once H.'sys/inc/db_connect.php';
-include_once H.'sys/inc/ipua.php';
-include_once H.'sys/inc/fnc.php';
-include_once H.'sys/inc/user.php';
+include_once '../sys/inc/start.php';
+include_once H . 'sys/inc/compress.php';
+include_once H . 'sys/inc/sess.php';
+include_once H . 'sys/inc/settings.php';
+include_once H . 'sys/inc/db_connect.php';
+include_once H . 'sys/inc/ipua.php';
+include_once H . 'sys/inc/fnc.php';
+include_once H . 'sys/inc/user.php';
 
 only_level(3);
 
@@ -88,7 +87,7 @@ if (isset($_GET['delete'])) {
 }
 
 $set['title'] = 'Управление смайлами';
-include_once H.'sys/inc/thead.php';
+include_once H . 'sys/inc/thead.php';
 err();
 title();
 aut();
@@ -190,7 +189,7 @@ if (isset($_GET['id'])) {
 	<img src="/style/icons/str.gif" alt="*" /> <a href="smiles.php">Категории смайлов</a>
 	</div>
 	<?php
-    include_once H.'sys/inc/tfoot.php';
+    include_once H . 'sys/inc/tfoot.php';
     exit;
 }
 /*
@@ -284,6 +283,6 @@ while ($post = $q->row()) {
 </div>
 <?php
 
-include_once H.'sys/inc/tfoot.php';
+include_once H . 'sys/inc/tfoot.php';
 
 ?>

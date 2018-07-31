@@ -202,14 +202,14 @@ SELECT COUNT(*) AS notificationset FROM `notification_set` WHERE `id_user` = ?i)
     // update data user
     if (!empty($set_user)) {
         $db->query(
-        'UPDATE `user` SET ?set WHERE `id`=?i',
-        [$set_user, $user['id']]
-    );
+                   'UPDATE `user` SET ?set WHERE `id`=?i',
+                            [$set_user, $user['id']]);
+        unset($set_user);
     }
     // Проверяем на сх    ожие ники
 //    $collision_q = $db->query(
 //    "SELECT `id` FROM `user` WHERE `ip` = ?i AND `ua` = ? AND `date_last` > ?i AND `id` <> ?i",
-//                            [$iplong, $ua, (time()-600), $user['id']]
+//                            [$iplong, $ua, TIME_600, $user['id']]
 //)->col();
 //    if (!empty($collision_q)) {
 //        foreach ($collision_q as $collision) {

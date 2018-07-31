@@ -2,7 +2,6 @@
 include_once 'sys/inc/start.php';
 include_once 'sys/inc/compress.php';
 include_once 'sys/inc/sess.php';
-include_once 'sys/inc/home.php';
 include_once 'sys/inc/settings.php';
 include_once 'sys/inc/db_connect.php';
 include_once 'sys/inc/ipua.php';
@@ -15,12 +14,12 @@ title();
 aut();
 
 $k_post=$db->query("SELECT COUNT(*) FROM `guests` WHERE `date_last`>?i AND `pereh`>?i",
-                   [(time()-600), 0])->el();
+                   [TIME_600, 0])->el();
 $k_page=k_page($k_post, $set['p_str']);
 $page=page($k_page);
 $start=$set['p_str']*$page-$set['p_str'];
 $q = $db->query("SELECT * FROM `guests` WHERE `date_last`>?i AND `pereh`>?i ORDER BY `date_aut` DESC LIMIT ?i OFFSET ?i",
-                   [(time()-600), 0, $set['p_str'], $start]);
+                   [TIME_600, 0, $set['p_str'], $start]);
 echo "<table class='post'>\n";
 if ($k_post==0) {
     echo "  <tr>\n";

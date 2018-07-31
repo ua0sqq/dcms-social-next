@@ -5,7 +5,7 @@ function online($user = null)
     if (!isset($users[$user])) {
         if ($ank = go\DB\query(
             "SELECT `browser` FROM `user` WHERE `id`=?i AND `date_last`>?i",
-                        [$user, (time()-600)]
+                        [$user, TIME_600]
         )->el()) {
             if ($ank == 'wap') {
                 $users[$user] = ' <img src="/style/icons/online.gif" alt="*" /> ';

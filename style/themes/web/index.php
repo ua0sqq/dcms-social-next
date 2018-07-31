@@ -1,13 +1,13 @@
 <?php
 // Онлайн пользователи
 $k_post=$db->query("SELECT COUNT( * ) FROM `user` WHERE `date_last`>?i",
-				   [(time()-600)])->el();
+				   [TIME_600])->el();
 
 if ($k_post) {
     echo "<a href='/online.php'><div class='main'>";
     echo "Сейчас на сайте ($k_post) чел.</div></a>";
 	$q = $db->query("SELECT `id`, `nick` FROM `user` WHERE `date_last`>?i ORDER BY `rating` DESC LIMIT ?i",
-				[(time()-600), 10]);
+				[TIME_600, 10]);
     echo "<div class='nav3'>";
     echo '<table>';
     echo '<tr>';
