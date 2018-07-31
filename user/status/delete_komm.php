@@ -24,7 +24,7 @@ if ($id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT)) {
            [$post['id']]);
             $_SESSION['message'] = 'Комментарий упешно удален';
         }
-        header('Location: komm.php?id=' . $status['id']);
+        header('Location: /user/status/komm.php?id=' . $status['id']);
         exit;
     } else {
         http_response_code(404);

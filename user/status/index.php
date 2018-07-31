@@ -144,7 +144,7 @@ while ($post = $q->row()) {
     echo '<div class="st_2">';
     echo output_text($post['msg']);
     echo "</div>";
-    echo "<a href='komm.php?id=$post[id]'><img src='/style/icons/bbl4.png' alt=''/>" . $post['cnt'] . "</a> ";
+    echo "<a href='/user/status/komm.php?id=$post[id]'><img src='/style/icons/bbl4.png' alt=''/>" . $post['cnt'] . "</a> ";
     if ($post['pokaz']==0) {
         if (isset($user) && ($user['level']!=0 || $user['id']==$post['id_user'])) {
             echo "[<a href=\"index.php?id=".$anketa['id']."&amp;reset=$post[id]\"><img src='/style/icons/ok.gif' alt=''/> вкл</a>]\n";

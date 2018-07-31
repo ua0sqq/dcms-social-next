@@ -243,7 +243,7 @@ WHERE fr.`frend`=?i AND fr.`disc_status`=1 AND fr.`user`<>?i AND `i`=1 AND dsc.d
             "UPDATE `user` SET `balls`=`balls`+1 WHERE `id`=?i",
                    [$user['id']]);
         $_SESSION['message'] = 'Сообщение упешно отправлено';
-        header("Location: komm.php?id=$status[id]");
+        header("Location: /user/status/komm.php?id=$status[id]");
         exit;
     }
 }
@@ -315,13 +315,13 @@ WHERE stk.`id_status`=?i ORDER BY stk.`id` DESC LIMIT ?i, ?i",
             if ($post['id_user'] != $user['id']) {
                 echo "<a href=\"?id=$status[id]&amp;spam=$post[id]&amp;page=$page\"><img src='/style/icons/blicon.gif' alt='*' title='Это спам'></a> ";
             }
-            echo " <a href='delete_komm.php?id=$post[id]'><img src='/style/icons/delete.gif' alt='*'></a>";
+            echo " <a href='/user/status/delete_komm.php?id=$post[id]'><img src='/style/icons/delete.gif' alt='*'></a>";
             echo "</div>";
         }
         echo "</div>";
     }
     if ($k_page>1) {
-        str("komm.php?id=".$id.'&amp;', $k_page, $page);
+        str("/user/status/komm.php?id=".$id.'&amp;', $k_page, $page);
     } // Вывод страниц
 }
 if (isset($user)) {

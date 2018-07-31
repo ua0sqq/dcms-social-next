@@ -66,7 +66,7 @@ echo "<a href='/plugins/notes/dir.php' class='activ'>Категории</a>";
 echo "</div>";
         
 echo "<div class='webmenu last'>";
-echo "<a href='search.php'>Поиск</a>";
+echo "<a href='/plugins/notes/search.php'>Поиск</a>";
 echo "</div>";
 echo "</div>";
 /*

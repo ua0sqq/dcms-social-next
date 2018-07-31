@@ -22,7 +22,7 @@ echo "<a href='/plugins/notes/dir.php'>Категории</a>";
 echo "</div>";
         
 echo "<div class='webmenu'>";
-echo "<a href='search.php' class='activ'>Поиск</a>";
+echo "<a href='/plugins/notes/search.php' class='activ'>Поиск</a>";
 echo "</div>";
 echo "</div>";
 $usearch=null;
@@ -40,7 +40,7 @@ if ($usearch==null) {
 
 $usearch=preg_replace("#( ){1,}#", "", $usearch);
 
-echo "<form method=\"post\" action=\"search.php?go\">Поиск по дневникам<br />";
+echo "<form method=\"post\" action=\"/plugins/notes/search.php?go\">Поиск по дневникам<br />";
 //$usearch=stripcslashes(htmlspecialchars($usearch));
 echo '<p><input type="text" name="usearch" maxlength="16" value="'.htmlspecialchars($usearch).'" /></p>'."\n";
 echo "<p><input type=\"submit\" value=\"Искать\" /></p>";

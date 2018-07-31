@@ -14,7 +14,7 @@ title();
 aut(); // форма авторизации
 
 // Поле поиска
-echo "<div class='foot'><form method=\"post\" action=\"search.php?go\">";
+echo "<div class='foot'><form method=\"post\" action=\"/plugins/notes/search.php?go\">";
 echo "<table><td><input style='width:95%;' type=\"text\" name=\"usearch\" maxlength=\"16\" /></td><td> \n";
 echo "<input type=\"submit\" value=\"Поиск\" /></td></table>";
 echo "</form></div>\n";

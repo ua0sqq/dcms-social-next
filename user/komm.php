@@ -110,7 +110,7 @@ if (isset($get_id['id']) && $db->query(
     }
     // Вывод страниц
     if ($k_page>1) {
-        str("komm.php?id=$post[id]&", $k_page, $page);
+        str("/user/tape/komm.php?id=$post[id]&", $k_page, $page);
     }
     if (!isset($post_msg) && isset($user)) {
 

@@ -96,8 +96,6 @@ if (isset($_POST['delete'])) {
                [$ank['id']]);
     $db->query("DELETE FROM `status_komm` WHERE `id_user`=?i",
                [$ank['id']]);
-    $db->query("DELETE FROM `mark_people` WHERE `id_user`=?i",
-               [$ank['id']]);
     $db->query("DELETE FROM `tape_set` WHERE `id_user`=?i",
                [$ank['id']]);
     $db->query("DELETE FROM `tape` WHERE `id_user`=?i",

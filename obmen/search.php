@@ -81,7 +81,7 @@ if (isset($_GET['go']) && $search!=null) {
         echo '</div>';
     }
     if ($k_page>1) {
-        str("search.php?go&amp;", $k_page, $page);
+        str("/obmen/search.php?go&amp;", $k_page, $page);
         echo '<br />';
     } // Вывод страниц
 } else {
@@ -89,7 +89,7 @@ if (isset($_GET['go']) && $search!=null) {
 }
 echo 'Поиск файлов';
 echo '</div>';
-echo "<form method=\"post\" action=\"search.php?go\" class=\"search\">\n";
+echo "<form method=\"post\" action=\"/obmen/search.php?go\" class=\"search\">\n";
 $search=stripcslashes(htmlspecialchars($search));
 echo "<input type=\"text\" name=\"search\" maxlength=\"64\" value=\"$search\" /><br />\n";
 echo "<input type=\"submit\" value=\"Поиск\" />\n";
