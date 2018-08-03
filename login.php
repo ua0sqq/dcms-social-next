@@ -52,7 +52,7 @@ if ($in_get['id'] && !empty($in_get['pass'])) {
         $_SESSION['id_user'] = $user['id'];
 
 		$user_data = ['date_aut' =>time(), 'date_last' => time()];		
-		$user_log_data = [$user['id'], time(), $user['ua'], $user['ip'], '0'];		
+		$user_log_data = [$user['id'], time(), $ua, $iplong, '0'];		
     
 	} else {
         $_SESSION['err'] = 'Неправильный логин или пароль';
@@ -71,7 +71,7 @@ if ($in_get['id'] && !empty($in_get['pass'])) {
         }
 
 		$user_data = ['date_aut' =>time(), 'date_last' => time()];		
-		$user_log_data = [$user['id'], time(), $user['ua'], $user['ip'], '1'];	
+		$user_log_data = [$user['id'], time(), $ua, $iplong, '1'];	
     
 	} else {
         $_SESSION['err'] = 'Неправильный логин или пароль';
@@ -84,7 +84,7 @@ if ($in_get['id'] && !empty($in_get['pass'])) {
 		$user = get_user($user);
         $_SESSION['id_user'] = $user['id'];
 		$user_data = ['date_aut' =>time(), 'date_last' => time()];		
-		$user_log_data = [$user['id'], time(), $user['ua'], $user['ip'], '2'];
+		$user_log_data = [$user['id'], time(), $ua, $iplong, '2'];
 
     } else {
         $_SESSION['err'] = 'Ошибка авторизации по COOKIE';

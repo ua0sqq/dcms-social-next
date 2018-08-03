@@ -156,7 +156,7 @@ SELECT COUNT( * ) FROM `visit_today` WHERE `time` < ?i), ?i)', $data);
                    [time(), 'everyday']);
         // удаление гостей старше 10 минут
         $db->query('DELETE FROM `guests` WHERE `date_last` < ?i',
-                   [(time() - 600)]);
+                   [TIME_600]);
         // удаление старых постов в чате
         $db->query('DELETE FROM `chat_post` WHERE `time` < ?i',
                    [(time() - 60 * 60 * 24)]);
