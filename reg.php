@@ -70,7 +70,7 @@ if (isset($_SESSION['step']) && $_SESSION['step']==1 && !$db->query("SELECT COUN
         $err[]='Неверное проверочное число';
     }
     if (!isset($err)) {
-        $pol = !empty($_POST['pol']) ? 1 : 0;
+        $pol = !empty($_POST['pol']) ? '1' : '0';
         if ($set['reg_select']=='open_mail') {
             
             $activation=md5(passgen());

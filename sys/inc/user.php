@@ -138,7 +138,7 @@ SELECT COUNT(*) AS notificationset FROM `notification_set` WHERE `id_user` = ?i)
     $url     = filter_input(INPUT_SERVER, 'SCRIPT_NAME', FILTER_SANITIZE_URL);
     $set_user += [
               'sess' => $sess,
-              'level' => $user['level'],
+              'level' => $user['level'] ? $user['level'] : '0',
               'browser' => ($webbrowser == true ? "web" : "wap"),
               'ip' => $ip_add,
               'ip_cl' => $ip_cl,
