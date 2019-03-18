@@ -20,14 +20,18 @@ WHERE st.`id`=?i",
         if (isset($user) && ($user['level'] > $post['level']) || $post['id_user'] == $user['id']) {
             $db->query("DELETE FROM `status` WHERE `id`=?i",
                        [$post['id']]);
+            $db->query("DELETE FROM `status_komm` WHERE `id_status`=?i",
+                           [$post['id']]);
+            $db->query("DELETE FROM `status_like` WHERE `id_status`=?i",
+                           [$post['id']]);
+            $_SESSION['message'] = 'Статус упешно удален';
+            header('Location: /user/status/index.php?id=' . $post['id_user']);
+            exit;
+        } else {
+            $_SESSION['err'] = 'Bad request!';
+            header('Location: /user/status/index.php?id=' . $post['id_user']);
+            exit;
         }
-        $db->query("DELETE FROM `status_komm` WHERE `id_status`=?i",
-                       [$post['id']]);
-        $db->query("DELETE FROM `status_like` WHERE `id_status`=?i",
-                       [$post['id']]);
-        $_SESSION['message'] = 'Статус упешно удален';
-        header('Location: /user/status/index.php?id=' . $post['id_user']);
-        exit;
     } else {
         $_SESSION['err'] = 'Статус не найден';
         header('Location: /user/status/index.php?id=' . $user['id']);
