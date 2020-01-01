@@ -43,11 +43,11 @@ if (isset($_POST['msg']) && isset($user)) {
                 "SELECT * FROM `notification_set` WHERE `id_user`=?i LIMIT ?i",
                                         [$ank_reply['id'], 1]
             )->row();
-            
+
             if ($notifiacation['komm'] == 1 && $ank_reply['id'] != $user['id']) {
                 $db->query(
-                    "INSERT INTO `notification` (`avtor`, `id_user`, `type`, `time`) VALUES (?i, ?i, ?, ?i)",
-                           [$user['id'], $ank_reply['id'], 'guest', $time]
+                    "INSERT INTO `notification` (`avtor`, `id_user`, `type`, `time`, `id_object`) VALUES (?i, ?i, ?, ?i, ?i)",
+                           [$user['id'], $ank_reply['id'], 'guest', $time, 0]
                 );
             }
         }
@@ -55,7 +55,7 @@ if (isset($_POST['msg']) && isset($user)) {
             "INSERT INTO `guest` (id_user, time, msg) values(?i, ?i, ?)",
                    [$user['id'], $time, $msg]
         );
-        
+
         $_SESSION['message'] = 'Сообщение успешно добавлено';
         header("Location: index.php" . SID);
         exit;
@@ -63,7 +63,7 @@ if (isset($_POST['msg']) && isset($user)) {
 } elseif (!isset($user) && isset($set['write_guest']) && $set['write_guest'] == 1 && isset($_SESSION['captcha']) && isset($_POST['chislo'])) {
     $msg = trim($_POST['msg']);
     $mat = antimat($msg);
-    
+
     if ($mat) {
         $err[] = 'В тексте сообщения обнаружен мат: '.$mat;
     }
@@ -86,7 +86,7 @@ if (isset($_POST['msg']) && isset($user)) {
             "INSERT INTO `guest` (id_user, time, msg) values(?i, ?i, ?)",
                    [0, $time, $msg]
         );
-        
+
         $_SESSION['message'] = 'Сообщение успешно добавлено';
         header("Location: index.php" . SID);
         exit;
@@ -112,13 +112,13 @@ if (isset($user) || (isset($set['write_guest']) && $set['write_guest'] == 1 && (
     } else {
         echo $tPanel . '<textarea name="msg">' . $insert . '</textarea><br />';
     }
-    
+
     if (!isset($user) && isset($set['write_guest']) && $set['write_guest'] == 1) {
         ?>
         <img src="/captcha.php?SESS=<?= $sess?>" width="100" height="30" alt="Captcha" /> <input name="chislo" size="7" maxlength="5" value="" type="text" placeholder="Цифры.."/><br />
         <?php
     }
-    
+
     echo '<input value="Отправить" type="submit" />';
     echo '</form>';
 } elseif (!isset($user) && isset($set['write_guest']) && $set['write_guest'] == 1) {
@@ -138,7 +138,7 @@ JOIN `user` u ON u.id=gst.id_user ORDER BY gst.id DESC LIMIT ?i OFFSET ?i",
 while ($post = $q->row()) {
     echo '<div class="' . ($num % 2 ? "nav1" : "nav2") . '">';
     $num++;
-    
+
     echo($post['id_user'] != 0 ? user::avatar($post['id_user'], 0) . user::nick($post['id_user'], 1, 1, 1) : user::avatar(0, 0) . ' <b>' . 'Гость' . '</b> ');
     if (isset($user) && $user['id'] != $post['id_user']) {
         echo ' <a href="?page=' . $page . '&amp;response=' . $post['id_user'] . '">[*]</a> (' . vremja($post['time']) . ')<br />';
