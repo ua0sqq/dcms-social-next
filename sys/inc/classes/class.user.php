@@ -7,7 +7,7 @@
 */
 class user
 {
-    
+
     /**
     * / Ссылка и Ник юзера
     */
@@ -19,27 +19,27 @@ class user
         * $on  == 1		Выводит рядом с ником значок онлайн
         * $medal == 1	Выводит медальку рядом со значком онлайн
         */
-        
+
         $ank =go\DB\query('SELECT `nick`, `date_last`, `rating`, `browser` FROM `user` WHERE `id`=?i',
                           [$user])->row();
-        
+
         $nick = null;
         $online = null;
         $icon_medal = null;
-        
+
         // Вывод ника
         if ($user == 0) {
             $ank = array('id' => '0', 'nick' => 'Cистема', 'pol' => '1', 'rating' => '0', 'browser' => 'wap', 'date_last' => time());
         } elseif (!$ank) {$url = 0;
             $ank = array('id' => '0', 'nick' => '[Удален]', 'pol' => '1', 'rating' => '0', 'browser' => 'wap', 'date_last' => time());
         }
-        
+
         if ($url == true) {
             $nick = ' <a href="/id' . $user . '">' . text($ank['nick']) . '</a> ';
         } else {
             $nick = text($ank['nick']);
         }
-        
+
         // Вывод значка онлайн
         if ($user != 0 && $ank['date_last'] > TIME_600 && $on == true) {
             if ($ank['browser'] == 'wap') {
@@ -48,10 +48,10 @@ class user
                 $online = ' <img src="/style/icons/online_web.gif" alt="WEB" /> ';
             }
         }
-        
+
         // Вывод медали
         $R = $ank['rating'];
-        
+
         if ($medal == 1 && $R >= 6) {
             if ($R >= 6 && $R <= 11) {
                 $img = 1;
@@ -70,7 +70,7 @@ class user
             }
             $icon_medal = ' <img src="/style/medal/' . $img . '.png" alt="ico" /> ';
         }
-        
+
         return $nick . $icon_medal . $online;
     }
     /**
@@ -84,38 +84,37 @@ class user
         * $type == 2 - Выводит только иконку
         */
         global $time, $set;
-        
-        $AVATAR = null;
+
+        $avatar = null;
         $icon = null;
         if ($user != 0) {
-            $ank =go\DB\query('SELECT `pol`, `id`, `group_access` FROM `user` WHERE `id`=?i',
-                              [$user])->row();
+            $ank =go\DB\query(
+                        'SELECT u.`pol`, u.`id`, u.`group_access`, gf.`id` AS id_foto, gf.`ras`, (
+SELECT COUNT( * ) FROM `ban` WHERE `id_user`=u.`id` AND (`time`>?i OR `navsegda`=1)) AS icon
+FROM `user` u
+LEFT JOIN `gallery_foto` gf ON gf.`id_user`=u.`id` AND gf.`avatar`="1"
+WHERE u.`id`=?i',
+[time(), $user])->row();
         }
-        
+
         if ($user == 0) {
             $ank = array('id' => '0', 'pol' => '1', 'group_access' => '0');
         } elseif (!$ank) {
             $ank = array('id' => '0', 'pol' => '1', 'group_access' => '0');
         }
-        
-        
+
         // Аватар
         if ($type == 0 || $type == 1) {
-            $avatar =go\DB\query("SELECT `id`, `ras` FROM `gallery_foto` WHERE `id_user`=?i AND `avatar`=? LIMIT ?i",
-                                 [$user, '1', 1])->row();
-            
-            if (is_file(H . 'sys/gallery/50/' . $avatar['id'] . '.' . $avatar['ras'])) {
-                $AVATAR = ' <img class="avatar" src="/foto/foto50/' . $avatar['id'] . '.' . $avatar['ras'] . '" alt="Avatar" /> ';
+            if (is_file(H . 'sys/gallery/50/' . $ank['id_foto'] . '.' . $ank['ras'])) {
+                $avatar = ' <img class="avatar" src="/foto/foto50/' . $ank['id_foto'] . '.' . $ank['ras'] . '" alt="Avatar" /> ';
             } else {
-                $AVATAR = '<img class="avatar" src="/style/user/avatar.gif" width="50" alt="No Avatar" />';
+                $avatar = '<img class="avatar" src="/style/user/avatar.gif" width="50" alt="No Avatar" /> ';
             }
         }
-        
-        
+
         // Иконка пользователя
         if ($type == 0 || $type == 2) {
-            if (go\DB\query("SELECT COUNT( * ) FROM `ban` WHERE `id_user`=?i AND (`time`>?i OR `navsegda`=?i)",
-                            [$user, time(), 1])->el()) {
+            if ($ank['icon']) {
                 $icon = ' <img src="/style/user/ban.png" alt="ico" class="icon" id="icon_group" /> ';
             } else {
                 if ($ank['group_access'] > 7 && ($ank['group_access'] < 10 || $ank['group_access'] > 14)) {
@@ -139,10 +138,10 @@ class user
                 }
             }
         }
-        
-        return $AVATAR . $icon;
+
+        return $avatar . $icon;
     }
-    
+
     /**
     * / Функция выборки пользовательских данных
     * / Выводин данные из таблицы user
@@ -156,12 +155,12 @@ class user
         * $ID	- ID юзера
         * $photo - Параметр на выборку аватара
         */
-        
+
         global $user;
         $ank=array();
         $ID = (int)$ID; //Определяем ID и $ank
         $ank['group_name'] = null;
-        
+
         // Если вы авторизованы, и функция вызывает
         // ваш ID, то просто берем данные из $user
         if ($user['id'] == $ID) {
@@ -170,7 +169,7 @@ class user
             // Иначе выбираем из базы
             $ank = go\DB\query('SELECT * FROM `user` WHERE `id`=?i', [$ID])->row();
         }
-        
+
         // Если система или неопределенный юзер
         if ($ID == 0) {
             $ank = array('id' => '0', 'pol' => '1', 'wmid' => '0', 'group_access' => '0', 'level' => '999');
@@ -182,20 +181,20 @@ class user
             $ank['group_name'] = $tmp_us['group_name'];
             $ank['level'] = $tmp_us['level'];
         }
-        
+
         // Если поставлен параметр выводить фото
         if ($photo) {
             // Определяем аватар
             $avatar = go\DB\query("SELECT `id`, `ras` FROM `gallery_foto` WHERE `id_user`=?i AND `avatar`=? LIMIT ?i",
                                   [$ID, '1', 1])->row();
-            
+
             if (is_file(H.'sys/gallery/50/' . $avatar['id'] . '.' . $avatar['ras'])) {
                 $ank['avatar'] = ' <img class="avatar" src="/sys/gallery/50/' . $avatar['id'] . '.' . $avatar['ras'] . '" alt="Avatar" /> ';
             } else {
                 $ank['avatar'] = ' <img class="avatar" src="/style/user/avatar.gif" width="50" alt="No Avatar" /> ';
             }
         }
-        
+
         // Вывод значка онлайн
         if ($ID != 0 && $ank['date_last'] > TIME_600) {
             if ($ank['browser'] == 'wap') {
@@ -206,10 +205,10 @@ class user
         } else {
             $ank['online'] = null;
         }
-        
+
         // Вывод медали
         $R = $ank['rating'];
-        
+
         if ($R >= 6) {
             if ($R >= 6 && $R <= 11) {
                 $img = 1;
@@ -230,7 +229,7 @@ class user
         } else {
             $ank['medal'] = null;
         }
-        
+
         // Иконка пользователя
         if (go\DB\query("SELECT COUNT( * ) FROM `ban` WHERE `id_user`=?i AND (`time`>?i OR `navsegda`=?i)",
                         [$ID, time(), 1])->el()) {
@@ -256,10 +255,10 @@ class user
                 }
             }
         }
-        
+
         $ank['link'] = ' <a href="/id' . $ID . '">' . text($ank['nick']) . '</a> ';
         $ank['nick'] = text($ank['nick']);
-        
+
         return $ank;
     }
 }
