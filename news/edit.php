@@ -24,7 +24,7 @@ $args = [
 $input_post = filter_input_array(INPUT_POST, $args);
 unset($args);
 
-if ($edit_id['id']) {
+if (!$edit_id) {
     $_SESSION['message'] = 'Неверный запрос!';
     header('Location: index.php?' . SID);
     exit;
@@ -50,7 +50,7 @@ if (isset($input_post['title']) && isset($input_post['msg']) && isset($input_pos
     $title = esc($input_post['title'], 1);
     $link = esc($input_post['link'], 1);
     $msg = esc($input_post['msg']);
-    
+
     if ($link != null && !preg_match('#^https?://#', $link) && !preg_match('#^/#i', $link)) {
         $link='/'.$link;
     }
@@ -83,12 +83,12 @@ if (isset($input_post['title']) && isset($input_post['msg']) && isset($input_pos
         if ($main_time <= time()) {
             $main_time = 0;
         }
-        
+
         $updt = ['title' => $title, 'msg' => $msg, 'link' => $link, 'main_time' => $main_time, 'time' => $time];
         $tbl = $db->getTable('news');
         $tbl->update($updt, ['id' => (int)$news['id']]);
         $db->query("UPDATE `user` SET `news_read` = '0'");
-        
+
         $_SESSION['message'] = 'Изменения успешно приняты';
         header("Location: /news/news.php?id=$news[id]");
         exit;
@@ -102,13 +102,13 @@ aut(); // форма авторизации
 
 if (isset($input_post['view']) && !isset($err)) {
     echo '<div class="main_menu">';
-    
+
     echo text($news['title']);
     echo '</div>';
     echo '<div class="mess">';
     echo output_text($news['msg']) . '<br />';
     echo '</div>';
-    
+
     if ($news['link'] != null) {
         echo '<div class="main">';
         echo '<a href="' . htmlentities($news['link'], ENT_QUOTES, 'UTF-8') . '">Подробности &rarr;</a><br />';
@@ -125,7 +125,7 @@ if (is_file(H.'style/themes/'.$set['set_them'].'/altername_post_form.php')) {
 }
 echo 'Ссылка:<br /><input name="link" size="16" maxlength="64" value="' . text($news['link']) . '" type="text" /><br />';
 echo 'Показывать на главной:<br />';
-echo '<input type="text" name="ch" size="3" value="' . ($input_post['ch'] ? $input_post['ch'] : "1") . '" />';
+echo '<input type="text" name="ch" size="3" value="' . (isset($input_post['ch']) ? $input_post['ch'] : "1") . '" />';
 echo '<select name="mn">';
 echo '  <option value="0" '.($input_post['mn'] && $input_post['mn'] == 0 ? "selected='selected'" : null).'>   </option>';
 echo '  <option value="1" '.($input_post['mn'] && $input_post['mn'] == 1 ? "selected='selected'" : null).'>Дней</option>';

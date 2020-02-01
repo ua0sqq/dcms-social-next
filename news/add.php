@@ -40,7 +40,7 @@ if (isset($input_post['title']) && isset($input_post['msg']) && isset($input_pos
     if ($link != null && !preg_match('#^https?://#', $link) && !preg_match('#^/#i', $link)) {
         $link='/'.$link;
     }
-     
+
     if (strlen2($title)>50) {
         $err = 'Слишком большой заголовок новости';
     }
@@ -51,7 +51,7 @@ if (isset($input_post['title']) && isset($input_post['msg']) && isset($input_pos
     if ($mat) {
         $err[] = 'В заголовке новости обнаружен мат: '.$mat;
     }
-    
+
     if (strlen2($msg)>10024) {
         $err='Содержиние новости слишком большое';
     }
@@ -62,7 +62,7 @@ if (isset($input_post['title']) && isset($input_post['msg']) && isset($input_pos
     if ($mat) {
         $err[]='В содержании обнаружен мат: '.$mat;
     }
-    
+
     $title = trim($input_post['title']);
     $msg = trim($input_post['msg']);
     if (!isset($err)) {
@@ -72,17 +72,17 @@ if (isset($input_post['title']) && isset($input_post['msg']) && isset($input_pos
         if ($main_time<=time()) {
             $main_time = 0;
         }
-        
+
 		$news['id'] = $db->query(
             "INSERT INTO `news` (`id_user`,`time`, `msg`, `title`, `main_time`, `link`) VALUES( ?i, ?i, ?, ?, ?i, ?)",
                                  [$user['id'], $time, $msg, $title, $main_time, $link]
         )->id();
         $db->query("UPDATE `user` SET `news_read` = '0'");
-     
+
         // Расслылка новостей на майл
         if (isset($input_post['mail'])) {
             $q = $db->query("SELECT `ank_mail` FROM `user` WHERE `set_news_to_mail` = '1' AND `ank_mail` <> ''")->col();
-            
+
             if (count($q)) {
                 $tbl = $db->getTable('mail_to_send');
                 foreach ($q as $ank_mail) {
@@ -91,7 +91,7 @@ if (isset($input_post['title']) && isset($input_post['msg']) && isset($input_pos
                 $tbl->multiInsert($val, true);
             }
         }
-    
+
         $_SESSION['message'] = 'Новость успешно создана';
         header("Location: /news/news.php?id=$news[id]");
         exit;
@@ -111,7 +111,7 @@ if (isset($input_post['view']) && !isset($err)) {
     echo'<div class="mess">';
     echo output_text($news['msg']) . '<br />';
     echo '</div>';
-    
+
     if ($news['link'] != null) {
         echo '<div class="main">';
         echo '<a href="' . htmlentities($news['link'], ENT_QUOTES, 'UTF-8') . '">Подробности &rarr;</a><br />';
@@ -129,7 +129,7 @@ if (is_file(H.'style/themes/'.$set['set_them'].'/altername_post_form.php')) {
 echo 'Ссылка:<br /><input name="link" size="16" maxlength="64" value="' . text($news['link']) . '" type="text" /><br />';
 echo '<input name="mail" value="1" checked="checked" type="checkbox">&nbsp;Рассылка<br />';
 echo 'Показывать на главной:<br />';
-echo '<input type="text" name="ch" size="3" value="'.($input_post['ch']?"".$input_post['ch']."":"1").'" />';
+echo '<input type="text" name="ch" size="3" value="'.(isset($input_post['ch'])?"".$input_post['ch']."":"1").'" />';
 echo '<select name="mn">';
 echo '  <option value="0" ' . ($input_post['mn'] && $input_post['mn'] == 0 ? "selected='selected'" : null) . '>   </option>';
 echo '  <option value="1" ' . ($input_post['mn'] && $input_post['mn'] == 1 ? "selected='selected'" : null) . '>Дней</option>';

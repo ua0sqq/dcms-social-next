@@ -47,11 +47,11 @@ if ((!isset($user) || $user['group_access'] == 0) &&
     include_once 'sys/inc/thead.php';
     title();
     aut();
-    
+
     echo '<div class="mess">'."\n";
     echo '<p style="text-align:center;color:red;"><b>Этот пользователь заблокирован!</b></p>'."\n";
     echo '</div>'."\n";
-    
+
     include_once 'sys/inc/tfoot.php';
     exit;
 }
@@ -61,7 +61,7 @@ if (isset($get_id['delete_post']) && $post_id = $db->query("SELECT `id` FROM `st
     if (user_access('guest_delete') || $ank['id'] == $user['id']) {
         $db->query("DELETE FROM `stena` WHERE `id`=?i", [$post_id]);
         $db->query("DELETE FROM `stena_like` WHERE `id_stena`=?i", [$post_id]);
-        
+
         $_SESSION['message'] = 'Сообщение успешно удалено';
     }
 }
@@ -196,7 +196,7 @@ if (isset($_POST['status']) && isset($user) && $user['id'] == $ank['id']) {
         $status=$db->query("SELECT * FROM `status` WHERE `id_user`=?i AND `pokaz`=?i LIMIT ?i",
                            [$ank['id'], 1, 1])->row();
         // Лента
-        $q = $db->query("SELECT fr.user, fr.lenta_status, ts.lenta_status as ts_status FROM `frends` fr 
+        $q = $db->query("SELECT fr.user, fr.lenta_status, ts.lenta_status as ts_status FROM `frends` fr
 JOIN tape_set ts ON ts.id_user=fr.user
 WHERE fr.`frend`=?i AND fr.`lenta_status`=?i AND ts.`lenta_status`=?i AND `i`=?i",
                         [$user['id'], 1, 1, 1]);
@@ -221,6 +221,9 @@ if (isset($get_id['off']) && $ank['id'] == $user['id']) {
 // Статус пользователя
 $status=$db->query("SELECT * FROM `status` WHERE `id_user`=?i AND `pokaz`=?i LIMIT ?i",
                    [$ank['id'], 1, 1])->row();
+if (empty($status)) {
+    $status = ['id' => 0];
+}
 /* Класс к статусу */
 if (isset($get_id['like']) && $user['id']!=$ank['id'] &&
     !$db->query("SELECT COUNT(*) FROM `status_like` WHERE `id_status`=?i AND `id_user`=?i",
@@ -228,7 +231,7 @@ if (isset($get_id['like']) && $user['id']!=$ank['id'] &&
     $db->query("INSERT INTO `status_like` (`id_user`, `time`, `id_status`) values(?i, ?i, ?i)",
                [$user['id'], $time, $status['id']]);
     // Лента
-        $q = $db->query("SELECT fr.user, fr.lenta_status_like, ts.lenta_status_like as ts_status FROM `frends` fr 
+        $q = $db->query("SELECT fr.user, fr.lenta_status_like, ts.lenta_status_like as ts_status FROM `frends` fr
 JOIN tape_set ts ON ts.id_user=fr.user
 WHERE fr.`frend`=?i AND fr.`lenta_status_like`=?i AND ts.`lenta_status_like`=?i AND `i`=?i",
                         [$user['id'], 1, 1, 1]);
@@ -258,7 +261,7 @@ if (isset($get_id['fav']) && isset($user)) {
                    [$user['id'], $ank['id'], 'people']);
         $_SESSION['message'] = $ank['nick'] . ' удален из закладок';
     }
-    
+
     header('Location: /info.php?id=' . $ank['id']);
     exit;
 }
@@ -284,7 +287,7 @@ if (isset($get_id['spam'])  && $ank['id']!=0 && isset($user)) {
     $mess = $db->query("SELECT stn.*, u.id AS id_user, u.nick FROM `stena` stn
 JOIN `user` u ON u.id=stn.id_user WHERE stn.`id`=?i",
                        [$get_id['spam']])->row();
-    
+
     if (!$db->query("SELECT COUNT( * ) FROM `spamus` WHERE `id_user`=?i AND `id_spam`=?i AND `razdel`=?",
                     [$user['id'], $mess['id_user'], 'stena'])->el()) {
         if (isset($_POST['spamus'])) {
@@ -305,7 +308,7 @@ JOIN `user` u ON u.id=stn.id_user WHERE stn.`id`=?i",
                     $db->query(
                         'INSERT INTO `spamus` (`id_object`, `id_user`, `msg`, `id_spam`, `time`, `types`, `razdel`, `spam`) VALUES(?i, ?i, ?, ?i, ?i, ?i, ?, ?)',
                                 [$ank['id'], $user['id'], $msg, $mess['id_user'], $time, $types, 'stena', $mess['msg']]);
-                    
+
                     $_SESSION['message'] = 'Заявка на рассмотрение отправлена';
                     header("Location: ?id=$ank[id]&spam=$mess[id]&page=".intval($get_id['page'])."");
                     exit;
@@ -314,12 +317,12 @@ JOIN `user` u ON u.id=stn.id_user WHERE stn.`id`=?i",
         }
     }
     // заголовок страницы
-    $set['title']=$ank['nick'].' - жалоба '; 
+    $set['title']=$ank['nick'].' - жалоба ';
     include_once 'sys/inc/thead.php';
     title();
     aut();
     err();
-    
+
     if (!$db->query(
             'SELECT COUNT(*) FROM `spamus` WHERE `id_user`=?i AND `id_spam`=?i AND `razdel`=?',
                     [$user['id'], $mess['id_user'], 'stena'])->el()) {
@@ -348,7 +351,7 @@ JOIN `user` u ON u.id=stn.id_user WHERE stn.`id`=?i",
     echo "<div class='foot'>\n";
     echo "<img src='/style/icons/str2.gif' alt='*'> <a href='/info.php?id=$ank[id]'>Назад</a><br />\n";
     echo "</div>\n";
-    
+
     include_once 'sys/inc/tfoot.php';
 }
 /*
@@ -362,7 +365,7 @@ title();
 aut();
 /*
 ==================================
-Приватность станички пользователя 
+Приватность станички пользователя
 ==================================
 */
 $pattern = 'SELECT ust.privat_str FROM `user_set` ust WHERE ust.`id_user`=?i';
@@ -386,18 +389,18 @@ if (!isset($user) || ($ank['id'] != $user['id'] && $user['group_access'] == 0)) 
         echo group($ank['id'])." $ank[nick] ";
         echo medal($ank['id'])." ".online($ank['id'])." ";
         echo "</div>\n";
-        
+
         echo "<div class='nav2'>\n";
         echo avatar($ank['id'], true, 128, false);
         //echo "<br />";
     }
-    
+
     // Если только для друзей
-    if ((!isset($user) && $uSet['privat_str'] == 2)  || (isset($user) && $uSet['privat_str'] == 2 && $uSet['frend'] != 2)) { 
+    if ((!isset($user) && $uSet['privat_str'] == 2)  || (isset($user) && $uSet['privat_str'] == 2 && $uSet['frend'] != 2)) {
         echo '<div class="mess">'."\n";
         echo 'Просматривать страничку пользователя могут только его друзья!'."\n";
         echo '</div>'."\n";
-        
+
         // В друзья
         if (isset($user)) {
             echo '<div class="nav1">'."\n";
@@ -413,12 +416,12 @@ if (!isset($user) || ($ank['id'] != $user['id'] && $user['group_access'] == 0)) 
         include_once 'sys/inc/tfoot.php';
         exit;
     }
-    
+
     if ($uSet['privat_str'] == 0) { // Если закрыта
         echo '<div class="mess">'."\n";
         echo 'Пользователь запретил просматривать его страничку!'."\n";
         echo '</div>'."\n";
-        
+
         include_once 'sys/inc/tfoot.php';
         exit;
     }
