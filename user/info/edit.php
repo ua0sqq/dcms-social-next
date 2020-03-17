@@ -13,7 +13,7 @@ $set['title']='Редактирование анкеты';
 include_once H . 'sys/inc/thead.php';
 title();
 aut();
-$get_set = filter_input(INPUT_GET, 'set', FILTER_VALIDATE_REGEXP, ['options' => ['regexp' => '/^([a-z]*)$/', 'default' => null]]);
+$get_set = filter_input(INPUT_GET, 'set', FILTER_VALIDATE_REGEXP, ['options' => ['regexp' => '/^([a-z_]*)$/', 'default' => null]]);
 
 if ($get_set) {
     $get = preg_replace('/&(.+?);/', '', $get_set);
@@ -25,11 +25,11 @@ if ($get_set) {
     } else {
         $get2 = null;
     }
-    
+
     $stream = urldecode(file_get_contents('php://input', true));
     !$stream ?: $stream;
     parse_str($stream, $user_set_data);
-    
+
     if (isset($user_set_data['save'])) {
         // ник
         if ($get_set == 'nick' && $user['set_nick'] == 1 && isset($user_set_data['nick'])) {
@@ -88,21 +88,21 @@ if ($get_set) {
                      'ank_m_r' =>  ['filter'  => FILTER_VALIDATE_INT, 'options' => ['default'   => null, 'min_range' => 1, 'max_range' => 12],],
                      'ank_g_r' =>  ['filter'  => FILTER_VALIDATE_INT, 'options' => ['default'   => null, 'min_range' => $min_year_of_birth, 'max_range' => $max_year_of_birth],],
                      ];
-            
+
             $set_data = filter_var_array($user_set_data, $args);
-            
+
             if ($set_data['ank_d_r']) {
                 $user['ank_d_r'] = $set_data['ank_d_r'];
             } else {
                 $err[]='Неверный формат дня рождения';
             }
-            
+
             if ($set_data['ank_m_r']) {
                 $user['ank_m_r'] = $set_data['ank_m_r'];
             } else {
                 $err[]='Неверный формат месяца рождения';
             }
-            
+
             if ($set_data['ank_g_r']) {
                 $user['ank_g_r'] = $set_data['ank_g_r'];
             } else {
@@ -265,7 +265,7 @@ if ($get_set) {
                     $user['ank_lov_' . $key] = 1;
                 } else {
                     $set_ank_lov += ['ank_lov_' . $key => 0];
-                    $user['ank_lov_' . $key] = 0;                    
+                    $user['ank_lov_' . $key] = 0;
                 }
             }
             if (!empty($set_ank_lov)) {
@@ -436,7 +436,7 @@ if ($get_set) {
             $_SESSION['message'] = 'Изменения успешно приняты';
             $db->query("UPDATE `user` SET `rating_tmp`=`rating_tmp`+?i WHERE `id`=?i",
                        [1, $user['id']]);
-        
+
             if ($get_act && $get_act['act']=='ank') {
                 header("Location: /user/info/anketa.php?".SID);
             } elseif ($get_act && $get_act['act']=='ank_web') {
@@ -447,9 +447,9 @@ if ($get_set) {
             exit;
         }
     }
-    
+
     err();
-    
+
     echo '<form method="post" action="?' . $get2 . 'set=' . $get . '">'."\n";
     if ($get_set == 'nick' && $user['set_nick'] == 1) {
         echo "<div class='mess'>Внимание! Изменить свой ник вы можете только один раз!</div> Nick Name:<br /><input type='text' name='nick' value='".htmlspecialchars($user['nick'], false)."' maxlength='32' /><br />";
@@ -457,11 +457,11 @@ if ($get_set) {
     if ($get_set == 'name') {
         echo "Имя в реале:<br /><input type='text' name='ank_name' value='".htmlspecialchars($user['ank_name'], false)."' maxlength='32' /><br />";
     }
-    
+
     if ($get_set == 'glaza') {
         echo "Цвет глаз:<br /><input type='text' name='ank_cvet_glas' value='".htmlspecialchars($user['ank_cvet_glas'], false)."' maxlength='32' /><br />";
     }
-    
+
     if ($get_set == 'volos') {
         echo "Волосы:<br /><input type='text' name='ank_volos' value='".htmlspecialchars($user['ank_volos'], false)."' maxlength='32' /><br />";
     }
@@ -484,8 +484,8 @@ if ($get_set) {
 		$array_month = range(1, 12);
 		foreach($array_month as $date_month) {
 			echo '  <option value="' . $date_month . '"' . ($user['ank_m_r'] == $date_month ? ' selected="selected"' : null) . '>' . $date_month . '</option>'."\n";
-		}		
-        
+		}
+
         echo '</select>'."\n";
         $max_year_of_birth = date('Y') - 14; // TODO: ??? в настройки?
         $min_year_of_birth = $max_year_of_birth - 70;
@@ -494,17 +494,17 @@ if ($get_set) {
         '<option value=""></option>'."\n";
 		foreach($array_year as $date_year) {
 			echo '  <option value="' . $date_year . '"' . ($user['ank_g_r'] == $date_year ? ' selected="selected"' : null) . '>' . $date_year . '</option>'."\n";
-		}    
+		}
         echo '</select><br/>';
     }
-        
+
     if ($get_set == 'pol') {
         echo "Пол:<br /> <input name='pol' type='radio' ".($user['pol']==1?' checked="checked"':null)." value='1' />Муж.<br />
 	<input name='pol' type='radio' ".($user['pol']==0?' checked="checked"':null)." value='0' />Жен.<br />";
     }
-        
+
     if ($get_set == 'telo') {
-        echo "Телосложение:<br /> 
+        echo "Телосложение:<br />
 	<input name='ank_telosl' type='radio' ".($user['ank_telosl']==1?' checked="checked"':null)." value='1' />Нет ответа<br />
 	<input name='ank_telosl' type='radio' ".($user['ank_telosl']==2?' checked="checked"':null)." value='2' />Худощавое<br />
 	<input name='ank_telosl' type='radio' ".($user['ank_telosl']==3?' checked="checked"':null)." value='3' />Обычное<br />
@@ -514,9 +514,9 @@ if ($get_set) {
 	<input name='ank_telosl' type='radio' ".($user['ank_telosl']==7?' checked="checked"':null)." value='7' />Полное<br />
 	<input name='ank_telosl' type='radio' ".($user['ank_telosl']==0?' checked="checked"':null)." value='0' />Не указано<br />";
     }
-        
+
     if ($get_set == 'avto') {
-        echo "Наличие автомобиля:<br /> 
+        echo "Наличие автомобиля:<br />
 	<input name='ank_avto_n' type='radio' ".($user['ank_avto_n']==0?' checked="checked"':null)." value='0' />Не указано<br />
 	<input name='ank_avto_n' type='radio' ".($user['ank_avto_n']==1?' checked="checked"':null)." value='1' />Есть<br />
 	<input name='ank_avto_n' type='radio' ".($user['ank_avto_n']==2?' checked="checked"':null)." value='2' />Нет<br />
@@ -524,7 +524,7 @@ if ($get_set) {
         echo "Название\Марка авто:<br /><input type='text' name='ank_avto' value='".htmlspecialchars($user['ank_avto'], false)."' maxlength='215' /><br />";
     }
     if ($get_set == 'nark') {
-        echo "Наркотики:<br /> 
+        echo "Наркотики:<br />
 	<input name='ank_nark' type='radio' ".($user['ank_nark']==0?' checked="checked"':null)." value='0' />Не указано<br />
 	<input name='ank_nark' type='radio' ".($user['ank_nark']==1?' checked="checked"':null)." value='1' />Да, курю травку<br />
 	<input name='ank_nark' type='radio' ".($user['ank_nark']==2?' checked="checked"':null)." value='2' />Да, люблю любой вид наркотических средств<br />
@@ -532,7 +532,7 @@ if ($get_set) {
 	<input name='ank_nark' type='radio' ".($user['ank_nark']==4?' checked="checked"':null)." value='4' />Нет, категорически не приемлю<br />";
     }
     if ($get_set == 'alko') {
-        echo "Алкоголь:<br /> 
+        echo "Алкоголь:<br />
 	<input name='ank_alko_n' type='radio' ".($user['ank_alko_n']==0?' checked="checked"':null)." value='0' />Не указано<br />
 	<input name='ank_alko_n' type='radio' ".($user['ank_alko_n']==1?' checked="checked"':null)." value='1' />Да, выпиваю<br />
 	<input name='ank_alko_n' type='radio' ".($user['ank_alko_n']==2?' checked="checked"':null)." value='2' />Редко, по праздникам<br />
@@ -540,14 +540,14 @@ if ($get_set) {
         echo "Напиток:<br /><input type='text' name='ank_alko' value='".htmlspecialchars($user['ank_alko'], false)."' maxlength='215' /><br />";
     }
     if ($get_set == 'orien') {
-        echo "Ориентация:<br /> 
+        echo "Ориентация:<br />
 	<input name='ank_orien' type='radio' ".($user['ank_orien']==0?' checked="checked"':null)." value='0' />Не указано<br />
 	<input name='ank_orien' type='radio' ".($user['ank_orien']==1?' checked="checked"':null)." value='1' />Гетеро<br />
 	<input name='ank_orien' type='radio' ".($user['ank_orien']==2?' checked="checked"':null)." value='2' />Би<br />
 	<input name='ank_orien' type='radio' ".($user['ank_orien']==3?' checked="checked"':null)." value='3' />Гей/Лесби<br />";
     }
     if ($get_set == 'mat_pol') {
-        echo "Материальное положение:<br /> 
+        echo "Материальное положение:<br />
 	<input name='ank_mat_pol' type='radio' ".($user['ank_mat_pol']==0?' checked="checked"':null)." value='0' />Не указано<br />
 	<input name='ank_mat_pol' type='radio' ".($user['ank_mat_pol']==1?' checked="checked"':null)." value='1' />Непостоянные заработки<br />
 	<input name='ank_mat_pol' type='radio' ".($user['ank_mat_pol']==2?' checked="checked"':null)." value='2' />Постоянный небольшой доход<br />
@@ -556,7 +556,7 @@ if ($get_set) {
 	<input name='ank_mat_pol' type='radio' ".($user['ank_mat_pol']==5?' checked="checked"':null)." value='5' />Не зарабатываю<br />";
     }
     if ($get_set == 'smok') {
-        echo "Курение:<br /> 
+        echo "Курение:<br />
 	<input name='ank_smok' type='radio' ".($user['ank_smok']==0?' checked="checked"':null)." value='0' />Не указано<br />
 	<input name='ank_smok' type='radio' ".($user['ank_smok']==1?' checked="checked"':null)." value='1' />Не курю<br />
 	<input name='ank_smok' type='radio' ".($user['ank_smok']==2?' checked="checked"':null)." value='2' />Курю<br />
@@ -564,9 +564,9 @@ if ($get_set) {
 	<input name='ank_smok' type='radio' ".($user['ank_smok']==4?' checked="checked"':null)." value='4' />Бросаю<br />
 	<input name='ank_smok' type='radio' ".($user['ank_smok']==5?' checked="checked"':null)." value='5' />Успешно бросил<br />";
     }
-    
+
     if ($get_set == 'proj') {
-        echo "Проживание:<br /> 
+        echo "Проживание:<br />
 	<input name='ank_proj' type='radio' ".($user['ank_proj']==0?' checked="checked"':null)." value='0' />Не указано<br />
 	<input name='ank_proj' type='radio' ".($user['ank_proj']==1?' checked="checked"':null)." value='1' />Отдельная квартира (снимаю или своя)<br />
 	<input name='ank_proj' type='radio' ".($user['ank_proj']==2?' checked="checked"':null)." value='2' />Комната в общежитии, коммуналка<br />
@@ -575,48 +575,48 @@ if ($get_set) {
 	<input name='ank_proj' type='radio' ".($user['ank_proj']==5?' checked="checked"':null)." value='5' />Живу с партнером или супругом (-ой)<br />
 	<input name='ank_proj' type='radio' ".($user['ank_proj']==6?' checked="checked"':null)." value='6' />Нет постоянного жилья<br />";
     }
-    
-    
+
+
     if ($get_set == 'baby') {
-        echo "Есть ли дети:<br /> 
+        echo "Есть ли дети:<br />
 	<input name='ank_baby' type='radio' ".($user['ank_baby']==0?' checked="checked"':null)." value='0' />Не указано<br />
 	<input name='ank_baby' type='radio' ".($user['ank_baby']==1?' checked="checked"':null)." value='1' />Нет<br />
 	<input name='ank_baby' type='radio' ".($user['ank_baby']==2?' checked="checked"':null)." value='2' />Нет, но хотелось бы<br />
 	<input name='ank_baby' type='radio' ".($user['ank_baby']==3?' checked="checked"':null)." value='3' />Есть, живем вместе<br />
 	<input name='ank_baby' type='radio' ".($user['ank_baby']==4?' checked="checked"':null)." value='4' />Есть, живем порознь<br />";
     }
-    
+
     if ($get_set == 'zan') {
         echo "Чем занимаюсь:<br /><input type='text' name='ank_zan' value='$user[ank_zan]' maxlength='215' /><br />";
     }
-    
+
     if ($get_set == 'gorod') {
         echo "Город:<br /><input type='text' name='ank_city' value='$user[ank_city]' maxlength='32' /><br />";
     }
-    
+
     if ($get_set == 'rost') {
         echo "Рост:<br /><input type='text' name='ank_rost' value='$user[ank_rost]' maxlength='3' /><br />";
     }
-    
+
     if ($get_set == 'ves') {
         echo "Вес:<br /><input type='text' name='ank_ves' value='$user[ank_ves]' maxlength='3' /><br />";
     }
-    
+
     if ($get_set == 'icq') {
         echo "ICQ:<br /><input type='text' name='ank_icq' value='$user[ank_icq]' maxlength='9' /><br />";
     }
-    
+
     if ($get_set == 'skype') {
         echo "Skype логин<br /><input type='text' name='ank_skype' value='$user[ank_skype]' maxlength='16' /><br />";
     }
-    
-    
+
+
     if ($get_set == 'mail') {
         echo "E-mail:<br />
 		<input type='text' name='ank_mail' value='$user[ank_mail]' maxlength='32' /><br />
 		<label><input type='checkbox' name='set_show_mail'".($user['set_show_mail']==1?' checked="checked"':null)." value='1' /> Показывать E-mail в анкете</label><br />";
     }
-    
+
     if ($get_set == 'loves') {
         echo "Цели знакомства:<br />
 		<label><input type='checkbox' name='ank_lov_1'".($user['ank_lov_1']==1?' checked="checked"':null)." value='1' /> Дружба и общение</label><br />
@@ -635,21 +635,21 @@ if ($get_set) {
 		<label><input type='checkbox' name='ank_lov_14'".($user['ank_lov_14']==1?' checked="checked"':null)." value='1' /> Занятия спортом</label><br />
     	<br />";
     }
-    
+
     if ($get_set == 'mobile') {
         echo "Номер телефона:<br /><input type='text' name='ank_n_tel' value='$user[ank_n_tel]' maxlength='11' /><br />";
     }
-    
+
     if ($get_set == 'osebe') {
         echo "О себе:<br /><input type='text' name='ank_o_sebe' value='$user[ank_o_sebe]' maxlength='512' /><br />";
     }
-    
+
     if ($get_set == 'opar') {
         echo "О партнере:<br /><input type='text' name='ank_o_par' value='$user[ank_o_par]' maxlength='215' /><br />";
     }
-   
+
     echo "<input type='submit' name='save' value='Сохранить' /></form>\n";
-    
+
 } else {
     echo "<div class='nav2'>";
     echo "Основное";
@@ -984,5 +984,5 @@ if (isset($_SESSION['refer']) && $_SESSION['refer']!=null && otkuda($_SESSION['r
     echo "<img src='/style/icons/str2.gif' alt='*'> <a href='$_SESSION[refer]'>".otkuda($_SESSION['refer'])."</a><br />\n";
 }
 echo '</div>';
-    
+
 include_once H . 'sys/inc/tfoot.php';
