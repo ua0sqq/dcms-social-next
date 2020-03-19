@@ -98,9 +98,9 @@ WHERE u.`id`=?i',
         }
 
         if ($user == 0) {
-            $ank = array('id' => '0', 'pol' => '1', 'group_access' => '0');
+            $ank = array('id' => 0, 'pol' => '1', 'group_access' => 0, 'id_foto' => 0, 'ras' => 'jpg', 'icon' => 0);
         } elseif (!$ank) {
-            $ank = array('id' => '0', 'pol' => '1', 'group_access' => '0');
+            $ank = array('id' => 0, 'pol' => '1', 'group_access' => 0, 'id_foto' => 0, 'ras' => 'jpg', 'icon' => 0);
         }
 
         // Аватар
